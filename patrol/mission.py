@@ -38,7 +38,8 @@ class JsonlSink:
 
 class Mission:
     def __init__(self, spec: dict, out: Path, cfg: Config | None = None, clef_url: str = clef.URL,
-                 fault_rate: float = 0.0, seed: int = 0, sinks=(), escalator=None, save_frames: bool = True, realtime: bool = True):
+                 fault_rate: float = 0.0, seed: int = 0, sinks=(), escalator=None, save_frames: bool = True,
+                 realtime: bool = True, chase: bool = False):
         self.spec, self.out = spec, Path(out)
         self.cfg = cfg or Config(length=spec["length"])
         self.sim = Sim(spec, start=self.cfg.home)
@@ -53,10 +54,13 @@ class Mission:
         self.v_prev = (0.0, 0.0, 0.0)
         self.latency_ema = 0.0
         self.realtime = realtime
+        self.chase = chase              # also render the third-person chase camera each tick (console, demo video)
         self.decisions: list[dict] = []
         self.photos: list[dict] = []
         (self.out / "media" / "frames").mkdir(parents=True, exist_ok=True)
         (self.out / "media" / "photos").mkdir(parents=True, exist_ok=True)
+        if chase:
+            (self.out / "media" / "chase").mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------ plumbing
     def emit(self, type_: str, **data):
@@ -142,6 +146,9 @@ class Mission:
         rec.update(state=sm.state, gated=self._g(g), frame=frame_file, battery=round(sm.battery, 1),
                    tel=sim.telemetry(), truth=sim.visible_defects("inspect", W, H) if frame_file else [])
         rec["cruise_speed"] = round(sm.governed_cruise(self.latency_ema), 2)
+        if self.chase:
+            rec["chase"] = self._save("chase", f"c{self.ticks:04d}.jpg", sim.jpeg("chase", 480, 360, quality=80),
+                                      force=True)
         self.emit("tick", **rec)
         sim.step(v, cfg.dt)
         self.v_prev = v
@@ -222,6 +229,15 @@ class Mission:
         s = min(cfg.transit, dist_xy) / dist_xy
         return (dx * s, dy * s, 0.8 * (cfg.transit_altitude - pos[2]))
 
+    def status_text(self) -> str:
+        """One paragraph of mission state for voice routing and spoken questions."""
+        sm, tel = self.sm, self.sim.telemetry()
+        flags = "; ".join(f"{f.id} at {f.target.x:.0f} m ({(f.note or {}).get('defect_type') or f.defect_guess}"
+                          f"{', ' + f.note['severity'] if f.note and f.note.get('severity') else ''})"
+                          for f in sm.flags) or "none yet"
+        return (f"The drone is in state {sm.state} at {tel['x']:.0f} m of the {self.cfg.length:.0f} m corridor, "
+                f"battery {sm.battery:.0f}%, {len(self.photos)} photos taken. Flags so far: {flags}.")
+
     # ------------------------------------------------------------ records
     def _save(self, kind: str, name: str, data: bytes, force=False):
         if not (self.save_frames or force):
@@ -245,14 +261,18 @@ class Mission:
         return {"action": g.action, "source": g.label, "reason": g.reason, "weighted": g.weighted}
 
     # ------------------------------------------------------------ run
-    def run(self, max_ticks: int = 3000, script: dict | None = None) -> dict:
-        """script: {tick: command} operator commands injected at given ticks (tests stand in for voice)."""
+    def run(self, max_ticks: int = 3000, script: dict | None = None, hooks=()) -> dict:
+        """script: {tick: command} operator commands injected at given ticks (tests stand in for voice).
+        hooks: callables run with the mission before each tick (the voice script uses one)."""
         t0 = time.time()
-        self.emit("start", spec={k: self.spec[k] for k in ("kind", "seed", "length")},
+        self.emit("start", spec={k: self.spec[k] for k in ("kind", "seed", "length", "spacing", "pylons", "trees")
+                                 if k in self.spec},
                   defects=self.spec["defects"], config=self.cfg.__dict__)
         while self.sm.state != "DONE" and self.ticks < max_ticks:
             if script and self.ticks in script:
                 self.command(script[self.ticks])
+            for h in hooks:
+                h(self)
             self.tick()
         if self.escalator:
             self.emit("state", state=self.sm.state, reason=f"waiting for {len(self.escalator.futures)} notes")
@@ -315,6 +335,10 @@ def add_args(p):
     p.add_argument("--escalate", action="store_true", help="qwen38 writes a note for each flag (M2)")
     p.add_argument("--no-frames", action="store_true", help="do not save every cruise frame")
     p.add_argument("--lockstep", action="store_true", help="pause the world while the model thinks")
+    p.add_argument("--speak", action="store_true", help="read each note and the summary aloud (Kokoro), WAVs saved")
+    p.add_argument("--voice-script", help='JSON {"tick:N" or "flag:K": "fixtures/voice/x.wav"}: recorded commands '
+                   "heard, routed by Clef and executed as if spoken")
+    p.add_argument("--chase", action="store_true", help="also render the third-person chase camera each tick")
 
 
 def scene(name: str, seed: int, length: float) -> dict:
@@ -333,7 +357,7 @@ def run_cli(a):
     sink = JsonlSink(out / "mission.jsonl")
 
     def console(ev):
-        if ev["type"] in ("state", "flag", "operator", "note"):
+        if ev["type"] in ("state", "flag", "operator", "note", "voice", "speech", "answer"):
             print(json.dumps({k: v for k, v in ev.items() if k not in ("probs", "nouls")})[:300], flush=True)
 
     esc = None
@@ -342,9 +366,29 @@ def run_cli(a):
         esc = escalate.Escalator(length=a.length)
     m = Mission(spec, out, Config(length=a.length, battery_start=a.battery), clef_url=a.clef_url,
                 fault_rate=a.fault_rate, seed=a.seed, sinks=[sink, console], escalator=esc,
-                save_frames=not a.no_frames, realtime=not a.lockstep)
+                save_frames=not a.no_frames, realtime=not a.lockstep, chase=a.chase)
     script = {int(k): v for k, v in json.loads(a.script).items()} if a.script else None
-    s = m.run(a.max_ticks, script)
+    worker = speaker = vs = None
+    hooks = []
+    if a.speak or a.voice_script:
+        from . import voice
+        worker = voice.VoiceWorker()
+        m.emit("voice_ready", **worker.ready)
+        if a.speak:
+            speaker = voice.Speaker(worker, out, publish=m.emit)
+            m.sinks.append(speaker)
+        if a.voice_script:
+            vs = voice.VoiceScript(json.loads(a.voice_script), worker, speaker, a.clef_url)
+            hooks.append(vs)
+    try:
+        s = m.run(a.max_ticks, script, hooks)
+        if vs:
+            vs.join()
+        if speaker:
+            speaker.drain()
+    finally:
+        if worker:
+            worker.close()      # GPU.md: the speech models exit when the stage ends
     sink.close()
     s = m.summary(s["wall_time_s"])        # recount sources now the log is flushed
     (out / "summary.json").write_text(json.dumps(s, indent=1))

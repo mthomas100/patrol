@@ -32,6 +32,8 @@ def _look_quat(yaw: float, pan: float, tilt: float) -> np.ndarray:
 class Sim:
     MAX_SPEED = 6.0     # m/s
     MAX_ACC = 3.0       # m/s^2
+    CHASE_OFFSET = (-9.0, -5.0, 3.5)     # chase camera position relative to the drone
+    CHASE_LOOK = (6.0, 4.0, -1.5)        # and the point it looks at, relative to the drone
 
     def __init__(self, spec: dict, start=(-15.0, -12.0, 13.0)):
         self.spec = spec
@@ -69,6 +71,12 @@ class Sim:
         self.data.mocap_pos[self.mocap] = self.pos
         q = np.zeros(4); mujoco.mju_euler2Quat(q, np.array([0, 0, self.yaw]), "xyz")
         self.data.mocap_quat[self.mocap] = q
+        # chase camera (console and demo video only): behind, to the right and above the drone, looking ahead at the line
+        c = self.pos + np.array(self.CHASE_OFFSET)
+        d = self.pos + np.array(self.CHASE_LOOK) - c
+        self.model.cam_pos[self.cam["chase"]] = c
+        self.model.cam_quat[self.cam["chase"]] = _look_quat(0.0, math.atan2(d[1], d[0]),
+                                                            -math.atan2(d[2], math.hypot(d[0], d[1])))
         for cam, target in self.aims.items():    # gimbals stay locked on their targets as the drone moves
             d = target - self.pos
             a = math.atan2(d[1], d[0]) - self.yaw
@@ -107,8 +115,8 @@ class Sim:
             self._renderers[key] = mujoco.Renderer(self.model, height, width)
         r = self._renderers[key]
         opt = mujoco.MjvOption()
-        if camera in ("wide", "inspect", "zoom"):
-            opt.geomgroup[3] = 0     # onboard cameras do not see the drone's own body
+        # onboard cameras do not see the drone's own body (group 3); the chase and map views do
+        opt.geomgroup[3] = 0 if camera in ("wide", "inspect", "zoom") else 1
         r.update_scene(self.data, camera=self.cam[camera], scene_option=opt)
         return r.render()
 

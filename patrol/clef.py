@@ -131,10 +131,11 @@ class Decision:
 
 
 def ask(jpeg, state: str, questions: dict | None = None, timeout: float = 10.0, url: str = URL) -> Decision:
-    """jpeg: bytes, or a list of bytes for several images decided together."""
+    """jpeg: bytes, or a list of bytes for several images decided together (an empty list: text only)."""
     imgs = jpeg if isinstance(jpeg, (list, tuple)) else [jpeg]
-    req = {"model": MODEL, "state": state, "questions": questions or schema(),
-           "images": ["data:image/jpeg;base64," + base64.b64encode(j).decode() for j in imgs]}
+    req = {"model": MODEL, "state": state, "questions": questions or schema()}
+    if imgs:            # text-only questions (voice routing) send no image field at all
+        req["images"] = ["data:image/jpeg;base64," + base64.b64encode(j).decode() for j in imgs]
     t0 = time.perf_counter()
     try:
         r = urllib.request.urlopen(urllib.request.Request(url, json.dumps(req).encode(),

@@ -117,3 +117,26 @@ class Escalator:
         for f in self.futures:
             f.result(timeout=max(1.0, timeout - (time.time() - t0)))
         return len(self.futures)
+
+
+def answer_question(question: str, status: str, max_wait_s: float = 300.0) -> dict:
+    """The operator asked something out loud: qwen38 answers in one or two spoken sentences from the mission state
+    (no image). Waits out GPU holds like the notes do."""
+    req = {"model": MODEL, "max_tokens": 120, "temperature": 0.2, "thinking": {"type": "disabled"},
+           "messages": [{"role": "system", "content": "You are the voice of a power-line inspection drone talking to "
+                         "its operator. Answer in at most two short spoken sentences, from the mission state only; "
+                         "no lists, no markdown."},
+                        {"role": "user", "content": f"Mission state: {status}\nOperator: {question}"}]}
+    t0 = time.time()
+    while True:
+        try:
+            body = _post(req, 120)
+            text = re.sub(r"<think>.*?</think>", "", body["choices"][0]["message"].get("content") or "",
+                          flags=re.S).strip()
+            return {"text": text, "wall_s": round(time.time() - t0, 1), "model": MODEL}
+        except urllib.error.HTTPError as e:
+            if e.code == 503 and time.time() - t0 < max_wait_s:
+                time.sleep(5); continue
+            return {"error": f"HTTP {e.code}", "wall_s": round(time.time() - t0, 1)}
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            return {"error": f"{type(e).__name__}: {e}"[:200], "wall_s": round(time.time() - t0, 1)}

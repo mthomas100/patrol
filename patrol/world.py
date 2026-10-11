@@ -245,18 +245,21 @@ def build_mjcf(spec: dict) -> str:
     <light directional="true" pos="0 0 50" dir="-0.3 0.4 -1" diffuse="0.75 0.72 0.65" castshadow="true"/>
     <geom type="plane" size="{L + 200:.0f} 200 0.1" pos="{L / 2:.1f} 0 0" material="grass"/>
     <body name="drone" mocap="true" pos="-15 -12 13">
-      <geom type="box" size="0.25 0.25 0.06" rgba="0.15 0.15 0.18 1" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="0.3 0.3 0.08" size="0.18 0.01" rgba="0.8 0.2 0.1 0.6" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="0.3 -0.3 0.08" size="0.18 0.01" rgba="0.8 0.2 0.1 0.6" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="-0.3 0.3 0.08" size="0.18 0.01" rgba="0.2 0.2 0.2 0.6" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="-0.3 -0.3 0.08" size="0.18 0.01" rgba="0.2 0.2 0.2 0.6" contype="0" conaffinity="0" group="3"/>
+      <geom type="box" size="0.35 0.35 0.1" rgba="0.92 0.92 0.95 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="capsule" fromto="-0.6 -0.6 0.05 0.6 0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="capsule" fromto="-0.6 0.6 0.05 0.6 -0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="0.6 0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="0.6 -0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="-0.6 0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="-0.6 -0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="sphere" pos="0.3 0 -0.15" size="0.12" rgba="0.1 0.1 0.12 1" contype="0" conaffinity="0" group="3"/>
       <body name="gimbal">
         <camera name="wide" pos="0 0 -0.1" fovy="62" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
         <camera name="inspect" pos="0 0 -0.1" fovy="34" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
         <camera name="zoom" pos="0 0 -0.1" fovy="24" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
       </body>
     </body>
-    <camera name="chase" mode="trackcom" pos="-14 -22 22" xyaxes="0.8 -0.6 0 0.3 0.4 0.87" target="drone"/>
+    <camera name="chase" pos="-25 -20 18" fovy="55"/>
     <camera name="map" pos="{L / 2:.1f} -10 {L * 0.9:.0f}" xyaxes="1 0 0 0 1 0" fovy="60"/>
       {body}
   </worldbody>
