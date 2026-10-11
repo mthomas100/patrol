@@ -1,0 +1,100 @@
+{
+ "mode": "live",
+ "url": "http://127.0.0.1:8793/",
+ "results": [
+  {
+   "name": "Start button visible in live mode",
+   "ok": true
+  },
+  {
+   "name": "clue chips shown before takeoff",
+   "ok": true
+  },
+  {
+   "name": "lanes known before takeoff",
+   "ok": true
+  },
+  {
+   "name": "ticks and frames reached the page",
+   "ok": true,
+   "detail": {
+    "ticks": 36,
+    "state": "SWEEP",
+    "t": 17.51,
+    "frame": 0,
+    "chase": "/run/media/chase/c0035.jpg"
+   }
+  },
+  {
+   "name": "Clef unreachable: every answer is FALLBACK",
+   "ok": true,
+   "detail": {
+    "nClef": 0,
+    "nFb": 9,
+    "hasChase": true,
+    "state": "SWEEP",
+    "path": 51,
+    "judged": 9,
+    "cov": 0.3033
+   }
+  },
+  {
+   "name": "chase panel visible, image loaded",
+   "ok": true
+  },
+  {
+   "name": "camera image loaded",
+   "ok": true
+  },
+  {
+   "name": "Return home enabled while flying",
+   "ok": true
+  },
+  {
+   "name": "Return home command reached the mission",
+   "ok": true,
+   "detail": "RETURN"
+  },
+  {
+   "name": "operator entry in the log",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "name": "flight ended with a summary",
+   "ok": true,
+   "detail": "DONE"
+  },
+  {
+   "name": "Start button offers \"Fly again\"",
+   "ok": true,
+   "detail": "Fly again"
+  },
+  {
+   "name": "second flight starts from a clean page",
+   "ok": true,
+   "detail": {
+    "ticks": 6,
+    "state": "TAKEOFF",
+    "run": "20261011-140528-console-search"
+   }
+  },
+  {
+   "name": "no external requests (Wi-Fi off safe)",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no failed requests",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no JS errors in the console",
+   "ok": true,
+   "detail": []
+  }
+ ],
+ "errors": [],
+ "failedReqs": []
+}

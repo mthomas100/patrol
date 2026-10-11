@@ -1,0 +1,228 @@
+{
+ "mode": "voice",
+ "url": "http://127.0.0.1:8790/",
+ "results": [
+  {
+   "name": "push-to-talk button visible (ready event says voice)",
+   "ok": true,
+   "detail": {
+    "voiceOn": true,
+    "text": "Hold to talk"
+   }
+  },
+  {
+   "name": "Sound button visible, starts off",
+   "ok": true
+  },
+  {
+   "name": "Start button visible before takeoff",
+   "ok": true
+  },
+  {
+   "name": "POST describe_demo.wav to /api/voice is routed to describe",
+   "ok": true,
+   "detail": {
+    "status": 200,
+    "text": "Missing hiker, blue backpack, orange tent, gray dog.",
+    "route": "describe",
+    "p": 0.88,
+    "source": "CLEF",
+    "error": null,
+    "wall_s": "0.7"
+   }
+  },
+  {
+   "name": "page shows qwen38 clue chips (names changed, one is a dog)",
+   "ok": true,
+   "detail": {
+    "before": [
+     "blue_backpack",
+     "orange_tent",
+     "grey_dog"
+    ],
+    "after": [
+     "blue_backpack",
+     "orange_tent",
+     "gray_dog"
+    ],
+    "chips": 3,
+    "run_before": "20261011-141045-console-search",
+    "run_after": "20261011-141051-console-search"
+   }
+  },
+  {
+   "name": "a speech event arrived after the description",
+   "ok": true,
+   "detail": [
+    {
+     "id": "clues_0",
+     "url": "/run/media/audio/clues_0.wav",
+     "error": null
+    }
+   ]
+  },
+  {
+   "name": "Sound button turns on",
+   "ok": true
+  },
+  {
+   "name": "pressing Start begins the flight",
+   "ok": true,
+   "detail": {
+    "state": "TAKEOFF",
+    "ticks": 6,
+    "run": "20261011-141051-console-search"
+   }
+  },
+  {
+   "name": "a clip POSTed from elsewhere appears as one VOICE line (event stream)",
+   "ok": true,
+   "detail": {
+    "tag": "VOICE",
+    "text": "“Go back to the last alert.” → go_back_to_last_alert (Clef 97%) heard in 84 ms, routed in 575 ms"
+   }
+  },
+  {
+   "name": "button shows Listening while held",
+   "ok": true,
+   "detail": {
+    "cls": "btn rec on",
+    "text": "Listening...",
+    "rec": true
+   }
+  },
+  {
+   "name": "header stays one row while recording (no layout jump)",
+   "ok": true,
+   "detail": {
+    "header_h": 76,
+    "ptt_w": 144
+   }
+  },
+  {
+   "name": "release POSTs the clip and the VOICE line lands in the log",
+   "ok": true,
+   "detail": {
+    "tag": "VOICE",
+    "text": "“Go back to the last alert.” → go_back_to_last_alert (Clef 97%) heard in 133 ms, routed in 695 ms"
+   }
+  },
+  {
+   "name": "VOICE line carries transcript, route and source",
+   "ok": true,
+   "detail": "“Go back to the last alert.” → go_back_to_last_alert (Clef 97%) heard in 133 ms, routed in 695 ms"
+  },
+  {
+   "name": "button back to Hold to talk",
+   "ok": true
+  },
+  {
+   "name": "space bar held starts recording",
+   "ok": true
+  },
+  {
+   "name": "space bar release also logs a VOICE line",
+   "ok": true,
+   "detail": 3
+  },
+  {
+   "name": "at least one speech event with an audio URL arrived during the flight",
+   "ok": true,
+   "detail": [
+    "clues_0",
+    "ack_42",
+    "ack_64",
+    "ack_105"
+   ]
+  },
+  {
+   "name": "speech audio URL returns 200 audio/wav from the console (at least one)",
+   "ok": true,
+   "detail": [
+    {
+     "url": "/run/media/audio/clues_0.wav",
+     "type": "audio/x-wav",
+     "bytes": 1204844
+    },
+    {
+     "url": "/run/media/audio/ack_42.wav",
+     "type": "audio/x-wav",
+     "bytes": 127244
+    },
+    {
+     "url": "/run/media/audio/ack_64.wav",
+     "type": "audio/x-wav",
+     "bytes": 127244
+    },
+    {
+     "url": "/run/media/audio/ack_105.wav",
+     "type": "audio/x-wav",
+     "bytes": 127244
+    }
+   ]
+  },
+  {
+   "name": "every speech audio URL is served (the answer to the description too)",
+   "ok": true,
+   "detail": {
+    "describe_answer": {
+     "url": "/run/media/audio/clues_0.wav",
+     "status": 200,
+     "type": "audio/x-wav",
+     "bytes": 1204844,
+     "riff": true
+    },
+    "bad": []
+   }
+  },
+  {
+   "name": "Sound on: the page played a spoken clip to the end",
+   "ok": true,
+   "detail": {
+    "started": 3,
+    "ended": 2,
+    "errors": 0
+   }
+  },
+  {
+   "name": "speech queue drains, clips played one at a time to the end, no errors",
+   "ok": true,
+   "detail": {
+    "playStats": {
+     "started": 3,
+     "ended": 3,
+     "errors": 0
+    },
+    "queued": 0,
+    "speaking": false
+   }
+  },
+  {
+   "name": "no page overflow at 1280x800 with the voice controls",
+   "ok": true,
+   "detail": {
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 800,
+    "ch": 800
+   }
+  },
+  {
+   "name": "no external requests (Wi-Fi off safe)",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no failed requests",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no JS errors in the console",
+   "ok": true,
+   "detail": []
+  }
+ ],
+ "errors": [],
+ "failedReqs": []
+}

@@ -52,6 +52,20 @@ header{display:flex;align-items:center;flex-wrap:wrap;row-gap:.3rem;column-gap:1
 .btn.go:hover:not(:disabled){background:#146446}
 .btn.warn{background:#3a2a0c;border-color:#a8741b;color:#ffe2a8}
 #ctl{display:flex;gap:.55rem;align-items:center}
+/* push-to-talk and spoken alerts: shown only when the server has a voice worker (ready.voice) */
+#voiceCtl{display:flex;flex-direction:column;gap:.2rem;align-items:stretch}      /* stacked: the header has about 12rem to spare, side by side they wrapped it */
+#voiceCtl .btn{padding:.2rem .6rem;font-size:.85rem;line-height:1.2;text-align:center}
+.btn.rec{background:#40161b;border-color:#8a2a35;color:#ffd6da;min-width:8rem;touch-action:none}
+.btn.rec::before{content:"\25CF\00a0";color:#ff6a78}
+.btn.rec:hover:not(:disabled){background:#541c24;border-color:#a8374a}
+.btn.rec.on{background:#c0202f;border-color:#ff8a96;color:#fff;box-shadow:0 0 0 .25rem rgba(255,77,94,.28);animation:pttpulse 1s ease-in-out infinite}
+.btn.rec.on::before{color:#fff}
+.btn.rec.busy{background:#3a2a0c;border-color:#a8741b;color:#ffe2a8}
+.btn.rec.busy::before{color:#ffb62e}
+@keyframes pttpulse{50%{box-shadow:0 0 0 .55rem rgba(255,77,94,.08)}}
+header.voice{column-gap:.7rem}
+header.listening{border-color:#ff6a78;box-shadow:0 0 0 .2rem rgba(255,77,94,.32)}
+.btn.snd.on{background:#0d3c48;border-color:#2ad4e8;color:#c6f6fc}
 #toast{position:fixed;right:.8rem;bottom:.8rem;z-index:20;font-size:.95rem;color:var(--cyan);background:rgba(8,14,22,.94);border:1px solid #1e4a55;
   border-radius:.35rem;padding:.3rem .7rem;max-width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #toast:empty{display:none}
@@ -94,8 +108,8 @@ main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,
 #hud{position:absolute;left:.6rem;top:.6rem;right:.6rem;display:flex;gap:.5rem;align-items:flex-start;justify-content:space-between;pointer-events:none}
 .tag{background:rgba(6,10,15,.84);border:1px solid #33465a;border-radius:.3rem;padding:.2rem .65rem;font-weight:800;font-size:1rem;letter-spacing:.04em}
 .vb{border-radius:.3rem;padding:.2rem .7rem;font-weight:800;font-size:1.15rem;letter-spacing:.08em;color:#fff;background:#3a4756}
-#caption{position:absolute;left:.6rem;right:.6rem;bottom:.6rem;background:rgba(6,10,15,.84);border-radius:.3rem;padding:.32rem .7rem;
-  font-size:1rem;line-height:1.3}
+#caption{position:absolute;left:.6rem;right:.6rem;bottom:.6rem;background:rgba(6,10,15,.84);border-radius:.3rem;padding:0 .7rem;border-top:.32rem solid transparent;border-bottom:.32rem solid transparent;
+  font-size:1rem;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 #banner{position:absolute;left:0;right:0;top:3rem;text-align:center;pointer-events:none}
 #banner span{display:inline-block;background:rgba(200,24,46,.94);color:#fff;font-weight:800;font-size:1.9rem;letter-spacing:.04em;
   padding:.35rem 1.6rem;border-radius:.4rem;box-shadow:0 0 0 .25rem rgba(255,77,94,.3);animation:bannerpulse 1s ease-in-out infinite}
@@ -219,6 +233,10 @@ main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,
     <div class="stat alerts" id="stAlerts"><b id="vAlerts">0</b><span>alerts</span></div>
     <div class="spacer"></div>
     <div id="toast"></div>
+    <div id="voiceCtl" hidden>
+      <button class="btn rec" id="bPtt" hidden title="Hold to talk to the drone, release to send (the space bar works too)">Hold to talk</button>
+      <button class="btn snd" id="bSound" title="Spoken alerts and answers. The browser blocks sound until a click, so this turns on by itself the first time you hold to talk.">Sound off</button>
+    </div>
     <div id="ctl" hidden>
       <button class="btn go" id="bStart">Start</button>
       <button class="btn" id="bLast" disabled>Go to last alert</button>
@@ -332,7 +350,7 @@ function freshState(){
     camHoldUntil: 0, traceHoldUntil: 0, flashUntil: 0, flashId: null,
     truth: null, truthLoading: false,
     bounds: {x0:-100, x1:100, y0:-100, y1:100}, boundsKey: '',
-    error: null, speech: null, speechUntil: 0,
+    error: null, speech: null, speechUntil: 0, voiceSeen: new Set(),
   };
 }
 const wake = ms => setTimeout(() => { dirty = true; }, ms + 30);
@@ -371,6 +389,8 @@ function ingest(ev){
     case 'note': onNote(ev); break;
     case 'clues': case 'clue_options': onClues(ev); break;
     case 'speech': onSpeech(ev); break;
+    case 'answer': onAnswer(ev); break;
+    case 'voice': voiceLine(ev); break;                    // spoken by another page or a script; our own is deduplicated
     case 'error': S.error = ev.message || 'error'; logEv(ev.t || S.t, 'ERROR', COL.red, esc(ev.message || 'flight error'), 'big'); toast('flight error: ' + (ev.message || '')); break;
     default: break;
   }
@@ -378,7 +398,7 @@ function ingest(ev){
 }
 
 function onSetup(ev){
-  if (ev.type === 'ready'){ S.run = ev.run || S.run; S.mode = ev.replay ? 'replay' : 'live'; S.speed = ev.speed || S.speed; }
+  if (ev.type === 'ready'){ S.run = ev.run || S.run; S.mode = ev.replay ? 'replay' : 'live'; S.speed = ev.speed || S.speed; voiceOn = !!ev.voice; }
   if (ev.spec) S.spec = ev.spec;
   if (Array.isArray(ev.clues) && ev.clues.length){ S.clues = ev.clues; S.cluesVer++; }
   if (ev.config) S.config = ev.config;
@@ -557,10 +577,169 @@ function onClues(ev){
   logEv(ev.t, 'CLUES', COL.violet, from + esc(S.clues.map(c => c.family).join(', ')));
 }
 
+/* ====================================================================== voice: spoken alerts and push-to-talk */
+// Spoken alerts: every `speech` event carries `audio`, a path inside the run directory. With "Sound on" the clips are
+// queued and played one at a time, the caption showing while each plays; without sound the caption shows for 7 s.
+// Recorded history (S.catchup) is never spoken. Module-level state, not in S: a reset must not lose the unlocked audio.
+let voiceOn = false, seenAudio = false, soundOn = false, soundTouched = false, speaking = false, pttHold = false, playTok = 0, audioEl = null;
+const speechQueue = [], speechLog = [], playStats = {started: 0, ended: 0, errors: 0};
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+
 function onSpeech(ev){
-  S.speech = ev.text || ''; S.speechUntil = performance.now() + 7000; wake(7000);
-  logEv(ev.t, 'SPEECH', COL.violet, '&ldquo;' + esc(ev.text || '') + '&rdquo;');
+  const url = ev.audio ? runUrl(ev.audio) : null;
+  if (url) seenAudio = true;
+  speechLog.push({id: ev.id, text: ev.text || '', url, error: ev.error || null, live: !S.catchup});
+  logEv(ev.t, 'SPEECH', COL.violet, '&ldquo;' + esc(ev.text || '') + '&rdquo;' + (ev.error ? ' <em>' + esc(ev.error) + '</em>' : ''));
+  if (S.catchup) return;                                   // history replayed on connect: no caption, no sound
+  if (soundOn && url){ speechQueue.push({text: ev.text || '', url}); nextSpeech(); }
+  else { S.speech = ev.text || ''; S.speechUntil = performance.now() + 7000; wake(7000); }
 }
+function onAnswer(ev){
+  logEv(ev.t, 'ANSWER', COL.violet, ev.error ? '<em>qwen38: ' + esc(ev.error) + '</em>' : '&ldquo;' + esc(ev.text || '') + '&rdquo;' + (ev.question ? ' <em>to &ldquo;' + esc(ev.question) + '&rdquo;</em>' : ''));
+}
+function nextSpeech(){
+  if (speaking || pttHold || !soundOn || !audioEl || !speechQueue.length) return;
+  const it = speechQueue.shift(), my = ++playTok;
+  let done = false;
+  speaking = true; S.speech = it.text; S.speechUntil = Infinity; dirty = true;
+  const finish = () => {
+    if (done || my !== playTok) return;
+    done = true; speaking = false; S.speechUntil = performance.now() + 1500; wake(1500);
+    nextSpeech();
+  };
+  audioEl.onended = () => { playStats.ended++; finish(); };
+  audioEl.onerror = () => { playStats.errors++; finish(); };
+  audioEl.src = it.url;
+  audioEl.play().then(() => { playStats.started++; }, () => { playStats.errors++; finish(); });
+}
+function stopSpeech(){                                     // a reset (new flight, page reconnect) drops what was queued
+  playTok++; speechQueue.length = 0; speaking = false;
+  if (audioEl){ audioEl.onended = audioEl.onerror = null; try { audioEl.pause(); } catch (e){} }
+}
+function setSound(on){
+  soundOn = on;
+  const b = $('bSound');
+  b.textContent = on ? 'Sound on' : 'Sound off'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (!on){ stopSpeech(); S.speechUntil = 0; dirty = true; return; }
+  audioEl = audioEl || new Audio();
+  // unlock autoplay with a silent clip inside this user gesture, then play whatever is queued
+  audioEl.src = SILENT_WAV;
+  audioEl.play().catch(() => {}).finally(() => nextSpeech());
+}
+$('bSound').addEventListener('click', () => { soundTouched = true; setSound(!soundOn); });
+// while the operator talks, the drone is quiet (its voice would go into the microphone)
+function duck(on){
+  pttHold = on;
+  if (!audioEl) return;
+  if (on){ if (speaking) try { audioEl.pause(); } catch (e){} }
+  else if (speaking && audioEl.paused) audioEl.play().catch(() => {});
+  else nextSpeech();
+}
+
+// Push-to-talk: hold the button (or the space bar when focus is not in a field); the clip is POSTed to /api/voice,
+// which transcribes it, routes it through Clef and returns the voice event; transcript and route go into the log.
+let stream = null, rec = null, recChunks = [], recStart = 0, wantRec = false, recMime = '', keyRec = false, pttPending = 0;
+const pttState = {recording: false, sent: 0};
+function pickMime(){
+  if (!window.MediaRecorder) return '';
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'])
+    if (MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function renderPtt(){
+  const b = $('bPtt'), live = wantRec || !!rec;
+  pttState.recording = live;
+  b.classList.toggle('on', live); b.classList.toggle('busy', !live && pttPending > 0); document.querySelector('header').classList.toggle('listening', live);
+  b.setAttribute('aria-pressed', live ? 'true' : 'false');
+  const t = live ? 'Listening...' : pttPending > 0 ? 'Sending...' : 'Hold to talk';
+  if (b.textContent !== t) b.textContent = t;
+}
+async function startRec(){
+  if (rec || wantRec) return;
+  wantRec = true; duck(true); renderPtt();
+  if (!soundTouched){ soundTouched = true; setSound(true); }   // a press is a user gesture: let the answer be heard
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('needs https or localhost');
+    if (!stream) stream = await navigator.mediaDevices.getUserMedia({audio: true});
+  } catch (e){ wantRec = false; duck(false); renderPtt(); toast('microphone unavailable: ' + (e.message || e.name)); return; }
+  if (!wantRec){ renderPtt(); return; }                       // released while the permission prompt was open
+  recChunks = []; recMime = pickMime();
+  try { rec = new MediaRecorder(stream, recMime ? {mimeType: recMime} : {}); }
+  catch (e){ rec = null; wantRec = false; duck(false); renderPtt(); toast('recorder failed: ' + e.message); return; }
+  rec.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+  rec.onstop = sendRec;
+  recStart = performance.now(); rec.start(); renderPtt(); toast('listening...');
+}
+function stopRec(){
+  const was = wantRec || !!rec;
+  wantRec = false; keyRec = false;
+  if (rec && rec.state === 'recording'){ try { rec.stop(); } catch (e){ rec = null; } }
+  if (was) duck(false);
+  renderPtt();
+}
+async function sendRec(){
+  const dur = performance.now() - recStart, chunks = recChunks;
+  recChunks = [];
+  const type = (chunks[0] && chunks[0].type) || recMime || 'audio/webm';
+  rec = null; renderPtt();
+  if (dur < 350 || !chunks.length){ toast('too short: hold the button while you speak'); return; }
+  const blob = new Blob(chunks, {type});
+  toast('sending ' + (blob.size / 1024).toFixed(0) + ' kB...');
+  pttPending++; renderPtt();
+  let j = null, status = 0, err = null;
+  try {
+    const r = await fetch('/api/voice', {method: 'POST', headers: {'Content-Type': type.split(';')[0]}, body: blob});
+    status = r.status; j = await r.json().catch(() => null);
+  } catch (e){ err = e.message || String(e); }
+  pttPending--; pttState.sent++; renderPtt();
+  voiceResult(j, status, err);
+}
+function voiceResult(j, status, err){
+  if (err || !j || status >= 400 || j.ok === false){
+    const why = err || (j && j.error) || ('HTTP ' + status);
+    logEv(S.t, 'VOICE', COL.orange, 'voice failed: <em>' + esc(why) + '</em>');
+    toast('voice failed: ' + why); return;
+  }
+  voiceLine(j);
+  toast(j.text == null ? 'nothing heard' : 'heard: ' + j.text + (j.route && j.accepted ? '' : ' (no command)'));
+}
+// One log line per spoken command. The voice event reaches every page on the event stream and the speaking page also
+// gets it as the POST answer; the POST answer is what survives when the command resets the page (a description does).
+function voiceLine(j){
+  if (!j || (j.text == null && !j.error)) return;
+  const key = [j.t, j.text, j.route].join('|');
+  if (S.voiceSeen.has(key)) return;
+  S.voiceSeen.add(key);
+  const t = isNum(j.t) ? j.t : S.t;
+  const src = j.source === 'CLEF' ? 'Clef' : j.source ? 'fallback' : '';
+  const conf = isNum(j.p) ? ' ' + Math.round(j.p * 100) + '%' : '';
+  const ms = [isNum(j.stt_ms) ? 'heard in ' + Math.round(j.stt_ms) + ' ms' : '', isNum(j.route_ms) ? 'routed in ' + Math.round(j.route_ms) + ' ms' : ''].filter(Boolean).join(', ');
+  if (j.text == null){ logEv(t, 'VOICE', COL.orange, 'nothing heard: <em>' + esc(j.error) + '</em>'); return; }
+  const words = '&ldquo;' + esc(j.text) + '&rdquo;';
+  if (!j.route || !j.accepted){
+    logEv(t, 'VOICE', COL.orange, words + ' \u2192 <span style="color:' + COL.orange + '">no command</span>' + (src ? ' <em>(' + esc(src + conf) + (j.error ? ', ' + esc(j.error) : '') + ')</em>' : '') + (ms ? ' <em>' + esc(ms) + '</em>' : ''));
+    return;
+  }
+  logEv(t, 'VOICE', COL.cyan, words + ' \u2192 <b>' + esc(j.route) + '</b> <em>(' + esc((src + conf).trim()) + ')</em>' + (ms ? ' <em>' + esc(ms) + '</em>' : ''));
+}
+const ptt = $('bPtt');
+ptt.addEventListener('pointerdown', e => { if (e.button) return; e.preventDefault(); try { ptt.setPointerCapture(e.pointerId); } catch (_){} startRec(); });
+ptt.addEventListener('pointerup', stopRec);
+ptt.addEventListener('pointercancel', stopRec);
+ptt.addEventListener('contextmenu', e => e.preventDefault());
+const inField = t => !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || !voiceOn || e.metaKey || e.ctrlKey || e.altKey || inField(e.target)) return;
+  e.preventDefault();                                          // also stops Space from "clicking" a focused button
+  if (e.repeat) return;
+  keyRec = true; startRec();
+});
+document.addEventListener('keyup', e => {
+  if (e.code !== 'Space' || !(keyRec || (voiceOn && !inField(e.target)))) return;
+  e.preventDefault(); stopRec();
+});
+window.addEventListener('blur', stopRec);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') stopRec(); });
 
 /* ====================================================================== decision trace */
 function setTrace(t, holdMs){
@@ -725,6 +904,7 @@ function camView(now){
 function applyHud(v){
   setText($('camTitle'), v.title); setText($('camMeta'), v.meta); setText($('camTag'), v.tag);
   setHtml($('camVerdict'), v.verdict ? '<span class="vb" style="background:' + v.verdict.col + '">' + esc(v.verdict.txt) + '</span>' : '');
+  if (speechCapOn) return;                                  // a spoken line is on the caption: renderBanner puts the camera caption back
   const c = $('caption'); c.hidden = !v.caption; setText(c, v.caption || '');
 }
 
@@ -1116,6 +1296,8 @@ function renderHeader(now){
 }
 
 function renderControls(){
+  const vc = voiceOn || seenAudio;
+  $('voiceCtl').hidden = !vc; $('bPtt').hidden = !voiceOn; document.querySelector('header').classList.toggle('voice', vc);
   const replay = !!API.replay || S.mode === 'replay';
   $('replayTag').hidden = !replay;
   $('bReplay').hidden = !replay;
@@ -1136,8 +1318,12 @@ function renderBanner(now){
   const on = now < S.flashUntil && S.flashId;
   const a = on && S.alerts.find(x => x.id === S.flashId);
   setHtml($('banner'), a ? '<span>ALERT ' + esc(a.id) + ': ' + esc(a.family) + ' found</span>' : '');
-  if (S.speech && now < S.speechUntil && !on){ const c = $('caption'); c.hidden = false; setText(c, '\u201c' + S.speech + '\u201d'); }
+  const sp = !!S.speech && now < S.speechUntil && !on, was = speechCapOn;
+  speechCapOn = sp;
+  if (sp){ const c = $('caption'); c.hidden = false; setText(c, '\u201c' + S.speech + '\u201d'); }
+  else if (was){ if (cam.cur) applyHud(cam.cur); else $('caption').hidden = true; }      // speech over: the camera caption returns
 }
+let speechCapOn = false;
 
 /* ====================================================================== render loop */
 function render(now){
@@ -1180,7 +1366,7 @@ window.addEventListener('resize', () => { dirty = true; });
 /* ====================================================================== reset */
 let cuTimer = null;
 function resetAll(){
-  S = freshState();
+  S = freshState(); stopSpeech();
   $('log').innerHTML = ''; $('alertList').innerHTML = '';
   cam.cur = cam.want = null; $('camImg').removeAttribute('src'); $('camEmpty').style.display = '';
   chaseShown = null; $('chaseImg').removeAttribute('src'); $('strip').innerHTML = ''; tileEls.clear(); stripShown = -1;
@@ -1251,7 +1437,8 @@ S.catchup = false;
 connect();
 setInterval(pollState, 2000);
 pollState();
-window.__patrol = {get S(){ return S; }, get cam(){ return cam; }, ingest};
+window.__patrol = {get S(){ return S; }, get cam(){ return cam; }, ingest,
+  get voice(){ return {voiceOn, seenAudio, soundOn, speaking, queued: speechQueue.length, speechLog, playStats, ptt: pttState}; }};
 </script>
 </body>
 </html>

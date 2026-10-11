@@ -276,9 +276,8 @@ def handle_utterance(wav: str | Path, worker: VoiceWorker, mission, speaker: Spe
         d = describe(heard["text"])
         mission.emit("clue_options", text=heard["text"], clues=d.get("clues", []), error=d.get("error"),
                      wall_s=d.get("wall_s"), cached=d.get("cached", False))
-        if on_describe:
-            on_describe(d)
-        if speaker:
+        spoken = on_describe(d) if on_describe else False      # True: the callback rebuilt the mission and spoke
+        if speaker and not spoken:
             speaker.say(f"clues_{mission.ticks}", clue_options_text(d))
     else:
         mission.command(cmd)

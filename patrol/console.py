@@ -155,8 +155,15 @@ class Console:
         """A spoken description before takeoff replaces the clues: a fresh mission with qwen38's clues, and a new ready
         event so the page shows them. In flight the options are only shown (the clue list is fixed per flight)."""
         if d.get("clues") and not self.running and self.kind == "search":
+            from . import voice
             self.described = d["clues"]
-            self.prepare()
+            self.prepare()                  # a new run directory and a reset page history: say and log it there
+            self.mission.emit("clue_options", text=d.get("text"), clues=d["clues"], wall_s=d.get("wall_s"),
+                              cached=d.get("cached", False))
+            if self.speaker:
+                self.speaker.say("clues_0", voice.clue_options_text(d))
+            return True
+        return False
 
     def prepare(self):
         """A fresh mission on the ground, waiting for start."""
