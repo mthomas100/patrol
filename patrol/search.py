@@ -373,8 +373,10 @@ class SearchMission:
                     old.update(g=g, verdict=gate["action"], area=c["area"], asks=old["asks"] + 1)
                 else:
                     self.judged.append({"g": g, "verdict": gate["action"], "area": c["area"], "asks": 1})
-            if gate["action"] == "investigate" and not any(math.dist(s["g"], g) < cfg.alert_r
-                                                           for s in self.pending + self.investigated):
+            # a spot already waiting blocks within judged_r; one already flown blocks only the ground its close-ups
+            # covered (a background spot framed for a backpack hid the tent 3.8 m away: runs/s5-live-test1)
+            if gate["action"] == "investigate" and not any(
+                    math.dist(s["g"], g) < s.get("cover_r", cfg.judged_r) for s in self.pending + self.investigated):
                 self.pending.append({"g": g, "clue": gate["clue"], "p_inv": gate["p_inv"], "noul": gate["noul"],
                                      "frame": name, "crop": row["crop"], "box": row["box"], "sweep_h": round(h, 1),
                                      "t_seen": round(sim.t, 2)})
@@ -423,6 +425,7 @@ class SearchMission:
         slant = math.dist(tuple(float(v) for v in sim.pos), (s["g"][0], s["g"][1], 0.0))
         fovy = min(24.0, max(3.0, math.degrees(2 * math.atan(foot / 2 / max(slant, 1.0)))))
         sim.model.cam_fovy[sim.cam["zoom"]] = fovy       # a zoom lens framed to the suspected clue's size
+        s["cover_r"] = max(cfg.judged_r, foot / 2)       # the ground this close-up checked, for the sweep's dedupe
         sim.aim("zoom", (s["g"][0], s["g"][1], 0.0))
         jpg = sim.jpeg("zoom", cfg.zoom_w, cfg.zoom_h, quality=90)
         photo = self._save("photos", f"{s['id']}_{h:.0f}m.jpg", jpg, force=True)

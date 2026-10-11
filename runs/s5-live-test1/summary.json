@@ -1,0 +1,133 @@
+{
+ "llm_calls": 4,
+ "llm_by_role": {
+  "note": 2,
+  "trail": 2
+ },
+ "clef_qwen_idle": {
+  "n": 135,
+  "ok": 135,
+  "median_ms": 320,
+  "p90_ms": 348
+ },
+ "clef_qwen_active": {
+  "n": 33,
+  "ok": 33,
+  "median_ms": 393,
+  "p90_ms": 479
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "D3",
+    "E3",
+    "F3",
+    "G3",
+    "D4",
+    "E4"
+   ],
+   "reason": "Backpack at (2,-28) confirms trail path; search sectors along the trail's northward trajectory.",
+   "raw_ok": true,
+   "wall_s": 3.7,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "G3",
+    "F4",
+    "G4",
+    "E4",
+    "F2",
+    "G2"
+   ],
+   "reason": "Prioritize sectors along the trail's northward path and near the last find at (13, 53).",
+   "raw_ok": true,
+   "wall_s": 3.7,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 625.8,
+ "wall_s": 79.3,
+ "flight_s": 625.3,
+ "battery_used_pct": 52.1,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 116,
+ "candidates": 348,
+ "clef_sweep": {
+  "n": 161,
+  "ok": 161,
+  "median_ms": 324,
+  "p90_ms": 393
+ },
+ "clef_confirm": {
+  "n": 7,
+  "ok": 7,
+  "median_ms": 411,
+  "p90_ms": 448
+ },
+ "fallback": 0,
+ "investigations": 7,
+ "dismissed": 5,
+ "mean_investigate_s": 8.6,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    1.88,
+    -28.34
+   ],
+   "conf": 0.956,
+   "h": 20.0,
+   "photo": "media/photos/S2_20m.jpg",
+   "sweep_crop": "media/crops/f0036_c2.jpg",
+   "sweep_h": 40.0,
+   "spot": "S2",
+   "t": 170.13,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Blue backpack spotted on grass, 2 meters east and 28 meters south of center, 71 meters from trailhead.",
+    "check": "Verify the object is the missing backpack and search the immediate area for the hiker.",
+    "agree": true,
+    "wall_s": 4.2,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    13.48,
+    53.48
+   ],
+   "conf": 0.78,
+   "h": 20.0,
+   "photo": "media/photos/S6_20m.jpg",
+   "sweep_crop": "media/crops/f0057_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S6",
+   "t": 308.72,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible red jacket spotted 13 meters east and 53 meters north of search center, 151 meters from trailhead.",
+    "check": "Ground team should inspect the object to confirm if it is the missing hiker's red jacket.",
+    "agree": true,
+    "wall_s": 4.9,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 170.13
+}

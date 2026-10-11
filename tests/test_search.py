@@ -173,3 +173,25 @@ def test_edge_boxes_are_judged_at_once(tmp_path, monkeypatch):
     st = [e["candidates"][0]["status"] for e in events if e["type"] == "frame"]
     assert st == ["judged", "judged"], st
     assert all(e["candidates"][0].get("edge") for e in events if e["type"] == "frame")
+
+
+def test_a_flown_spot_blocks_only_the_ground_its_close_up_covered(tmp_path, monkeypatch):
+    """runs/s5-live-test1: a background spot framed for a backpack (close-up about 4 m across) was dismissed, and the
+    tent 3.8 m away, judged 'investigate' a lane later, was never flown to (the old dedupe radius was 6 m)."""
+    def ask(jpeg, state, questions, timeout=6.0, url=""):
+        name = next(k for k, v in questions.items() if v["type"] == "noul")
+        return clef.Decision(ok=True, action="investigate", probs={"investigate": 0.8}, nouls={name: 0.3},
+                             latency_ms=1.0)
+    m, spec, events = small_mission(tmp_path, ask)
+    m.investigated = [{"g": (10.33, 14.99), "cover_r": 2.0, "id": "S1"}]
+    m.state = "SWEEP"
+    m.cur = {"x0": -30.0, "x1": 30.0, "y": 18.0, "lane": 0, "id": "A1"}
+
+    def candidates(jpg, k=3):
+        return [{"x0": 100, "y0": 100, "x1": 140, "y1": 140, "cx": 120, "cy": 120, "score": 1.0, "area": 1600}]
+    monkeypatch.setattr(search.anomaly, "candidates", candidates)
+    orig = search.geo.pixel_to_ground
+    monkeypatch.setattr(search.geo, "pixel_to_ground",
+                        lambda u, v, *a, **k: (11.21, 18.56) if (u, v) == (120, 120) else orig(u, v, *a, **k))
+    m._sweep_frame(m.cur)
+    assert [s["g"] for s in m.investigated][1:] == [(11.21, 18.56)]
