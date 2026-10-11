@@ -113,6 +113,19 @@ def test_speed_governor():
     assert sm.governed_cruise(10) == 0.8
 
 
+def test_confirm_gate_corroboration():
+    """runs/s4-e2e-4 F7: p(flag) 0.37 with every component answer <= 0.06 was a false alarm; F3 (0.35) was real."""
+    from patrol.control import confirm_gate
+    d = dec(flag_damage=0.37, **{"continue": 0.63})
+    d.nouls = {"insulator_damaged": 0.015, "conductor_frayed": 0.017, "vegetation_close": 0.047, "foreign_object": 0.062}
+    g = confirm_gate(d, "p")
+    assert g.action == "continue" and "uncorroborated" in g.reason
+    d.nouls = {"insulator_damaged": 0.18, "foreign_object": 0.35}
+    assert confirm_gate(d, "p").action == "flag_damage"
+    d.nouls = {}                                                      # no component answers: p(flag) decides
+    assert confirm_gate(d, "p").action == "flag_damage"
+
+
 def test_confirm_gate_noul_upgrade():
     from patrol.control import confirm_gate
     d = dec(flag_damage=0.22, **{"continue": 0.78}); d.nouls = {"foreign_object": 0.5, "vegetation_close": 0.1}

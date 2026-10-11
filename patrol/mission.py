@@ -16,7 +16,7 @@ from pathlib import Path
 
 from . import clef, world
 from .control import (ACTIONS, CRUISE_WEIGHTS, Config, Flag, Gated, StateMachine, Target, confirm_gate, gate,
-                      rangefinder_flag)
+                      VEG_FLAG_M, rangefinder_flag)
 from .sim import Sim
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -164,15 +164,16 @@ class Mission:
         sm, sim = self.sm, self.sim
         t = sm.target
         offsets = (0.0,) if "insulator string" in t.why else (-3.0, 3.0)
-        jpgs, paths, clear = [], [], []
+        jpgs, paths, clear, spots = [], [], [], []
         n = len(self.photos) + 1
         for k, off in enumerate(offsets):
             sim.aim("zoom", (t.x + off, t.y, t.z))
             jpg = sim.jpeg("zoom", W, H)
             jpgs.append(jpg)
-            c = sim.vegetation_clearance("zoom", x_window=(t.x + off - 8, t.x + off + 8))
-            if c is not None:
-                clear.append(c)
+            per_phase = sim.vegetation_clearance("zoom", where=True, x_window=(t.x + off - 8, t.x + off + 8))
+            if per_phase:
+                spot = min(per_phase.values(), key=lambda q: q["clearance"])
+                clear.append(spot["clearance"]); spots.append(spot)
             paths.append(self._save("photos", f"photo_{n:02d}{'ab'[k] if len(offsets) > 1 else ''}_x{t.x + off:05.1f}.jpg",
                                     jpg, force=True))
         path = paths[0]
@@ -196,6 +197,11 @@ class Mission:
         if g.action == "flag_damage":
             guess = "vegetation_close" if g.source == "sensor" else \
                 max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
+            if guess == "vegetation_close" and clearance is not None and clearance < VEG_FLAG_M:
+                # the finding is the tree, so pin it to the conductor point the rangefinder measured closest (the
+                # hover may have been aimed at another phase); a second look at the same tree is then one flag
+                spot = min(spots, key=lambda q: q["clearance"])
+                t = Target(spot["x"], spot["y"], spot["z"], t.why)
             prev = next((x for x in sm.flags if x.target.near(t)), None)
             if prev:        # a re-inspection (spoken revisit): the same finding gets a fresh photo and note
                 f = prev

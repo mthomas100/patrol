@@ -23,6 +23,11 @@ CONFIRM_WEIGHTS = {"continue": 1.0, "flag_damage": 3.0}       # flag when p(flag
 NOUL_FLAG = {"insulator_damaged": 0.25, "conductor_frayed": 0.25, "foreign_object": 0.25, "vegetation_close": 0.65}
 # 0.35 -> 0.25 after runs/m2-seed0-c: debris photo read foreign_object 0.27, while no clean photo in seeds 0-1 exceeded
 # 0.065 on these three. Tuned on seed 0; on held-out seed 1 it changes nothing (no clean photo crosses it).
+# Corroboration (patrol-orch g2, DECISIONS 16:50): a flag carried by p(flag) alone also needs one component answer at
+# or above this. Every false corridor flag measured so far had all components under 0.14 (STATUS M3; runs/s4-e2e-4 F7:
+# max 0.06 at p(flag) 0.37), every true flag at least 0.32 (runs/m3-e2e-seed*, s4-e2e-4 F3: 0.35). Rangefinder flags
+# are measured, so this does not apply to them.
+CORROBORATE = 0.20
 
 GATE = {
     "deadline_ms": 2500.0,    # a cruise answer later than this is dropped (the drone has moved on)
@@ -94,6 +99,9 @@ def confirm_gate(dec, fallback_why: str) -> Gated:
         if over:
             k = max(over, key=over.get)
             g.action, g.reason = "flag_damage", f"{k} = {over[k]:.2f} >= {NOUL_FLAG[k]}"
+    elif g.source == "clef" and g.action == "flag_damage" and dec.nouls and max(dec.nouls.values()) < CORROBORATE:
+        g.action, g.reason = "continue", (f"uncorroborated: p(flag) {dec.probs.get('flag_damage', 0):.2f} but every "
+                                          f"component answer < {CORROBORATE}; photo kept for human review")
     return g
 
 
