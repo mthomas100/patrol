@@ -1,0 +1,172 @@
+{
+ "llm_calls": 6,
+ "llm_by_role": {
+  "note": 3,
+  "trail": 3
+ },
+ "clef_qwen_idle": {
+  "n": 171,
+  "ok": 171,
+  "median_ms": 321,
+  "p90_ms": 654
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "D3",
+    "E3",
+    "F3",
+    "G3",
+    "D4",
+    "E4"
+   ],
+   "reason": "Prioritize trail path north of backpack; stream intersection in E3 is high priority.",
+   "raw_ok": true,
+   "wall_s": 3.7,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "F3",
+    "G3",
+    "E4",
+    "F4",
+    "G4",
+    "D4"
+   ],
+   "reason": "Hikers likely continued north along the trail; recent finds confirm this path, so prioritize northern trail sectors.",
+   "raw_ok": true,
+   "wall_s": 1.7,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "G3",
+    "G2",
+    "F2",
+    "E2",
+    "D2",
+    "D1"
+   ],
+   "reason": "Hikers follow the trail north; G3 is the immediate next trail segment, followed by adjacent sectors near the stream junction.",
+   "raw_ok": true,
+   "wall_s": 1.6,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 683.6,
+ "wall_s": 683.6,
+ "flight_s": 683.1,
+ "battery_used_pct": 56.9,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 125,
+ "candidates": 375,
+ "clef_sweep": {
+  "n": 163,
+  "ok": 163,
+  "median_ms": 321,
+  "p90_ms": 649
+ },
+ "clef_confirm": {
+  "n": 8,
+  "ok": 8,
+  "median_ms": 421,
+  "p90_ms": 450
+ },
+ "fallback": 0,
+ "investigations": 8,
+ "dismissed": 5,
+ "mean_investigate_s": 8.0,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    1.81,
+    -28.32
+   ],
+   "conf": 0.945,
+   "h": 20.0,
+   "photo": "media/photos/S2_20m.jpg",
+   "sweep_crop": "media/crops/f0037_c2.jpg",
+   "sweep_h": 40.0,
+   "spot": "S2",
+   "t": 176.23,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Blue backpack spotted 2 meters east and 28 meters north of center, 71 meters from trailhead.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object.",
+    "agree": true,
+    "wall_s": 4.5,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    11.21,
+    18.57
+   ],
+   "conf": 0.82,
+   "h": 20.0,
+   "photo": "media/photos/S4_20m.jpg",
+   "sweep_crop": "media/crops/f0047_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S4",
+   "t": 238.21,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible orange tent spotted 117 meters from trailhead, 11 meters east and 19 meters north of search center.",
+    "check": "Ground team should verify object identity and search for hiker or other belongings nearby.",
+    "agree": true,
+    "wall_s": 1.9,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    13.48,
+    53.49
+   ],
+   "conf": 0.783,
+   "h": 20.0,
+   "photo": "media/photos/S6_20m.jpg",
+   "sweep_crop": "media/crops/f0054_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S6",
+   "t": 292.96,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible red jacket located 13 meters east and 53 meters north of search center, 151 meters from trailhead.",
+    "check": "Ground team should visually confirm the object is a hooded red jacket.",
+    "agree": true,
+    "wall_s": 1.8,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 176.23
+}
