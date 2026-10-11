@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import io
 import json
 import time
@@ -51,7 +52,7 @@ class RangeFile(io.RawIOBase):
                 with urllib.request.urlopen(req, timeout=60) as r:
                     data = r.read()
                 break
-            except OSError:
+            except (OSError, http.client.HTTPException):    # IncompleteRead on a dropped connection
                 if attempt == 3:
                     raise
                 time.sleep(2 ** attempt)

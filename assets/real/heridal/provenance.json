@@ -1,0 +1,1235 @@
+{
+ "dataset": "HERIDAL (keras-retinanet VOC copy)",
+ "record": "https://zenodo.org/records/5662351",
+ "url": "https://zenodo.org/records/5662351/files/heridal_keras_retinanet_voc.zip?download=1",
+ "archive_bytes": 8311735812,
+ "licence": "CC BY 3.0 (Zenodo API: cc-by-3.0)",
+ "attribution": "HERIDAL dataset, Bozic-Stulic, Marusic, Gotovac, FESB, University of Split (Zenodo 5662351)",
+ "fetched_utc": "2026-10-11T23:29:18Z",
+ "files": [
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0001.xml",
+   "file": "test_BLI_0001.xml",
+   "bytes": 1699,
+   "sha256": "f1b468f7b5567a74"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0002.xml",
+   "file": "test_BLI_0002.xml",
+   "bytes": 2265,
+   "sha256": "74bf69e0e8003a81"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0003.xml",
+   "file": "test_BLI_0003.xml",
+   "bytes": 1983,
+   "sha256": "eee2c5e4733a03c8"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0004.xml",
+   "file": "test_BLI_0004.xml",
+   "bytes": 5358,
+   "sha256": "ffe31613d3368302"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0005.xml",
+   "file": "test_BLI_0005.xml",
+   "bytes": 852,
+   "sha256": "544bae2243964325"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0006.xml",
+   "file": "test_BLI_0006.xml",
+   "bytes": 852,
+   "sha256": "d3189e84d680fede"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0007.xml",
+   "file": "test_BLI_0007.xml",
+   "bytes": 850,
+   "sha256": "e334e2ac7f148dea"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0008.xml",
+   "file": "test_BLI_0008.xml",
+   "bytes": 854,
+   "sha256": "1b3fdf92b1cd238f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BLI_0009.xml",
+   "file": "test_BLI_0009.xml",
+   "bytes": 856,
+   "sha256": "0c705c44606e85bf"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0001.xml",
+   "file": "test_BRA_0001.xml",
+   "bytes": 571,
+   "sha256": "d978bde2d786ebfb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0002.xml",
+   "file": "test_BRA_0002.xml",
+   "bytes": 571,
+   "sha256": "85bdbe9478f341d3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0003.xml",
+   "file": "test_BRA_0003.xml",
+   "bytes": 569,
+   "sha256": "e00123858133d0d6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0004.xml",
+   "file": "test_BRA_0004.xml",
+   "bytes": 571,
+   "sha256": "062176459a8daef4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0005.xml",
+   "file": "test_BRA_0005.xml",
+   "bytes": 571,
+   "sha256": "5b068ca9bd68449a"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0006.xml",
+   "file": "test_BRA_0006.xml",
+   "bytes": 573,
+   "sha256": "6cdfe9eef487c502"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0007.xml",
+   "file": "test_BRA_0007.xml",
+   "bytes": 571,
+   "sha256": "47d4d0ec30ad58c0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0008.xml",
+   "file": "test_BRA_0008.xml",
+   "bytes": 856,
+   "sha256": "c898e7561b102aa6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0009.xml",
+   "file": "test_BRA_0009.xml",
+   "bytes": 850,
+   "sha256": "484eb15100f6bced"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0010.xml",
+   "file": "test_BRA_0010.xml",
+   "bytes": 2271,
+   "sha256": "8737d13ba05d7466"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0011.xml",
+   "file": "test_BRA_0011.xml",
+   "bytes": 569,
+   "sha256": "2624086bd7611437"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRA_0012.xml",
+   "file": "test_BRA_0012.xml",
+   "bytes": 1135,
+   "sha256": "0848055bdf8e634e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0001.xml",
+   "file": "test_BRK_0001.xml",
+   "bytes": 856,
+   "sha256": "f3b0bbe1db6a650c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0002.xml",
+   "file": "test_BRK_0002.xml",
+   "bytes": 856,
+   "sha256": "967785dfcfc3bc77"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0003.xml",
+   "file": "test_BRK_0003.xml",
+   "bytes": 856,
+   "sha256": "db1313626f1fb14f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0004.xml",
+   "file": "test_BRK_0004.xml",
+   "bytes": 855,
+   "sha256": "025987b3791c2a37"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0005.xml",
+   "file": "test_BRK_0005.xml",
+   "bytes": 855,
+   "sha256": "1e4f7dcc277a2ea4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0006.xml",
+   "file": "test_BRK_0006.xml",
+   "bytes": 856,
+   "sha256": "4751798320bdc8de"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0007.xml",
+   "file": "test_BRK_0007.xml",
+   "bytes": 573,
+   "sha256": "54acb1c3031e38c3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0008.xml",
+   "file": "test_BRK_0008.xml",
+   "bytes": 854,
+   "sha256": "cadc5acbc0554a43"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0009.xml",
+   "file": "test_BRK_0009.xml",
+   "bytes": 573,
+   "sha256": "0c967c0758c675da"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0010.xml",
+   "file": "test_BRK_0010.xml",
+   "bytes": 571,
+   "sha256": "acab579c3a3f522d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0011.xml",
+   "file": "test_BRK_0011.xml",
+   "bytes": 856,
+   "sha256": "e0785ff5b44fa16c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRK_0012.xml",
+   "file": "test_BRK_0012.xml",
+   "bytes": 856,
+   "sha256": "c9c33f82c5cdeb04"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0001.xml",
+   "file": "test_BRS_0001.xml",
+   "bytes": 1139,
+   "sha256": "ba42c0685ecf3e4c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0002.xml",
+   "file": "test_BRS_0002.xml",
+   "bytes": 850,
+   "sha256": "cf3f1890c94b5ee8"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0003.xml",
+   "file": "test_BRS_0003.xml",
+   "bytes": 571,
+   "sha256": "50b79cb5783dcb33"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0004.xml",
+   "file": "test_BRS_0004.xml",
+   "bytes": 571,
+   "sha256": "95ebab6dd2f1fece"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0005.xml",
+   "file": "test_BRS_0005.xml",
+   "bytes": 573,
+   "sha256": "6f420b82f79f5c69"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0006.xml",
+   "file": "test_BRS_0006.xml",
+   "bytes": 854,
+   "sha256": "92b99e930032fc30"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0007.xml",
+   "file": "test_BRS_0007.xml",
+   "bytes": 854,
+   "sha256": "5622699119d652c4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0008.xml",
+   "file": "test_BRS_0008.xml",
+   "bytes": 853,
+   "sha256": "cfc9ce058c93d0c3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0009.xml",
+   "file": "test_BRS_0009.xml",
+   "bytes": 853,
+   "sha256": "f1a72dfc21dfa664"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0010.xml",
+   "file": "test_BRS_0010.xml",
+   "bytes": 854,
+   "sha256": "cc5cbababa5eed1a"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_BRS_0011.xml",
+   "file": "test_BRS_0011.xml",
+   "bytes": 854,
+   "sha256": "894b25f3cdc93a1d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0001.xml",
+   "file": "test_CAB_0001.xml",
+   "bytes": 1139,
+   "sha256": "f4ccfcf4f64b9185"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0002.xml",
+   "file": "test_CAB_0002.xml",
+   "bytes": 1133,
+   "sha256": "51864ddc3bd30cb6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0003.xml",
+   "file": "test_CAB_0003.xml",
+   "bytes": 855,
+   "sha256": "8279009f3969302c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0004.xml",
+   "file": "test_CAB_0004.xml",
+   "bytes": 2269,
+   "sha256": "a8b6bba5038d2b7e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0005.xml",
+   "file": "test_CAB_0005.xml",
+   "bytes": 573,
+   "sha256": "becc68d12e2d88df"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0006.xml",
+   "file": "test_CAB_0006.xml",
+   "bytes": 2546,
+   "sha256": "dfc37239e556bc8c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0007.xml",
+   "file": "test_CAB_0007.xml",
+   "bytes": 1418,
+   "sha256": "07ad1bf028db7ebb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAB_0008.xml",
+   "file": "test_CAB_0008.xml",
+   "bytes": 1981,
+   "sha256": "83b9d78d151f477e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0001.xml",
+   "file": "test_CAP_0001.xml",
+   "bytes": 856,
+   "sha256": "536da3d0f4b045f7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0002.xml",
+   "file": "test_CAP_0002.xml",
+   "bytes": 571,
+   "sha256": "6110e37b37a5aeca"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0003.xml",
+   "file": "test_CAP_0003.xml",
+   "bytes": 852,
+   "sha256": "702e1fb963b15d93"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0004.xml",
+   "file": "test_CAP_0004.xml",
+   "bytes": 856,
+   "sha256": "b148cdb5953e0df3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0005.xml",
+   "file": "test_CAP_0005.xml",
+   "bytes": 2268,
+   "sha256": "9b55647eea9ec618"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_CAP_0006.xml",
+   "file": "test_CAP_0006.xml",
+   "bytes": 1699,
+   "sha256": "4cd49c1aa68782db"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0001.xml",
+   "file": "test_GRO_0001.xml",
+   "bytes": 854,
+   "sha256": "b383061cace58cfe"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0002.xml",
+   "file": "test_GRO_0002.xml",
+   "bytes": 854,
+   "sha256": "20810b112bf960ee"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0003.xml",
+   "file": "test_GRO_0003.xml",
+   "bytes": 573,
+   "sha256": "65a10514bb544da9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0004.xml",
+   "file": "test_GRO_0004.xml",
+   "bytes": 856,
+   "sha256": "04ae9a0b628027a7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0005.xml",
+   "file": "test_GRO_0005.xml",
+   "bytes": 1418,
+   "sha256": "73facc82aefd03f9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0007.xml",
+   "file": "test_GRO_0007.xml",
+   "bytes": 856,
+   "sha256": "486f40bf1762f20f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0008.xml",
+   "file": "test_GRO_0008.xml",
+   "bytes": 1420,
+   "sha256": "5cdc82c185351b41"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0009.xml",
+   "file": "test_GRO_0009.xml",
+   "bytes": 856,
+   "sha256": "1626d39c4dc5a42b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0010.xml",
+   "file": "test_GRO_0010.xml",
+   "bytes": 856,
+   "sha256": "5339bcf500b71d4e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0011.xml",
+   "file": "test_GRO_0011.xml",
+   "bytes": 856,
+   "sha256": "c2482dfda04bfc72"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_GRO_0012.xml",
+   "file": "test_GRO_0012.xml",
+   "bytes": 856,
+   "sha256": "6f1c03038c534c4c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0001.xml",
+   "file": "test_MED_0001.xml",
+   "bytes": 5358,
+   "sha256": "c03884e272d03a06"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0002.xml",
+   "file": "test_MED_0002.xml",
+   "bytes": 4804,
+   "sha256": "8513d57e9c17650d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0003.xml",
+   "file": "test_MED_0003.xml",
+   "bytes": 1420,
+   "sha256": "9fbf1d57b2ce4935"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0004.xml",
+   "file": "test_MED_0004.xml",
+   "bytes": 852,
+   "sha256": "00ce5bfb069eeb75"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0005.xml",
+   "file": "test_MED_0005.xml",
+   "bytes": 1988,
+   "sha256": "756c5b46c4f04457"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MED_0006.xml",
+   "file": "test_MED_0006.xml",
+   "bytes": 1988,
+   "sha256": "5b3224f8126318b9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MOB_0001.xml",
+   "file": "test_MOB_0001.xml",
+   "bytes": 1137,
+   "sha256": "5fe074600cbb7ae0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MOB_0002.xml",
+   "file": "test_MOB_0002.xml",
+   "bytes": 1137,
+   "sha256": "6eb6369934bc9938"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MOB_0003.xml",
+   "file": "test_MOB_0003.xml",
+   "bytes": 1137,
+   "sha256": "f8c0a6cdd9473c19"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MOB_0004.xml",
+   "file": "test_MOB_0004.xml",
+   "bytes": 1137,
+   "sha256": "2ad7ab7f3fe65cb8"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_MOB_0005.xml",
+   "file": "test_MOB_0005.xml",
+   "bytes": 573,
+   "sha256": "b924f36e8a692884"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0001.xml",
+   "file": "test_SB_0001.xml",
+   "bytes": 855,
+   "sha256": "835bfe01017d102d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0002.xml",
+   "file": "test_SB_0002.xml",
+   "bytes": 855,
+   "sha256": "6b6b9af50acf5171"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0003.xml",
+   "file": "test_SB_0003.xml",
+   "bytes": 855,
+   "sha256": "b2f3e5ca2908a581"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0004.xml",
+   "file": "test_SB_0004.xml",
+   "bytes": 853,
+   "sha256": "4945f4cd177f684c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0005.xml",
+   "file": "test_SB_0005.xml",
+   "bytes": 853,
+   "sha256": "fa8d4482da82902c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0006.xml",
+   "file": "test_SB_0006.xml",
+   "bytes": 855,
+   "sha256": "05724b08b91b28c9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0007.xml",
+   "file": "test_SB_0007.xml",
+   "bytes": 855,
+   "sha256": "75d76c4fa295276f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0008.xml",
+   "file": "test_SB_0008.xml",
+   "bytes": 1138,
+   "sha256": "b28005bd04ad7ffb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0009.xml",
+   "file": "test_SB_0009.xml",
+   "bytes": 1138,
+   "sha256": "05b76f426a9c5fb8"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0010.xml",
+   "file": "test_SB_0010.xml",
+   "bytes": 1138,
+   "sha256": "c241937efed452ee"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_SB_0011.xml",
+   "file": "test_SB_0011.xml",
+   "bytes": 1138,
+   "sha256": "5a57370b434c20f0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0001.xml",
+   "file": "test_TRS_0001.xml",
+   "bytes": 1139,
+   "sha256": "d8e0af5d35a15391"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0002.xml",
+   "file": "test_TRS_0002.xml",
+   "bytes": 1139,
+   "sha256": "dd773e4d851cfe03"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0003.xml",
+   "file": "test_TRS_0003.xml",
+   "bytes": 1139,
+   "sha256": "7a6db7be9736477b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0004.xml",
+   "file": "test_TRS_0004.xml",
+   "bytes": 853,
+   "sha256": "8076897507da453e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0005.xml",
+   "file": "test_TRS_0005.xml",
+   "bytes": 1420,
+   "sha256": "2c0476d0902329e7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_TRS_0006.xml",
+   "file": "test_TRS_0006.xml",
+   "bytes": 1135,
+   "sha256": "cd34d7ca2155bfe4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0001.xml",
+   "file": "test_ZRI_0001.xml",
+   "bytes": 3385,
+   "sha256": "0270018dc51ac326"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0002.xml",
+   "file": "test_ZRI_0002.xml",
+   "bytes": 2554,
+   "sha256": "ef6a15846d6a2819"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0003.xml",
+   "file": "test_ZRI_0003.xml",
+   "bytes": 1704,
+   "sha256": "5de7eb1e1191f2b6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0004.xml",
+   "file": "test_ZRI_0004.xml",
+   "bytes": 2548,
+   "sha256": "b42aba6fb02e5636"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0005.xml",
+   "file": "test_ZRI_0005.xml",
+   "bytes": 3681,
+   "sha256": "938f706b3e95cec3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/Annotations/test_ZRI_0006.xml",
+   "file": "test_ZRI_0006.xml",
+   "bytes": 1139,
+   "sha256": "3195b094f66689af"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0001.jpg",
+   "file": "test_BLI_0001.jpg",
+   "bytes": 4645298,
+   "sha256": "bc4901f9c5041f0a"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0002.jpg",
+   "file": "test_BLI_0002.jpg",
+   "bytes": 6902670,
+   "sha256": "c9af67d06db085a0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0003.jpg",
+   "file": "test_BLI_0003.jpg",
+   "bytes": 4742523,
+   "sha256": "6076c886003a7348"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0004.jpg",
+   "file": "test_BLI_0004.jpg",
+   "bytes": 5535463,
+   "sha256": "99cc453226d498e4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0005.jpg",
+   "file": "test_BLI_0005.jpg",
+   "bytes": 6038040,
+   "sha256": "950d5d8f3508fda0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0006.jpg",
+   "file": "test_BLI_0006.jpg",
+   "bytes": 6419998,
+   "sha256": "75f11a42b1bd8bab"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0007.jpg",
+   "file": "test_BLI_0007.jpg",
+   "bytes": 5571713,
+   "sha256": "b984e3861297a59e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0008.jpg",
+   "file": "test_BLI_0008.jpg",
+   "bytes": 5359483,
+   "sha256": "21af6ea347b104a0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BLI_0009.jpg",
+   "file": "test_BLI_0009.jpg",
+   "bytes": 5677443,
+   "sha256": "ce0fb4899536d0cb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0001.jpg",
+   "file": "test_BRA_0001.jpg",
+   "bytes": 5092366,
+   "sha256": "5d70810a4d732efa"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0002.jpg",
+   "file": "test_BRA_0002.jpg",
+   "bytes": 5324111,
+   "sha256": "ed1118b7d2ca5a85"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0003.jpg",
+   "file": "test_BRA_0003.jpg",
+   "bytes": 5272387,
+   "sha256": "3969e9893ece86fd"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0004.jpg",
+   "file": "test_BRA_0004.jpg",
+   "bytes": 5106243,
+   "sha256": "bde802159d4c4de7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0005.jpg",
+   "file": "test_BRA_0005.jpg",
+   "bytes": 5111055,
+   "sha256": "73c1f552ed44dd05"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0006.jpg",
+   "file": "test_BRA_0006.jpg",
+   "bytes": 5194140,
+   "sha256": "dac2c27c624fb7cb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0007.jpg",
+   "file": "test_BRA_0007.jpg",
+   "bytes": 5276720,
+   "sha256": "8d2905ffc72580eb"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0008.jpg",
+   "file": "test_BRA_0008.jpg",
+   "bytes": 5090444,
+   "sha256": "b6176bb7ad231d9c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0009.jpg",
+   "file": "test_BRA_0009.jpg",
+   "bytes": 5312807,
+   "sha256": "e00de07c7ea3993c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0010.jpg",
+   "file": "test_BRA_0010.jpg",
+   "bytes": 5220184,
+   "sha256": "55c51655ddd0dd4b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0011.jpg",
+   "file": "test_BRA_0011.jpg",
+   "bytes": 5058643,
+   "sha256": "da3f937911391a6e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRA_0012.jpg",
+   "file": "test_BRA_0012.jpg",
+   "bytes": 4958563,
+   "sha256": "166edd91e60b55a5"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0001.jpg",
+   "file": "test_BRK_0001.jpg",
+   "bytes": 5286253,
+   "sha256": "3494d62aee1f15de"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0002.jpg",
+   "file": "test_BRK_0002.jpg",
+   "bytes": 5054451,
+   "sha256": "dce5d8b520d5532f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0003.jpg",
+   "file": "test_BRK_0003.jpg",
+   "bytes": 5151577,
+   "sha256": "e0c91aa0c2d8d258"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0004.jpg",
+   "file": "test_BRK_0004.jpg",
+   "bytes": 5248053,
+   "sha256": "89c45a03b82e2a7d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0005.jpg",
+   "file": "test_BRK_0005.jpg",
+   "bytes": 5016992,
+   "sha256": "9641f3e3b417e02b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0006.jpg",
+   "file": "test_BRK_0006.jpg",
+   "bytes": 5044213,
+   "sha256": "5be1581290f1a889"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0007.jpg",
+   "file": "test_BRK_0007.jpg",
+   "bytes": 5104834,
+   "sha256": "a3bbc74f62c70625"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0008.jpg",
+   "file": "test_BRK_0008.jpg",
+   "bytes": 5429486,
+   "sha256": "441fb7c09b854388"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0009.jpg",
+   "file": "test_BRK_0009.jpg",
+   "bytes": 4854184,
+   "sha256": "b79f205a485f109b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0010.jpg",
+   "file": "test_BRK_0010.jpg",
+   "bytes": 4665077,
+   "sha256": "d495b4b1764364f9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0011.jpg",
+   "file": "test_BRK_0011.jpg",
+   "bytes": 5077859,
+   "sha256": "8a32b497f16a3768"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRK_0012.jpg",
+   "file": "test_BRK_0012.jpg",
+   "bytes": 5204905,
+   "sha256": "b9a68bc148bb32b2"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0001.jpg",
+   "file": "test_BRS_0001.jpg",
+   "bytes": 4947811,
+   "sha256": "d11fc441b3933397"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0002.jpg",
+   "file": "test_BRS_0002.jpg",
+   "bytes": 5254830,
+   "sha256": "fdded5e7cfc2e7ba"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0003.jpg",
+   "file": "test_BRS_0003.jpg",
+   "bytes": 5161312,
+   "sha256": "fdf7f3dd42a46f1e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0004.jpg",
+   "file": "test_BRS_0004.jpg",
+   "bytes": 5000218,
+   "sha256": "3c9bc87bd08706ab"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0005.jpg",
+   "file": "test_BRS_0005.jpg",
+   "bytes": 5109157,
+   "sha256": "8f47e158e7420dbe"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0006.jpg",
+   "file": "test_BRS_0006.jpg",
+   "bytes": 5049519,
+   "sha256": "b6ab40bfa4e7a794"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0007.jpg",
+   "file": "test_BRS_0007.jpg",
+   "bytes": 5042331,
+   "sha256": "8ebff4a0d86666bd"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0008.jpg",
+   "file": "test_BRS_0008.jpg",
+   "bytes": 5073263,
+   "sha256": "101e0c1bd067e364"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0009.jpg",
+   "file": "test_BRS_0009.jpg",
+   "bytes": 5064648,
+   "sha256": "ef4d869ddacff40d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0010.jpg",
+   "file": "test_BRS_0010.jpg",
+   "bytes": 5069026,
+   "sha256": "5f5c869177bafc92"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_BRS_0011.jpg",
+   "file": "test_BRS_0011.jpg",
+   "bytes": 5051395,
+   "sha256": "d033788009ec1a86"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0001.jpg",
+   "file": "test_CAB_0001.jpg",
+   "bytes": 3184864,
+   "sha256": "8a26eb1af05229a0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0002.jpg",
+   "file": "test_CAB_0002.jpg",
+   "bytes": 3298011,
+   "sha256": "0bfae510773ae517"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0003.jpg",
+   "file": "test_CAB_0003.jpg",
+   "bytes": 3637809,
+   "sha256": "43f3e0ebfc060ef5"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0004.jpg",
+   "file": "test_CAB_0004.jpg",
+   "bytes": 4288823,
+   "sha256": "6a5ef76d68781192"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0005.jpg",
+   "file": "test_CAB_0005.jpg",
+   "bytes": 3166622,
+   "sha256": "23768a975a2ec94a"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0006.jpg",
+   "file": "test_CAB_0006.jpg",
+   "bytes": 4434233,
+   "sha256": "294c06641e83f178"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0007.jpg",
+   "file": "test_CAB_0007.jpg",
+   "bytes": 4288174,
+   "sha256": "b3364f01db3fec5f"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAB_0008.jpg",
+   "file": "test_CAB_0008.jpg",
+   "bytes": 3214034,
+   "sha256": "2eef1244188703c9"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0001.jpg",
+   "file": "test_CAP_0001.jpg",
+   "bytes": 4671408,
+   "sha256": "3ebb934a81bedc33"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0002.jpg",
+   "file": "test_CAP_0002.jpg",
+   "bytes": 4898891,
+   "sha256": "26aee756b6fbb3fa"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0003.jpg",
+   "file": "test_CAP_0003.jpg",
+   "bytes": 4945965,
+   "sha256": "75ffd1f0ee45cb8d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0004.jpg",
+   "file": "test_CAP_0004.jpg",
+   "bytes": 4917986,
+   "sha256": "d5cb216303e012af"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0005.jpg",
+   "file": "test_CAP_0005.jpg",
+   "bytes": 4861864,
+   "sha256": "8d94c290526c6ba1"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_CAP_0006.jpg",
+   "file": "test_CAP_0006.jpg",
+   "bytes": 4258127,
+   "sha256": "4c5f7c6afc4420f7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0001.jpg",
+   "file": "test_GRO_0001.jpg",
+   "bytes": 5211827,
+   "sha256": "aeb75ee2aee187f7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0002.jpg",
+   "file": "test_GRO_0002.jpg",
+   "bytes": 5190058,
+   "sha256": "b8234afac15c9bae"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0003.jpg",
+   "file": "test_GRO_0003.jpg",
+   "bytes": 5103028,
+   "sha256": "b7cd0e41d865c56b"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0004.jpg",
+   "file": "test_GRO_0004.jpg",
+   "bytes": 5105101,
+   "sha256": "761f385dd1c1345a"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0007.jpg",
+   "file": "test_GRO_0007.jpg",
+   "bytes": 5218632,
+   "sha256": "296ad9bfe705c4fc"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0008.jpg",
+   "file": "test_GRO_0008.jpg",
+   "bytes": 5140467,
+   "sha256": "44c4b87fbdc1d13c"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0009.jpg",
+   "file": "test_GRO_0009.jpg",
+   "bytes": 4983209,
+   "sha256": "9370f218318f1499"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0010.jpg",
+   "file": "test_GRO_0010.jpg",
+   "bytes": 5023138,
+   "sha256": "75439986ea5b6355"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0011.jpg",
+   "file": "test_GRO_0011.jpg",
+   "bytes": 5217191,
+   "sha256": "c5f65c5ee853f2a6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_GRO_0012.jpg",
+   "file": "test_GRO_0012.jpg",
+   "bytes": 5175337,
+   "sha256": "7609b6220a08efbf"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0001.jpg",
+   "file": "test_MED_0001.jpg",
+   "bytes": 3989380,
+   "sha256": "2f72b185fa41f2f0"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0002.jpg",
+   "file": "test_MED_0002.jpg",
+   "bytes": 3839685,
+   "sha256": "4d0233941efa3afd"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0003.jpg",
+   "file": "test_MED_0003.jpg",
+   "bytes": 5914189,
+   "sha256": "913a69ced8e2b5fe"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0004.jpg",
+   "file": "test_MED_0004.jpg",
+   "bytes": 3657396,
+   "sha256": "809b12265c742809"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0005.jpg",
+   "file": "test_MED_0005.jpg",
+   "bytes": 6086659,
+   "sha256": "6d0f77fb524e254e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MED_0006.jpg",
+   "file": "test_MED_0006.jpg",
+   "bytes": 3713798,
+   "sha256": "ec4f038cca862a34"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MOB_0001.jpg",
+   "file": "test_MOB_0001.jpg",
+   "bytes": 5337257,
+   "sha256": "f4558a9ba59d7744"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MOB_0002.jpg",
+   "file": "test_MOB_0002.jpg",
+   "bytes": 5365054,
+   "sha256": "5dc08453f988ee54"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MOB_0003.jpg",
+   "file": "test_MOB_0003.jpg",
+   "bytes": 5322771,
+   "sha256": "142ca51157c8db04"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MOB_0004.jpg",
+   "file": "test_MOB_0004.jpg",
+   "bytes": 5291640,
+   "sha256": "d605c19ce0fcd9f1"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_MOB_0005.jpg",
+   "file": "test_MOB_0005.jpg",
+   "bytes": 5252070,
+   "sha256": "0c42c9ddc0dfbad4"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0001.jpg",
+   "file": "test_SB_0001.jpg",
+   "bytes": 5072486,
+   "sha256": "04c8cf27c01016a3"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0002.jpg",
+   "file": "test_SB_0002.jpg",
+   "bytes": 5016748,
+   "sha256": "1841ec41550a8f3e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0003.jpg",
+   "file": "test_SB_0003.jpg",
+   "bytes": 5060919,
+   "sha256": "974b2f827a2dae00"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0005.jpg",
+   "file": "test_SB_0005.jpg",
+   "bytes": 5064576,
+   "sha256": "0cd0c40b11b2fb3e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0006.jpg",
+   "file": "test_SB_0006.jpg",
+   "bytes": 5014762,
+   "sha256": "8ec406c51f0f3588"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0007.jpg",
+   "file": "test_SB_0007.jpg",
+   "bytes": 5427325,
+   "sha256": "98edfe2961132937"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0008.jpg",
+   "file": "test_SB_0008.jpg",
+   "bytes": 5393605,
+   "sha256": "92221b9879430f74"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0009.jpg",
+   "file": "test_SB_0009.jpg",
+   "bytes": 5392392,
+   "sha256": "9d25a18f40393957"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0010.jpg",
+   "file": "test_SB_0010.jpg",
+   "bytes": 5240080,
+   "sha256": "12ab2d7637c4be39"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_SB_0011.jpg",
+   "file": "test_SB_0011.jpg",
+   "bytes": 5580188,
+   "sha256": "a815b2091872fa49"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0001.jpg",
+   "file": "test_TRS_0001.jpg",
+   "bytes": 5023024,
+   "sha256": "a8144299696f8fde"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0002.jpg",
+   "file": "test_TRS_0002.jpg",
+   "bytes": 5204554,
+   "sha256": "84ac9931ab01361d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0003.jpg",
+   "file": "test_TRS_0003.jpg",
+   "bytes": 5221717,
+   "sha256": "ee625685b300005e"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0004.jpg",
+   "file": "test_TRS_0004.jpg",
+   "bytes": 5146783,
+   "sha256": "db7bf8fff707c75d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0005.jpg",
+   "file": "test_TRS_0005.jpg",
+   "bytes": 5089032,
+   "sha256": "85390428279b59d6"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_TRS_0006.jpg",
+   "file": "test_TRS_0006.jpg",
+   "bytes": 5303481,
+   "sha256": "0e57f35bd0ca1bf1"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0001.jpg",
+   "file": "test_ZRI_0001.jpg",
+   "bytes": 4961358,
+   "sha256": "b153628c0cacddc7"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0002.jpg",
+   "file": "test_ZRI_0002.jpg",
+   "bytes": 4647784,
+   "sha256": "2fc189196dca7a93"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0003.jpg",
+   "file": "test_ZRI_0003.jpg",
+   "bytes": 5737295,
+   "sha256": "9dfafda09178c444"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0004.jpg",
+   "file": "test_ZRI_0004.jpg",
+   "bytes": 2665430,
+   "sha256": "dc940d19fd2e239d"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0005.jpg",
+   "file": "test_ZRI_0005.jpg",
+   "bytes": 5078128,
+   "sha256": "36db99758ba69baf"
+  },
+  {
+   "member": "heridal_keras_retinanet_voc/JPEGImages/test_ZRI_0006.jpg",
+   "file": "test_ZRI_0006.jpg",
+   "bytes": 3306276,
+   "sha256": "a0e29e92a1259838"
+  }
+ ]
+}
