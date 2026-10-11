@@ -1,0 +1,27 @@
+{
+ "alerts": [
+  {
+   "id": "P1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -61.14,
+    0.37
+   ],
+   "conf": 0.64,
+   "frame": "media/frames/f0052.jpg",
+   "t": 208.22
+  }
+ ],
+ "asked": 624,
+ "frames": 104,
+ "wall_s": 167.5,
+ "clef_median_ms": 254.1,
+ "score": {
+  "found": [
+   "grey_dog"
+  ],
+  "clues": 1,
+  "false_alerts": []
+ }
+}

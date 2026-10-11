@@ -1,0 +1,53 @@
+{
+ "alerts": [
+  {
+   "id": "P1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    1.88,
+    -28.32
+   ],
+   "conf": 0.934,
+   "frame": "media/frames/f0036.jpg",
+   "t": 165.72
+  },
+  {
+   "id": "P2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    11.21,
+    18.57
+   ],
+   "conf": 0.739,
+   "frame": "media/frames/f0047.jpg",
+   "t": 231.29
+  },
+  {
+   "id": "P3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    13.48,
+    53.49
+   ],
+   "conf": 0.597,
+   "frame": "media/frames/f0054.jpg",
+   "t": 285.04
+  }
+ ],
+ "asked": 750,
+ "frames": 125,
+ "wall_s": 264.0,
+ "clef_median_ms": 340.4,
+ "score": {
+  "found": [
+   "blue_backpack",
+   "orange_tent",
+   "red_jacket"
+  ],
+  "clues": 3,
+  "false_alerts": []
+ }
+}

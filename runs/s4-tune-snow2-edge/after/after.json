@@ -1,0 +1,40 @@
+{
+ "alerts": [
+  {
+   "id": "P1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    10.44,
+    -66.25
+   ],
+   "conf": 0.835,
+   "frame": "media/frames/f0008.jpg",
+   "t": 51.61
+  },
+  {
+   "id": "P2",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    -35.47,
+    60.2
+   ],
+   "conf": 0.892,
+   "frame": "media/frames/f0100.jpg",
+   "t": 484.43
+  }
+ ],
+ "asked": 690,
+ "frames": 115,
+ "wall_s": 242.8,
+ "clef_median_ms": 339.6,
+ "score": {
+  "found": [
+   "blue_backpack",
+   "red_jacket"
+  ],
+  "clues": 3,
+  "false_alerts": []
+ }
+}

@@ -1,0 +1,93 @@
+{
+ "alerts": [
+  {
+   "id": "P1",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    -19.31,
+    -56.21
+   ],
+   "conf": 0.521,
+   "frame": "media/frames/f0025.jpg",
+   "t": 130.77
+  },
+  {
+   "id": "P2",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    44.14,
+    -43.7
+   ],
+   "conf": 0.579,
+   "frame": "media/frames/f0041.jpg",
+   "t": 214.46
+  },
+  {
+   "id": "P3",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    40.07,
+    -17.22
+   ],
+   "conf": 0.72,
+   "frame": "media/frames/f0064.jpg",
+   "t": 334.35
+  },
+  {
+   "id": "P4",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    31.41,
+    -10.05
+   ],
+   "conf": 0.504,
+   "frame": "media/frames/f0072.jpg",
+   "t": 398.18
+  },
+  {
+   "id": "P5",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    61.43,
+    29.39
+   ],
+   "conf": 0.639,
+   "frame": "media/frames/f0152.jpg",
+   "t": 851.88
+  },
+  {
+   "id": "P6",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    14.87,
+    51.21
+   ],
+   "conf": 0.583,
+   "frame": "media/frames/f0176.jpg",
+   "t": 979.62
+  }
+ ],
+ "asked": 1116,
+ "frames": 186,
+ "wall_s": 466.5,
+ "clef_median_ms": 398.3,
+ "score": {
+  "found": [
+   "grey_dog",
+   "green_sleeping_bag",
+   "sos_rocks"
+  ],
+  "clues": 4,
+  "false_alerts": [
+   "P1 green_sleeping_bag",
+   "P3 sos_rocks",
+   "P6 green_sleeping_bag"
+  ]
+ }
+}

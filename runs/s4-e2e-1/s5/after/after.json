@@ -1,0 +1,119 @@
+{
+ "alerts": [
+  {
+   "id": "P1",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    18.22,
+    -65.47
+   ],
+   "conf": 0.686,
+   "frame": "media/frames/f0009.jpg",
+   "t": 55.95
+  },
+  {
+   "id": "P2",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    72.92,
+    -42.77
+   ],
+   "conf": 0.52,
+   "frame": "media/frames/f0039.jpg",
+   "t": 187.87
+  },
+  {
+   "id": "P3",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    -44.6,
+    -11.22
+   ],
+   "conf": 0.544,
+   "frame": "media/frames/f0078.jpg",
+   "t": 360.03
+  },
+  {
+   "id": "P4",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -18.91,
+    30.14
+   ],
+   "conf": 0.776,
+   "frame": "media/frames/f0115.jpg",
+   "t": 528.76
+  },
+  {
+   "id": "P5",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    25.55,
+    49.98
+   ],
+   "conf": 0.586,
+   "frame": "media/frames/f0128.jpg",
+   "t": 601.34
+  },
+  {
+   "id": "P6",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    -62.89,
+    53.37
+   ],
+   "conf": 0.826,
+   "frame": "media/frames/f0147.jpg",
+   "t": 695.77
+  },
+  {
+   "id": "P7",
+   "clue": "yellow_helmet",
+   "family": "yellow helmet",
+   "g": [
+    10.48,
+    66.95
+   ],
+   "conf": 0.55,
+   "frame": "media/frames/f0164.jpg",
+   "t": 800.65
+  },
+  {
+   "id": "P8",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    67.35,
+    81.19
+   ],
+   "conf": 0.578,
+   "frame": "media/frames/f0169.jpg",
+   "t": 814.44
+  }
+ ],
+ "asked": 1056,
+ "frames": 176,
+ "wall_s": 435.1,
+ "clef_median_ms": 397.3,
+ "score": {
+  "found": [
+   "grey_dog",
+   "green_sleeping_bag",
+   "yellow_helmet",
+   "sos_rocks"
+  ],
+  "clues": 4,
+  "false_alerts": [
+   "P2 green_sleeping_bag",
+   "P3 green_sleeping_bag",
+   "P5 green_sleeping_bag",
+   "P8 green_sleeping_bag"
+  ]
+ }
+}
