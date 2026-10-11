@@ -1,0 +1,21 @@
+{
+ "text": "Missing hiker. Blue backpack, orange tent.",
+ "clues": [
+  {
+   "name": "blue_backpack",
+   "family": "Blue backpack",
+   "words": "a blue rectangular object with visible straps and buckles, roughly the size of a large book.",
+   "size_m": 0.5
+  },
+  {
+   "name": "orange_tent",
+   "family": "orange tent",
+   "words": "an orange triangular or dome-shaped fabric structure with visible poles and guy lines, covering a small area.",
+   "size_m": 2.0
+  }
+ ],
+ "wall_s": 2.4,
+ "model": "qwen38",
+ "stt_ms": null,
+ "wav": null
+}
