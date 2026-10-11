@@ -35,17 +35,16 @@ The repos must sit at these exact paths: the voice code is looked up at `~/repos
 
 ```sh
 mkdir -p ~/repos && cd ~/repos
-git clone <PATROL_REPO_URL> multi-modal-hackathon        # the owner fills this in when the repo is published
-git clone https://github.com/<owner>/local-decision ~/repos/local-decision   # Clef server (Tier 1)
+git clone https://github.com/mthomas100/patrol ~/repos/patrol
+git clone https://github.com/mthomas100/local-decision ~/repos/local-decision   # Clef server (Tier 1)
 ```
 
-`<owner>` is the GitHub account that published Patrol; `local-decision`, `local-voice` and `local-3d` are public repos
-on that same account.
+`local-decision`, `local-voice` and `local-3d` are public repos on the same account as Patrol.
 
 Patrol's own environment (Python 3.12; these are the versions it was tested with):
 
 ```sh
-cd .
+cd ~/repos/patrol
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python mujoco==3.15.0 numpy==2.5.4 pillow==12.3.0 scipy==1.18.1 trimesh==5.1.1 pytest==9.1.1
 ```
@@ -81,11 +80,11 @@ Git holds only each item's description files; the meshes (about 50 MB for all ei
 nothing can be placed in the scene. There are two ways to get them:
 
 **A. A mesh bundle, if the author published one** (a zip of `assets/items/*/mujoco/`). Unzip it over
-`projects/patrol/assets/items/`, then rewrite the author's absolute paths to yours (the `mujoco.json` files name their
+`assets/items/`, then rewrite the author's absolute paths to yours (the `mujoco.json` files name their
 mesh by full path):
 
 ```sh
-cd .
+cd ~/repos/patrol
 for f in assets/items/*/mujoco/mujoco.json; do
   d="$PWD/$(dirname "$f")"
   .venv/bin/python -c "import json,sys; p=sys.argv[1]; j=json.load(open(p)); j['obj']=sys.argv[2]+'/mesh.obj'; j['texture']=sys.argv[2]+'/texture.png'; json.dump(j,open(p,'w'),indent=1)" "$f" "$d"
@@ -97,7 +96,7 @@ Hunyuan3D). This is heavy. Follow "Setup, if rebuilding from scratch" in `~/repo
 the z-image-turbo and Hunyuan3D weights it names (ASK: the full set is about 45 GB). Check: `m3d --help` works. Then:
 
 ```sh
-cd .
+cd ~/repos/patrol
 rm assets/items/*/mujoco/mujoco.json      # the tracked copies make the build script skip every item
 tools/build_items.sh                      # six items, about 3 GPU-minutes each
 # the build script does not list these two; build them by hand (output paths must be absolute):
@@ -116,7 +115,7 @@ inside its `mujoco.json` exists on this Mac.
 ## 4. Prove Tier 1
 
 ```sh
-cd .
+cd ~/repos/patrol
 tests/e2e_search.sh --only 1,2,3,4 --no-think --out runs/setup-tier1
 ```
 
@@ -160,7 +159,7 @@ should PASS, and the console accepts `--think --describe "Missing hiker. Blue ba
 ## 6. Tier 3: voice
 
 ```sh
-git clone https://github.com/<owner>/local-voice ~/repos/local-voice
+git clone https://github.com/mthomas100/local-voice ~/repos/local-voice
 cd ~/repos/local-voice/orchestrator && uv sync          # creates orchestrator/.venv, which Patrol calls
 ```
 
