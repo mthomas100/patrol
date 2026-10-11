@@ -51,7 +51,7 @@ Every number below is on the explainer page. Everything is a simulator result.
 ## 10. Higher means fewer lanes
 - Say: at 40 m each photo covers 32.6 m of ground with 22.9 m between lanes; higher is the battery lever.
 - Land: up high only notice that a spot looks odd; close up, decide what it is (20 m first, 12 m only if unsure).
-- Caveat: results are on a 20-minute simulated battery (now set to 30).
+- Caveat: the hero numbers are from a 20-minute simulated battery; it is now 30.
 
 ## 11. Each model sees only what it must
 - Say: cheap work on everything, expensive work on almost nothing.
@@ -75,12 +75,12 @@ Every number below is on the explainer page. Everything is a simulator result.
 
 ## 15. What doesn't work yet
 - Say: five honest faults.
-- Land: the four-clue flight ran out of its 20-minute simulated battery in all three seed sets (all results so far are on a 20-minute battery); held-out close-ups score only 0.12 to 0.29.
-- Caveat: the battery is now set to 30 minutes (drones in service fly 40 to 45 min and lose a quarter to a third in the cold); re-runs are not in yet.
+- Land: on 20 minutes the four-clue flight ran out of battery; on a realistic 30 it covers everything and 17 of 18 pass. The one miss is the finder never boxing a sleeping bag. Held-out close-ups score only 0.12 to 0.29 (qwen38 rescues them).
+- Caveat: why 30 minutes: drones in service fly 40 to 45 min and lose a quarter to a third in the cold. The power-line regression failed once on its known vegetation false alarms.
 - Caveat: location accuracy is a best case (flat ground, no GPS error).
 
 ## 16. What's next
 - Say: from a convincing simulator to evidence on real ground.
-- Land: first, the 30-minute battery re-runs and the Wi-Fi-off rehearsal (about ten minutes).
+- Land: first, the finder's blind spot and the Wi-Fi-off rehearsal (about ten minutes).
 - Caveat: real aerial imagery (HERIDAL, SARD, WiSARD) is approved, but dataset licences are still being checked.
 
