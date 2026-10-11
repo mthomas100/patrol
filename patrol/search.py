@@ -53,7 +53,9 @@ class SearchConfig:
     t_dismiss: float = 0.2           # every clue noul below this at a step: dismiss without descending further
     inv_noul: float = 0.1            # sweep gate: investigate when any clue's noul on the crop reaches this
     inv_p: float = 0.9               # ... or when p(investigate) does (background crops: noul <= 0.052, p up to 0.81)
-    judged_r: float = 3.0            # a candidate this close to an already judged spot is not asked again
+    judged_r: float = 3.0            # a candidate this close to an already judged spot is not asked again ...
+    rejudge_gain: float = 2.0        # ... unless its box is this many times larger (a far-edge glimpse judged first
+    max_asks: int = 3                #     must not hide the clear view a lane later; runs/s3-trail-ab-rt grass6)
     edge_px: int = 8                 # boxes this close to the frame edge wait for a neighbouring frame (overlap)
     alert_r: float = 6.0             # a find this close to an alert of the same clue updates it (one alert per item)
     h_band: tuple = (8.0, 70.0)      # SAFETY: height above ground while searching
@@ -132,7 +134,7 @@ class SearchMission:
         self.resume_xy: tuple | None = None
         self.pending: list[dict] = []
         self.spot: dict | None = None
-        self.judged: list[dict] = []          # every spot Clef has judged: {"g", "verdict"}
+        self.judged: list[dict] = []          # every spot Clef has judged: {"g", "verdict", "area", "asks"}
         self.investigated: list[dict] = []
         self.alerts: list[dict] = []
         self.decisions: list[dict] = []
@@ -347,6 +349,9 @@ class SearchMission:
             row = {"box": [c["x0"], c["y0"], c["x1"], c["y1"]], "score": c["score"], "area": c["area"],
                    "g": [round(g[0], 2), round(g[1], 2)] if g else None}
             near = g and next((j for j in self.judged if math.dist(j["g"], g) < cfg.judged_r), None)
+            if near and c["area"] >= cfg.rejudge_gain * near["area"] and near["asks"] < cfg.max_asks:
+                row["rejudge"] = {"was": near["verdict"], "area_was": near["area"]}
+                near = None               # a much better view of a spot judged from a poor one: ask again
             edge = min(c["x0"], c["y0"], cfg.W - c["x1"], cfg.H - c["y1"]) <= cfg.edge_px
             if not g or near or edge:     # a box cut by the frame edge is judged from a neighbouring frame instead
                 row["status"] = "seen" if near else "edge" if edge else "off-ground"
@@ -357,7 +362,11 @@ class SearchMission:
             gate = self._sweep_gate(dec)
             row.update(status="judged", gate=gate, probs=d["probs"], nouls=d["nouls"], ms=d["latency_ms"])
             if dec.ok:        # a failed call leaves the spot unjudged, so a later frame may ask again
-                self.judged.append({"g": g, "verdict": gate["action"]})
+                old = next((j for j in self.judged if math.dist(j["g"], g) < cfg.judged_r), None)
+                if old:
+                    old.update(g=g, verdict=gate["action"], area=c["area"], asks=old["asks"] + 1)
+                else:
+                    self.judged.append({"g": g, "verdict": gate["action"], "area": c["area"], "asks": 1})
             if gate["action"] == "investigate" and not any(math.dist(s["g"], g) < cfg.alert_r
                                                            for s in self.pending + self.investigated):
                 self.pending.append({"g": g, "clue": gate["clue"], "p_inv": gate["p_inv"], "noul": gate["noul"],
@@ -696,17 +705,24 @@ def add_args(ap: argparse.ArgumentParser):
     ap.add_argument("--no-trail", action="store_true", help="with --think: no sector reordering after a find")
     ap.add_argument("--no-second", action="store_true", help="with --think: no second opinion on close calls")
     ap.add_argument("--on-trail", action="store_true", help="place the clue items along the trail (path seeds)")
+    ap.add_argument("--describe", help="what the family said, in words: qwen38 writes the clues Clef looks for "
+                    "(instead of the catalogue wording); --clues still says which planted items are theirs")
+    ap.add_argument("--describe-wav", help="the same description, spoken (Parakeet transcribes it first)")
+    ap.add_argument("--speak", action="store_true", help="read alerts, notes and the summary aloud (Kokoro), WAVs saved")
+    ap.add_argument("--voice-script", help='JSON {"tick:N" or "alert:K": "fixtures/voice/x.wav"}: spoken commands '
+                    "heard, routed by Clef and executed")
 
 
-def make_mission(a, out: Path, sinks=()) -> SearchMission:
-    """The scene and mission for parsed add_args() options (the CLI and the console both use this)."""
+def make_mission(a, out: Path, sinks=(), clue_list: list[dict] | None = None) -> SearchMission:
+    """The scene and mission for parsed add_args() options (the CLI and the console both use this). clue_list:
+    clues written by qwen38 from the family's description (thinker.describe); default, the catalogue's."""
     names = [n for n in a.items.split(",") if n]
     cnames = [n for n in a.clues.split(",") if n]
     h = a.half
     cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h,
                        thinker=a.think, trail=not a.no_trail, second=not a.no_second)
     spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2], on_trail=a.on_trail)
-    return SearchMission(spec, out, cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
+    return SearchMission(spec, out, clue_list or cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
                          seed=a.seed, sinks=sinks, realtime=not a.lockstep, chase=a.chase)
 
 
@@ -717,8 +733,38 @@ def main(argv=None):
     out = Path(a.out or ROOT / "runs" / time.strftime("%Y%m%d-%H%M%S-search"))
     out.mkdir(parents=True, exist_ok=True)
     sink = JsonlSink(out / "mission.jsonl")
-    m = make_mission(a, out, [sink])
-    s = m.run(max_ticks=a.max_ticks, pace=a.pace)
+    worker = speaker = vs = None
+    if a.speak or a.voice_script or a.describe_wav:
+        from . import voice
+        worker = voice.VoiceWorker()
+    described = None
+    if a.describe or a.describe_wav:
+        heard = worker.stt(ROOT / a.describe_wav) if a.describe_wav else {"ok": True, "text": a.describe}
+        if not heard.get("ok"):
+            raise SystemExit(f"could not transcribe {a.describe_wav}: {heard.get('error')}")
+        described = thinker.describe(heard["text"]) | {"stt_ms": heard.get("stt_ms"), "wav": a.describe_wav}
+        (out / "describe.json").write_text(json.dumps(described, indent=1))
+        print(json.dumps({"heard": heard["text"], "clues": [(c["name"], c["words"]) for c in
+                                                             described.get("clues", [])]}), flush=True)
+        if not described.get("clues"):
+            raise SystemExit(f"qwen38 gave no clues for {heard['text']!r}: {described.get('error')}")
+    m = make_mission(a, out, [sink], clue_list=described["clues"] if described else None)
+    hooks = []
+    if a.speak:
+        speaker = voice.Speaker(worker, out, publish=m.emit)
+        m.sinks.append(speaker)
+    if a.voice_script:
+        vs = voice.VoiceScript(json.loads(a.voice_script), worker, speaker, a.clef_url)
+        hooks.append(vs)
+    try:
+        s = m.run(max_ticks=a.max_ticks, pace=a.pace, hooks=hooks)
+        if vs:
+            vs.join()
+        if speaker:
+            speaker.drain()
+    finally:
+        if worker:
+            worker.close()
     sink.close()
     sc = score(out)
     (out / "score.json").write_text(json.dumps(sc, indent=1))

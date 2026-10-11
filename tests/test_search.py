@@ -120,3 +120,35 @@ def test_decision_path_source_reads_no_truth():
     src = "".join(code_only(o) for o in (search.SearchMission, anomaly, geo, planner, clues))
     hits = [f for f in forbidden if f in src]
     assert not hits, f"decision path mentions {hits}"
+
+
+def test_a_much_better_view_of_a_judged_spot_is_asked_again(tmp_path, monkeypatch):
+    """runs/s3-trail-ab-rt grass6: a 60 px glimpse at a frame's far side, judged 'continue', hid the backpack's clear
+    241 px view a lane later (same spot within judged_r), and the clue was never investigated."""
+    asked = []
+
+    def ask(jpeg, state, questions, timeout=6.0, url=""):
+        asked.append(1)
+        name = next(k for k, v in questions.items() if v["type"] == "noul")
+        return clef.Decision(ok=True, action="continue", probs={"continue": 0.9}, nouls={name: 0.01}, latency_ms=1.0)
+    m, spec, events = small_mission(tmp_path, ask)
+    views = iter([(60, (2.68, -31.16)), (241, (1.89, -28.34)), (300, (1.79, -28.34)), (900, (1.8, -28.3)),
+                  (2000, (1.8, -28.3))])
+    cur = {}
+
+    def candidates(jpg, k=3):
+        area, g = next(views)
+        cur["g"] = g
+        return [{"x0": 100, "y0": 100, "x1": 120, "y1": 120, "cx": 110, "cy": 110, "score": 1.0, "area": area}]
+    monkeypatch.setattr(search.anomaly, "candidates", candidates)
+    orig = search.geo.pixel_to_ground          # the footprint uses it too: fake only the candidate's pixel
+    monkeypatch.setattr(search.geo, "pixel_to_ground",
+                        lambda u, v, *a, **k: cur["g"] if (u, v) == (110, 110) else orig(u, v, *a, **k))
+    lane = {"x0": -30.0, "x1": 30.0, "y": -28.0}
+    status = []
+    for _ in range(5):
+        m._sweep_frame(lane)
+        status.append(events[-1]["candidates"][0]["status"])
+    # glimpse judged; 4x larger view judged again; 1.2x not; 3x judged (third ask); max_asks reached after that
+    assert status == ["judged", "judged", "seen", "judged", "seen"]
+    assert len(asked) == 3 and len(m.judged) == 1 and m.judged[0]["asks"] == 3

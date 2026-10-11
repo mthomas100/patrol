@@ -51,7 +51,7 @@ def main(argv=None):
     ap.add_argument("--lockstep", action="store_true", help="pause the world while Clef thinks (less timing noise)")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    out = Path(a.out or ROOT / "runs" / time.strftime("s3-trail-ab-%H%M%S"))
+    out = Path(a.out or ROOT / "runs" / time.strftime("s3-trail-ab-%H%M%S")).resolve()
     out.mkdir(parents=True, exist_ok=True)
     rows = []
     for seed in a.seeds:
