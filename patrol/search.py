@@ -67,9 +67,6 @@ class SearchConfig:
     battery_s: float = 1200.0        # endurance, flight seconds
     reserve: float = 10.0            # battery % kept for landing
     clef_timeout: float = 6.0
-    corner_s: float = 1.0            # flight seconds charged per corner flown through (sector ends and starts, resume
-    #                                  points): a multirotor braking at about 3 m/s2 through a 90 degree turn from 6 m/s
-    #                                  loses about 1 s; a full stop with the slow approach cost about 4 s (DECISIONS 15:40)
     max_confirm_tries: int = 2
     sector_len: float = 40.0         # lanes are cut into sectors the slow thinker can reorder
     oblique: float = 0.6             # investigate hover offset = oblique x height (about 31 degrees off vertical)
@@ -203,11 +200,6 @@ class SearchMission:
             self.state_s[self.state] += dt
             self.state_m[self.state] += self.sim.odometer - o
 
-    def _corner(self):
-        """A corner flown through costs corner_s of flight on the spot (the braking and turn a kinematic drone skips)."""
-        if self.cfg.corner_s > 0:
-            self._advance((0.0, 0.0, 0.0), self.cfg.corner_s)
-
     def battery(self) -> float:
         return max(0.0, 100.0 * (1 - self.flight_s / self.cfg.battery_s))
 
@@ -269,16 +261,13 @@ class SearchMission:
         elif self.state == "SWEEP":
             sec = self.cur
             if not self.on_sector:
-                v, arrived = self._goto((sec["x0"], sec["y"], self.sweep_h), stop=False)
+                v, arrived = self._goto((sec["x0"], sec["y"], self.sweep_h))
                 if arrived:
-                    self._corner()
                     self.on_sector = True
                     self.last_frame_xy = None
             else:
                 cont = self._continues()
-                v, arrived = self._goto((sec["x1"], sec["y"], self.sweep_h), stop=False)
-                if arrived and not cont:
-                    self._corner()
+                v, arrived = self._goto((sec["x1"], sec["y"], self.sweep_h), stop=not cont)
                 xy = (float(self.sim.pos[0]), float(self.sim.pos[1]))
                 if self.last_frame_xy is None or math.dist(xy, self.last_frame_xy) >= self.frame_every or \
                         (arrived and not cont):
@@ -293,9 +282,8 @@ class SearchMission:
             if arrived:
                 self._confirm_step()
         elif self.state == "RESUME":
-            v, arrived = self._goto((self.resume_xy[0], self.resume_xy[1], self.sweep_h), stop=False)
+            v, arrived = self._goto((self.resume_xy[0], self.resume_xy[1], self.sweep_h))
             if arrived:
-                self._corner()
                 self.last_frame_xy = self.resume_xy
                 self.on_sector = True
                 self._set("SWEEP", f"resumed sector {self.cur['id']} at x={self.resume_xy[0]:.0f}")
