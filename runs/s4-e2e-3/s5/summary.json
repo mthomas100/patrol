@@ -1,0 +1,222 @@
+{
+ "llm_calls": 11,
+ "llm_by_role": {
+  "second_opinion": 3,
+  "note": 4,
+  "trail": 4
+ },
+ "clef_qwen_idle": {
+  "n": 378,
+  "ok": 378,
+  "median_ms": 384,
+  "p90_ms": 436
+ },
+ "clef_qwen_active": {
+  "n": 62,
+  "ok": 62,
+  "median_ms": 489,
+  "p90_ms": 674
+ },
+ "sectors": 56,
+ "sectors_done": 52,
+ "plans": [
+  {
+   "first": [
+    "D3",
+    "D4",
+    "E3",
+    "E4",
+    "F3",
+    "F4"
+   ],
+   "reason": "Hikers likely continued north along the trail; these sectors cover the path ahead of the last find.",
+   "raw_ok": true,
+   "wall_s": 5.1,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "E3",
+    "F3",
+    "G3",
+    "H3",
+    "I3",
+    "J3"
+   ],
+   "reason": "Trail continues northeast through these sectors; hikers likely follow path or stream nearby.",
+   "raw_ok": true,
+   "wall_s": 5.4,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "I4",
+    "J4",
+    "J3",
+    "K4",
+    "L4",
+    "M4"
+   ],
+   "reason": "Prioritize trail continuation northeast from last find, covering high-probability path segments and adjacent stream intersections.",
+   "raw_ok": true,
+   "wall_s": 5.2,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "K3",
+    "K2",
+    "J2",
+    "K1",
+    "J1",
+    "L2"
+   ],
+   "reason": "Prioritize sectors near the trail and stream, following the hikers' likely path northward from recent finds.",
+   "raw_ok": true,
+   "wall_s": 4.8,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "battery 15% leaves only the return reserve",
+ "sim_s": 1059.6,
+ "wall_s": 215.5,
+ "flight_s": 1059.1,
+ "battery_used_pct": 88.3,
+ "state_s": {
+  "TAKEOFF": 5.5,
+  "SWEEP": 730.5,
+  "INVESTIGATE": 180.9,
+  "CONFIRM": 16.8,
+  "RESUME": 92.0,
+  "RETURN": 33.5
+ },
+ "sweep_h": 21.818181818181817,
+ "lanes": 14,
+ "lane_spacing_m": 11.79,
+ "frame_every_m": 6.54,
+ "coverage": 0.9659,
+ "area_m2_covered": 24728,
+ "frames": 296,
+ "candidates": 888,
+ "clef_sweep": {
+  "n": 411,
+  "ok": 411,
+  "median_ms": 385,
+  "p90_ms": 465
+ },
+ "clef_confirm": {
+  "n": 29,
+  "ok": 29,
+  "median_ms": 514,
+  "p90_ms": 725
+ },
+ "fallback": 0,
+ "investigations": 25,
+ "dismissed": 21,
+ "mean_investigate_s": 7.9,
+ "mean_decision_h": 18.7,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "yellow_helmet",
+   "family": "yellow helmet",
+   "g": [
+    14.16,
+    -44.36
+   ],
+   "conf": 0.291,
+   "h": 12.0,
+   "photo": "media/photos/S6_12m.jpg",
+   "sweep_crop": "media/crops/f0055_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S6",
+   "t": 202.29,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Possible yellow helmet spotted 14 meters east and 44 meters south of search center, 56 meters from trailhead.",
+    "check": "Ground team should inspect the object to confirm if it is the missing hiker's yellow climbing helmet.",
+    "agree": true,
+    "wall_s": 2.3,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -49.3,
+    -24.96
+   ],
+   "conf": 0.886,
+   "h": 20.0,
+   "photo": "media/photos/S11_20m.jpg",
+   "sweep_crop": "media/crops/f0091_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S11",
+   "t": 349.18,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a grey dog lying down 49 meters west and 25 meters south of the search center.",
+    "check": "Ground team should verify the animal's status and check the immediate area for hiker belongings.",
+    "agree": true,
+    "wall_s": 5.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    47.02,
+    17.18
+   ],
+   "conf": 0.294,
+   "h": 12.0,
+   "photo": "media/photos/S20_12m.jpg",
+   "sweep_crop": "media/crops/f0194_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S20",
+   "t": 694.05,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Possible green sleeping bag spotted 47 meters east and 17 meters north of search center.",
+    "check": "Verify object on ground and confirm if it is the missing hiker's gear.",
+    "agree": true,
+    "wall_s": 4.3,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A4",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    1.87,
+    46.13
+   ],
+   "conf": 0.85,
+   "h": 20.0,
+   "photo": "media/photos/S23_20m.jpg",
+   "sweep_crop": "media/crops/f0279_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S23",
+   "t": 956.48,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible SOS signal made of stones located 2 meters east and 46 meters north of search center.",
+    "check": "Verify the stone arrangement and inspect the immediate area for hiker belongings.",
+    "agree": true,
+    "wall_s": 5.0,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 202.29
+}

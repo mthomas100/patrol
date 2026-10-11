@@ -1,0 +1,104 @@
+{
+ "llm_calls": 2,
+ "llm_by_role": {
+  "note": 1,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 140,
+  "ok": 140,
+  "median_ms": 234,
+  "p90_ms": 245
+ },
+ "clef_qwen_active": {
+  "n": 21,
+  "ok": 21,
+  "median_ms": 301,
+  "p90_ms": 379
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "E1",
+    "E2",
+    "F1",
+    "F2",
+    "G1",
+    "G2"
+   ],
+   "reason": "Prioritize sectors along the trail's northward path and the intersecting stream, as hikers typically follow linear features.",
+   "raw_ok": true,
+   "wall_s": 3.7,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 413.8,
+ "wall_s": 50.0,
+ "flight_s": 413.3,
+ "battery_used_pct": 34.4,
+ "state_s": {
+  "TAKEOFF": 10.0,
+  "SWEEP": 347.2,
+  "INVESTIGATE": 7.0,
+  "CONFIRM": 2.1,
+  "RESUME": 7.0,
+  "RETURN": 40.0
+ },
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lane_spacing_m": 26.09,
+ "frame_every_m": 11.98,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 100,
+ "candidates": 300,
+ "clef_sweep": {
+  "n": 160,
+  "ok": 160,
+  "median_ms": 236,
+  "p90_ms": 275
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 2142,
+  "p90_ms": 2142
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 9.1,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -61.14,
+    0.36
+   ],
+   "conf": 0.806,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0051_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 191.85,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a grey dog lying on the ground, 61 meters west of the search center.",
+    "check": "Ground team should verify the animal's status and location at the 61-meter west mark.",
+    "agree": true,
+    "wall_s": 3.7,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 191.85
+}

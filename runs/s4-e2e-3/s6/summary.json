@@ -1,0 +1,143 @@
+{
+ "llm_calls": 4,
+ "llm_by_role": {
+  "note": 2,
+  "trail": 2
+ },
+ "clef_qwen_idle": {
+  "n": 30,
+  "ok": 30,
+  "median_ms": 342,
+  "p90_ms": 410
+ },
+ "clef_qwen_active": {
+  "n": 17,
+  "ok": 17,
+  "median_ms": 503,
+  "p90_ms": 1112
+ },
+ "sectors": 28,
+ "sectors_done": 5,
+ "plans": [
+  {
+   "first": [
+    "A2",
+    "B2",
+    "C2",
+    "D2",
+    "E2",
+    "F2"
+   ],
+   "reason": "Prioritize trail segments closest to the trailhead, as lost hikers typically stay near the path they were following.",
+   "raw_ok": true,
+   "wall_s": 5.4,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "D2",
+    "E2",
+    "D3",
+    "E3",
+    "F2",
+    "F3"
+   ],
+   "reason": "Prioritize trail segments north of the tent find, as hikers likely continued along the main path.",
+   "raw_ok": true,
+   "wall_s": 3.0,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 193.0,
+ "wall_s": 30.8,
+ "flight_s": 192.5,
+ "battery_used_pct": 16.0,
+ "state_s": {
+  "TAKEOFF": 9.0,
+  "SWEEP": 111.4,
+  "INVESTIGATE": 19.5,
+  "CONFIRM": 3.6,
+  "RESUME": 18.5,
+  "RETURN": 30.5
+ },
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "lane_spacing_m": 23.72,
+ "frame_every_m": 10.9,
+ "coverage": 0.2683,
+ "area_m2_covered": 6868,
+ "frames": 26,
+ "candidates": 78,
+ "clef_sweep": {
+  "n": 44,
+  "ok": 44,
+  "median_ms": 357,
+  "p90_ms": 554
+ },
+ "clef_confirm": {
+  "n": 3,
+  "ok": 3,
+  "median_ms": 1112,
+  "p90_ms": 1112
+ },
+ "fallback": 0,
+ "investigations": 3,
+ "dismissed": 0,
+ "mean_investigate_s": 7.7,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "gray_dog",
+   "family": "gray dog",
+   "g": [
+    -66.46,
+    -62.99
+   ],
+   "conf": 0.804,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0002_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 38.72,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a small gray furry shape 66 meters west and 63 meters south of the search center.",
+    "check": "Ground team should visually inspect the object to confirm if it is the missing gray dog.",
+    "agree": true,
+    "wall_s": 3.7,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    10.4,
+    -16.65
+   ],
+   "conf": 0.911,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0023_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S3",
+   "t": 144.08,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible orange tent 10 meters east and 17 meters south of the search center.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object.",
+    "agree": true,
+    "wall_s": 3.1,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 38.72
+}
