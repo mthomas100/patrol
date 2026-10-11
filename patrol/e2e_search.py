@@ -33,7 +33,8 @@ SCENARIOS = {   # held out: grey_dog, green_sleeping_bag, yellow_helmet, sos_roc
     3: {"name": "empty", "terrain": "grass", "seed": 23, "items": "", "clues": "blue_backpack,orange_tent,grey_dog"},
     4: {"name": "Clef off", "terrain": "snow", "seed": 24, "items": "blue_backpack", "clues": "blue_backpack",
         "extra": ["--clef-url", DEAD, "--half", "50"]},
-    5: {"name": "several", "terrain": "snow", "seed": 35,      # seed 25 was diagnosed after s4-e2e-1 (DECISIONS 13:29)
+    5: {"name": "several", "terrain": "snow", "seed": 45,      # 25 diagnosed after s4-e2e-1 (DECISIONS 13:29), 35 after
+        #                                                           s4-e2e-2 (DECISIONS 14:55); neither is held out now
         "items": "grey_dog,green_sleeping_bag,yellow_helmet,sos_rocks,grey_boulder,orange_leaf_pile",
         "clues": "grey_dog,green_sleeping_bag,yellow_helmet,sos_rocks"},
     6: {"name": "voice", "terrain": "grass", "seed": 26, "items": "blue_backpack,orange_tent,grey_dog,blue_tarp",
@@ -121,6 +122,7 @@ def main(argv=None):
     ap.add_argument("--only", default="1,2,3,4,5,6")
     ap.add_argument("--no-think", action="store_true", help="fly without qwen38 on board (Clef only)")
     ap.add_argument("--with-corridor", action="store_true", help="also run the power-line regression e2e (seed 1)")
+    ap.add_argument("--seed-offset", type=int, default=0, help="added to every scenario's seed (S6 variance: 100, 200)")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     t0 = time.time()
@@ -137,7 +139,8 @@ def main(argv=None):
     for k in [int(x) for x in a.only.split(",") if x]:
         sc_ = SCENARIOS[k]
         d = out / f"s{k}"
-        cmd = [PY, "-m", "patrol.cli", "search", "--terrain", sc_["terrain"], "--seed", str(sc_["seed"]),
+        seed = sc_["seed"] + a.seed_offset
+        cmd = [PY, "-m", "patrol.cli", "search", "--terrain", sc_["terrain"], "--seed", str(seed),
                "--items", sc_["items"], "--clues", sc_["clues"], "--out", str(d)] + sc_.get("extra", []) \
             + ([] if a.no_think else ["--think"])
         rc, dt, _ = sh(cmd, log=out / f"s{k}.log", timeout=1800)
