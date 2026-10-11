@@ -1,0 +1,70 @@
+{
+  "input": "a royal blue hiking backpack with black straps, lying on its back",
+  "status": "SUCCEEDED",
+  "plan": [
+    "text\u2192image (zimage-turbo\u00d71)",
+    "cutout",
+    "image\u2192mesh (hy3d, full)",
+    "post (game)"
+  ],
+  "dir": "assets/items/blue_backpack",
+  "raw_glb": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full.glb",
+  "glb": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+  "usdz": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+  "all_usdz": [
+    "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+    "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+    "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz"
+  ],
+  "wall_seconds": 293.7,
+  "hold": {
+    "id": "h103ca8",
+    "nested": false
+  },
+  "steps": [
+    {
+      "stage": "concept",
+      "model": "zimage-turbo",
+      "seconds": 20.0,
+      "peak_gb": 22.0,
+      "output": "assets/items/blue_backpack/concept-zimage-turbo-s7.png"
+    },
+    {
+      "stage": "cutout",
+      "method": "vision",
+      "png_path": "assets/items/blue_backpack/concept-zimage-turbo-s7-rgba.png",
+      "opaque_pct": 23.9,
+      "partial_pct": 3.31,
+      "output": "assets/items/blue_backpack/concept-zimage-turbo-s7-rgba.png"
+    },
+    {
+      "stage": "mesh-full",
+      "model": "hy3d",
+      "seconds": 260.2,
+      "peak_gb": 32.3,
+      "output": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full.glb",
+      "normals": true
+    },
+    {
+      "stage": "post-game",
+      "model": "blender-cpu",
+      "seconds": 10.0,
+      "peak_gb": 1.6,
+      "output": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+      "usdz": [
+        {
+          "usdz": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/blue_backpack/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz",
+          "usdchecker": true
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@ import numpy as np
 
 
 def find_glb(d: Path) -> Path:
-    for pat in ("*game*.glb", "*-post*.glb", "*.glb"):
+    for pat in ("*-game/*_LOD0.glb", "*.glb"):     # m3d --post game writes <name>-game/<name>_LOD0.glb
         c = sorted(d.glob(pat))
         if c:
             return c[-1]
@@ -39,7 +39,7 @@ def convert(d: Path, size: float, up: str = "y") -> dict:
         tex = out / "texture.png"
         img.convert("RGB").save(tex)
     obj = out / "mesh.obj"
-    obj.write_text(trimesh.exchange.obj.export_obj(mesh, include_texture=False, include_normals=True))
+    obj.write_text(trimesh.exchange.obj.export_obj(mesh, include_texture=True, include_normals=True, return_texture=False))
     info = {"glb": glb.name, "obj": str(obj.resolve()), "texture": str(tex.resolve()) if tex else None,
             "size_m": size, "extent_m": [round(float(v), 3) for v in (mesh.bounds[1] - mesh.bounds[0])],
             "faces": int(len(mesh.faces)), "has_uv": getattr(mesh.visual, "uv", None) is not None}

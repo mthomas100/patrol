@@ -298,8 +298,8 @@ def describe_target(spec: dict, target, phase: str = "near") -> str:
 
 # ---------------------------------------------------------------- Direction 2: open-terrain search scenes
 TERRAINS = {   # ground texture colours (MuJoCo builtin checker, low contrast, random marks) and clutter style
-    "snow": {"rgb1": "0.90 0.92 0.95", "rgb2": "0.88 0.90 0.94", "mark": "0.80 0.83 0.88", "trees": "conifer"},
-    "grass": {"rgb1": "0.33 0.45 0.22", "rgb2": "0.36 0.48 0.24", "mark": "0.45 0.52 0.30", "trees": "broadleaf"},
+    "snow": {"rgb1": "0.78 0.80 0.85", "rgb2": "0.78 0.80 0.85", "mark": "0.70 0.73 0.80", "trees": "conifer"},
+    "grass": {"rgb1": "0.34 0.46 0.23", "rgb2": "0.34 0.46 0.23", "mark": "0.42 0.50 0.28", "trees": "broadleaf"},
 }
 
 
