@@ -88,6 +88,24 @@ def fault_checks(run: Path) -> list[tuple[str, bool]]:
     ]
 
 
+def voice_checks(run: Path, expect: str, notes_spoken: bool) -> list[tuple[str, bool]]:
+    """Speech in was heard, routed by Clef (not the keyword fallback) and executed; notes were read aloud."""
+    ev = [json.loads(l) for l in (run / "mission.jsonl").read_text().splitlines()]
+    v = [e for e in ev if e["type"] == "voice"]
+    ops = [e for e in ev if e["type"] == "operator" and (e.get("command") or {}).get("name") == expect]
+    hit = [e for e in v if e.get("route") == expect and e.get("source") == "CLEF" and e.get("accepted")]
+    out = [(f"spoken command heard and routed by Clef to {expect} "
+            f"({'; '.join(repr(e.get('text')) + ' -> ' + str(e.get('route')) + ' ' + str(e.get('source')) for e in v)})",
+            bool(hit)),
+           (f"{expect} executed by the drone", any(e.get("accepted") for e in ops))]
+    if notes_spoken:
+        notes = {e["id"] for e in ev if e["type"] == "note"}
+        spoken = {e.get("flag") for e in ev if e["type"] == "speech" and e.get("audio")
+                  and (run / e["audio"]).exists()}
+        out.append((f"every note read aloud ({len(notes & spoken)}/{len(notes)} with a WAV)", notes <= spoken))
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="e2e")
     ap.add_argument("--seed", type=int, default=1)
@@ -116,8 +134,10 @@ def main(argv=None):
 
     mrun = out / "mission"
     rc, wall, _ = sh([str(ROOT / "bin" / "patrol"), "fly", "--scene", a.scene, "--seed", str(a.seed), "--escalate",
+                      "--speak", "--chase", "--voice-script", json.dumps({"flag:1": "fixtures/voice/revisit.wav"}),
                       "--out", str(mrun)], out / "mission.log")
-    rows.append((f"mission: {a.scene} seed {a.seed}, Clef + qwen38 notes", wall, "mission/REPORT.md"))
+    rows.append((f"mission: {a.scene} seed {a.seed}, Clef + qwen38 notes read aloud, spoken revisit after the "
+                 "first flag", wall, "mission/REPORT.md"))
     if rc != 0 or not (mrun / "summary.json").exists():
         checks.append(("mission ran", False))
     else:
@@ -133,6 +153,21 @@ def main(argv=None):
             (f"decision latency reported (median {s['latency_ms']['median']} ms, p90 {s['latency_ms']['p90']} ms)",
              s["latency_ms"]["median"] is not None),
         ]
+        checks += [(f"mission: {c[0]}", c[1]) for c in voice_checks(mrun, "revisit_last_flag", True)]
+
+    vrun = out / "voice"
+    rc, wall, _ = sh([str(ROOT / "bin" / "patrol"), "fly", "--scene", "m0", "--seed", str(a.seed), "--speak",
+                      "--voice-script", json.dumps({"tick:60": "fixtures/voice/return_home.wav"}), "--out", str(vrun)],
+                     out / "voice.log")
+    rows.append(("voice mission: spoken 'return home' at tick 60", wall, "voice/REPORT.md"))
+    if rc != 0 or not (vrun / "summary.json").exists():
+        checks.append(("voice mission ran", False))
+    else:
+        (vrun / "REPORT.md").write_text(report.build(vrun, 0.0, 99, False)[0])
+        vs = json.loads((vrun / "summary.json").read_text())
+        checks += [(f"voice: {c[0]}", c[1]) for c in voice_checks(vrun, "return_home", False)]
+        checks.append((f"voice: drone came home because the operator asked ({vs['return_reason']})",
+                       vs["returned_home"] and vs["return_reason"] == "operator asked"))
 
     if not a.skip_faults:
         frun = out / "faults"

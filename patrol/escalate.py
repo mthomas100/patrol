@@ -14,8 +14,10 @@ import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 URL = "http://127.0.0.1:8090/v1/chat/completions"
+REFERENCE = Path(__file__).resolve().parents[1] / "fixtures" / "reference"
 MODEL = "qwen38"          # the only llama-swap model this project may ever request
 
 SYSTEM = ("You are a power-line inspection engineer writing notes from drone photos. Look at the photo yourself; "
@@ -25,12 +27,31 @@ PROMPT = """Zoomed drone photo(s) from a simulated transmission-line inspection,
 aimed at the {what}. The on-board decision model flagged possible damage; its probabilities: {nouls}.
 {lidar}
 Write the inspection note as JSON with exactly these keys:
-  "defect_type": one of "broken_insulator", "frayed_conductor", "vegetation", "foreign_object", "none",
+  "defect_type": one of "broken_insulator", "frayed_conductor", "vegetation", "foreign_object", "none", where
+     broken_insulator = the insulator string itself is damaged: discs missing (gaps in the stack), cracked, blackened
+       or scorched, or a disc knocked loose and hanging askew; fragments of discs below it;
+     frayed_conductor = the wire itself has broken strands splayed out or a burnt patch;
+     vegetation = a tree within about a metre of a wire;
+     foreign_object = something that is not part of the line equipment (bird nest, sticks, plastic sheet, kite),
   "component": the part affected, in a few words,
   "severity": one of "low", "medium", "high", "critical",
   "note": one or two sentences saying what is visible in the photo,
   "recommendation": one sentence for the maintenance crew.
-If nothing is wrong in the photo, use "none" and say so."""
+If nothing is wrong in the photo, use "none" and say so.{reference}"""
+
+REFERENCE_TEXT = ("\nThe LAST image is not from this inspection: it is a catalogue reference photo of a healthy {what} of "
+                  "the same design, for comparison. Compare the inspection photo(s) against it (count and spacing of the "
+                  "glass discs, the wire's outline) before naming the defect.")
+
+
+def reference_for(what: str) -> tuple[str, bytes] | None:
+    """A catalogue photo of the healthy component of the same design (rendered from a defect-free scene, the way an
+    inspector's reference library would hold one); None when no reference fits."""
+    for key, name, label in (("insulator", "insulator_healthy.jpg", "insulator string (nine evenly spaced discs)"),
+                             ("conductor", "conductor_healthy.jpg", "conductor span")):
+        if key in what and (REFERENCE / name).exists():
+            return label, (REFERENCE / name).read_bytes()
+    return None
 
 
 def _post(req: dict, timeout: float) -> dict:
@@ -51,20 +72,26 @@ def parse_note(text: str) -> dict:
 
 
 def write_note(jpeg, x: float, what: str, nouls: dict, length: float = 300.0, clearance=None,
-               max_wait_s: float = 900.0, timeout: float = 240.0) -> dict:
+               max_wait_s: float = 900.0, timeout: float = 240.0, reference: bool = True) -> dict:
     """One qwen38 vision call; waits out GPU holds (503) up to max_wait_s. Returns the note plus timing."""
     lidar = ("Rangefinder (lidar): no trees in view." if clearance is None else
              f"Rangefinder (lidar): nearest tree surface {clearance:.1f} m from the nearest conductor (a tree is a "
              "hazard only within about 1 m; one that merely looks close in the photo may be far behind the line).")
+    imgs = list(jpeg if isinstance(jpeg, (list, tuple)) else [jpeg])
+    ref = reference_for(what) if reference else None
+    if ref:
+        imgs.append(ref[1])
     req = {"model": MODEL, "max_tokens": 500, "temperature": 0.2, "thinking": {"type": "disabled"},
            "messages": [{"role": "system", "content": SYSTEM},
                         {"role": "user", "content": [
                             {"type": "text", "text": PROMPT.format(x=x, length=length, what=what, lidar=lidar,
+                                                                   reference=REFERENCE_TEXT.format(what=ref[0]) if ref
+                                                                   else "",
                                                                    nouls=json.dumps({k: round(v, 2) for k, v in
                                                                                      nouls.items()}))},
                             *[{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,"
                                                                         + base64.b64encode(j).decode()}}
-                              for j in (jpeg if isinstance(jpeg, (list, tuple)) else [jpeg])]]}]}
+                              for j in imgs]]}]}
     t0 = time.time()
     waited, attempts = 0.0, 0
     while True:
@@ -85,7 +112,7 @@ def write_note(jpeg, x: float, what: str, nouls: dict, length: float = 300.0, cl
     msg = body["choices"][0]["message"]
     note = parse_note(msg.get("content") or "")
     note.update(model=MODEL, wall_s=round(time.time() - t0, 1), held_wait_s=round(waited, 1), attempts=attempts,
-                usage=body.get("usage"))
+                usage=body.get("usage"), reference=ref[0] if ref else None)
     return note
 
 
