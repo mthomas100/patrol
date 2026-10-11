@@ -247,3 +247,10 @@ def test_a_plan_the_battery_cannot_fly_to_the_end_is_refused(tmp_path):
     m.plan_next = {"first": far, "reason": "test"}
     m._apply_plan()
     assert [m.sectors[i]["id"] for i in m.queue[:2]] == far
+
+
+def test_a_corner_costs_corner_s_of_flight_on_the_spot(tmp_path):
+    m, _ = plan_mission(tmp_path)
+    xy, f0 = m.sim.pos[:2].copy(), m.flight_s
+    m._corner()
+    assert m.flight_s == pytest.approx(f0 + m.cfg.corner_s) and (m.sim.pos[:2] == xy).all()
