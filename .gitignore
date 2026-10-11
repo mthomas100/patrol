@@ -1,7 +1,7 @@
 # root patterns like runs/*/media/ are anchored at the repo root; these cover this project
 .venv/
 runs/scratch/
-runs/*/media/
+runs/**/media/
 runs/*/*.png
 runs/*/*.jpg
 runs/*/*.mp4
