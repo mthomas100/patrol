@@ -66,13 +66,16 @@ def scene_items(terrain_seed: int) -> list[dict]:
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("out"); ap.add_argument("--views", type=int, default=5); ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("out"); ap.add_argument("--views", type=int, default=5)
+    ap.add_argument("--summarise", action="store_true", help="rebuild SUMMARY.md from OUT/probe.jsonl, no renders"); ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no-clef", action="store_true", help="finder and renders only")
     ap.add_argument("--res", type=int, nargs=2, default=[512, 384], help="sweep render size (the finder's input)")
     a = ap.parse_args(argv)
     global W, H
     W, H = a.res
     out = Path(a.out); (out / "media").mkdir(parents=True, exist_ok=True)
+    if a.summarise:
+        return summarise([json.loads(l) for l in (out / "probe.jsonl").read_text().splitlines()], out)
     if not a.no_clef and not clef.health(timeout=20):
         sys.exit("Clef-Flash is not answering on :8097")
     rows = []
@@ -161,20 +164,17 @@ def summarise(rows: list[dict], out: Path):
                 L.append(f"| {t} | {it} | {h} | {inv[(t, it, h)]} | {[r.get('p_clue') for r in rs]} |")
     # the rule: one investigate height where a single T separates clue (>= T on 4/5) from decoy (< T on 4/5), both terrains
     verdict_inv = {}
-    for h in (20, 12):
-        best = None
-        for T in [x / 100 for x in range(5, 100, 5)]:
-            ok = all(sum(v >= T for v in inv[(t, CLUE, h)]) >= 4 and sum(v < T for v in inv[(t, "blue_tarp", h)]) >= 4
-                     for t in ("snow", "grass"))
-            if ok:
-                best = T; break
-        verdict_inv[h] = best
+    for h in (20, 12):   # every single threshold T that separates clue from decoy per the rule; report the range
+        ok_T = [T / 100 for T in range(1, 100) if all(
+            sum(v >= T / 100 for v in inv[(t, CLUE, h)]) >= 4 and sum(v < T / 100 for v in inv[(t, "blue_tarp", h)]) >= 4
+            for t in ("snow", "grass"))]
+        verdict_inv[h] = (min(ok_T), max(ok_T)) if ok_T else None
     sweep_by = {(cam, h): all(finder_ok[(t, it, cam, h)] for t in ("snow", "grass") for it in ITEMS)
                 for cam in ("wide", "inspect") for h in (60, 40, 20)}
     inv_pass = any(v is not None for v in verdict_inv.values())
     sweep_pass = [k for k, v in sweep_by.items() if v and k[1] >= 40]
     L += ["", "## Verdict against the rule (DECISIONS 11:50)", "",
-          f"- Investigate: separating threshold per height {verdict_inv} -> {'PASS' if inv_pass else 'FAIL'}",
+          f"- Investigate: range of single thresholds T that separate clue from decoy, per height {verdict_inv} -> {'PASS' if inv_pass else 'FAIL'}",
           f"- Sweep (finder top-3 on >= 4/5 views, both terrains, both items) by camera and height: "
           f"{ {f'{c} {h} m': v for (c, h), v in sweep_by.items()} } -> {'PASS' if sweep_pass else 'FAIL'}",
           f"- **{'GO' if inv_pass and sweep_pass else 'NO-GO' if not inv_pass else 'GO at a lower sweep height only'}**", ""]

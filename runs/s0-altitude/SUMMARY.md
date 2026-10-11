@@ -44,6 +44,6 @@
 
 ## Verdict against the rule (DECISIONS 11:50)
 
-- Investigate: separating threshold per height {20: 0.05, 12: 0.05} -> PASS
+- Investigate: range of single thresholds T that separate clue from decoy, per height {20: (0.05, 0.69), 12: (0.05, 0.91)} -> PASS
 - Sweep (finder top-3 on >= 4/5 views, both terrains, both items) by camera and height: {'wide 60 m': False, 'wide 40 m': False, 'wide 20 m': False, 'inspect 60 m': False, 'inspect 40 m': False, 'inspect 20 m': True} -> FAIL
 - **GO at a lower sweep height only**
