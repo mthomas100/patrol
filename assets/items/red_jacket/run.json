@@ -1,0 +1,70 @@
+{
+  "input": "a red hooded rain jacket lying flat on the ground with its arms spread out",
+  "status": "SUCCEEDED",
+  "plan": [
+    "text\u2192image (zimage-turbo\u00d71)",
+    "cutout",
+    "image\u2192mesh (hy3d, full)",
+    "post (game)"
+  ],
+  "dir": "assets/items/red_jacket",
+  "raw_glb": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full.glb",
+  "glb": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+  "usdz": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+  "all_usdz": [
+    "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+    "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+    "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz"
+  ],
+  "wall_seconds": 237.3,
+  "hold": {
+    "id": "h85a9da",
+    "nested": false
+  },
+  "steps": [
+    {
+      "stage": "concept",
+      "model": "zimage-turbo",
+      "seconds": 30.0,
+      "peak_gb": 22.0,
+      "output": "assets/items/red_jacket/concept-zimage-turbo-s7.png"
+    },
+    {
+      "stage": "cutout",
+      "method": "vision",
+      "png_path": "assets/items/red_jacket/concept-zimage-turbo-s7-rgba.png",
+      "opaque_pct": 23.2,
+      "partial_pct": 2.6,
+      "output": "assets/items/red_jacket/concept-zimage-turbo-s7-rgba.png"
+    },
+    {
+      "stage": "mesh-full",
+      "model": "hy3d",
+      "seconds": 195.2,
+      "peak_gb": 32.6,
+      "output": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full.glb",
+      "normals": true
+    },
+    {
+      "stage": "post-game",
+      "model": "blender-cpu",
+      "seconds": 10.0,
+      "peak_gb": 1.6,
+      "output": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+      "usdz": [
+        {
+          "usdz": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/red_jacket/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz",
+          "usdchecker": true
+        }
+      ]
+    }
+  ]
+}

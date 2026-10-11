@@ -95,6 +95,7 @@ class SearchMission:
         (self.out / "scene.json").write_text(json.dumps(spec))      # ground truth: scoring and console only
         self.cfg = cfg or SearchConfig()
         self.sim = Sim(spec, start=self.cfg.home)
+        self.sim.CHASE_OFFSET, self.sim.CHASE_LOOK = (-12.0, -16.0, 9.0), (5.0, 8.0, -14.0)   # 3/4 view from above
         self.spec = {k: v for k, v in spec.items() if k not in TRUTH_KEYS}
         self.sim.spec = self.spec                                    # cut the simulator's copy of the truth too
         self.clues = clue_list
@@ -422,7 +423,8 @@ class SearchMission:
                 f"{100 * self.coverage.fraction():.0f}%, battery {self.battery():.0f}%. Alerts: {found or 'none yet'}.")
 
     # ------------------------------------------------------------ run
-    def run(self, max_ticks: int = 4000, script: dict | None = None, hooks=()) -> dict:
+    def run(self, max_ticks: int = 4000, script: dict | None = None, hooks=(), pace: float = 0.0) -> dict:
+        """pace > 0: sim time runs at most `pace` x wall-clock time (live console); 0: as fast as it computes."""
         t0 = time.time()
         self.started = True
         self.emit("start", spec=self.spec, clues=self.clues, config=asdict(self.cfg), sweep_h=self.sweep_h,
@@ -433,6 +435,10 @@ class SearchMission:
             for h in hooks:
                 h(self)
             self.tick()
+            if pace > 0:
+                ahead = self.sim.t / pace - (time.time() - t0)
+                if ahead > 0:
+                    time.sleep(min(ahead, 1.0))
         summary = self.summary(time.time() - t0)
         self.emit("summary", **summary)
         (self.out / "summary.json").write_text(json.dumps(summary, indent=1))
@@ -529,8 +535,7 @@ def score(out: Path, match_r: float = 5.0) -> dict:
             "time_to_first_find": min((r["t_alert"] for r in found), default=None)}
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(prog="patrol search")
+def add_args(ap: argparse.ArgumentParser):
     ap.add_argument("--terrain", default="snow", choices=sorted(world.TERRAINS))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--items", default="blue_backpack,blue_tarp", help="items placed in the scene")
@@ -541,20 +546,31 @@ def main(argv=None):
     ap.add_argument("--clef-url", default=clef.URL)
     ap.add_argument("--fault-rate", type=float, default=0.0)
     ap.add_argument("--lockstep", action="store_true", help="pause the world while Clef thinks")
-    ap.add_argument("--chase", action="store_true")
+    ap.add_argument("--chase", action="store_true", help="render the chase camera every tick (console, video)")
+    ap.add_argument("--pace", type=float, default=0.0, help="sim seconds per wall second (0: as fast as possible)")
     ap.add_argument("--max-ticks", type=int, default=4000)
-    a = ap.parse_args(argv)
+
+
+def make_mission(a, out: Path, sinks=()) -> SearchMission:
+    """The scene and mission for parsed add_args() options (the CLI and the console both use this)."""
     names = [n for n in a.items.split(",") if n]
     cnames = [n for n in a.clues.split(",") if n]
-    out = Path(a.out or ROOT / "runs" / time.strftime("%Y%m%d-%H%M%S-search"))
-    out.mkdir(parents=True, exist_ok=True)
     h = a.half
     cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h)
     spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2])
+    return SearchMission(spec, out, cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
+                         seed=a.seed, sinks=sinks, realtime=not a.lockstep, chase=a.chase)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="patrol search")
+    add_args(ap)
+    a = ap.parse_args(argv)
+    out = Path(a.out or ROOT / "runs" / time.strftime("%Y%m%d-%H%M%S-search"))
+    out.mkdir(parents=True, exist_ok=True)
     sink = JsonlSink(out / "mission.jsonl")
-    m = SearchMission(spec, out, cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
-                      seed=a.seed, sinks=[sink], realtime=not a.lockstep, chase=a.chase)
-    s = m.run(max_ticks=a.max_ticks)
+    m = make_mission(a, out, [sink])
+    s = m.run(max_ticks=a.max_ticks, pace=a.pace)
     sink.close()
     sc = score(out)
     (out / "score.json").write_text(json.dumps(sc, indent=1))

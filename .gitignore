@@ -15,3 +15,6 @@ assets/**/*.png
 assets/**/*.obj
 assets/**/*.jpg
 assets/**/*.mtl
+runs/**/strips/
+runs/**/*.jpg
+runs/**/*.png

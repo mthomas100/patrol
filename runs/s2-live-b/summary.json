@@ -1,0 +1,51 @@
+{
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 354.6,
+ "wall_s": 52.2,
+ "flight_s": 354.1,
+ "battery_used_pct": 29.5,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lanes_done": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 97,
+ "clef_sweep": {
+  "n": 89,
+  "ok": 89,
+  "median_ms": 531,
+  "p90_ms": 636
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 667,
+  "p90_ms": 667
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 8.2,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    -32.73,
+    25.21
+   ],
+   "conf": 0.87,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0059_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 202.1,
+   "seen": 1
+  }
+ ],
+ "time_to_first_alert": 202.1
+}

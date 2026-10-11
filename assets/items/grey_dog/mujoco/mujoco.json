@@ -1,0 +1,13 @@
+{
+ "glb": "concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+ "obj": "assets/items/grey_dog/mujoco/mesh.obj",
+ "texture": "assets/items/grey_dog/mujoco/texture.png",
+ "size_m": 1.0,
+ "extent_m": [
+  1.0,
+  0.522,
+  0.284
+ ],
+ "faces": 20000,
+ "has_uv": true
+}

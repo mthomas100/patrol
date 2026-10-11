@@ -1,0 +1,13 @@
+{
+ "glb": "concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+ "obj": "assets/items/red_jacket/mujoco/mesh.obj",
+ "texture": "assets/items/red_jacket/mujoco/texture.png",
+ "size_m": 0.8,
+ "extent_m": [
+  0.8,
+  0.227,
+  0.579
+ ],
+ "faces": 20000,
+ "has_uv": true
+}
