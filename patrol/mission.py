@@ -55,6 +55,7 @@ class Mission:
         self.latency_ema = 0.0
         self.realtime = realtime
         self.chase = chase              # also render the third-person chase camera each tick (console, demo video)
+        self.started = False
         self.decisions: list[dict] = []
         self.photos: list[dict] = []
         (self.out / "media" / "frames").mkdir(parents=True, exist_ok=True)
@@ -192,11 +193,17 @@ class Mission:
         if g.action == "flag_damage":
             guess = "vegetation_close" if g.source == "sensor" else \
                 max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
-            f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs, nouls=dec.nouls,
-                     defect_guess=guess, source=g.label, clearance=clearance, trigger=sm.trigger)
-            sm.flags.append(f)
+            prev = next((x for x in sm.flags if x.target.near(t)), None)
+            if prev:        # a re-inspection (spoken revisit): the same finding gets a fresh photo and note
+                f = prev
+                f.photo, f.probs, f.nouls, f.t, f.note = path, dec.probs, dec.nouls, sim.t, None
+            else:
+                f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs,
+                         nouls=dec.nouls, defect_guess=guess, source=g.label, clearance=clearance,
+                         trigger=sm.trigger)
+                sm.flags.append(f)
             self.emit("flag", id=f.id, target=[t.x, t.y, t.z], photo=path, photos=paths, defect_guess=guess,
-                      clearance_m=clearance, trigger=sm.trigger, source=g.label,
+                      clearance_m=clearance, trigger=sm.trigger, source=g.label, revisit=bool(prev),
                       probs=dec.probs, nouls=dec.nouls, truth=photo["truth"])
             if self.escalator:     # off the control path; the note event arrives when qwen38 answers
                 self.escalator.submit(f, jpgs if len(jpgs) > 1 else jpgs[0], lambda fl, note: self.emit("note", id=fl.id, photo=fl.photo,
@@ -232,6 +239,9 @@ class Mission:
     def status_text(self) -> str:
         """One paragraph of mission state for voice routing and spoken questions."""
         sm, tel = self.sm, self.sim.telemetry()
+        if not self.started:
+            return (f"The drone is on the ground at the launch point, ready to patrol the {self.cfg.length:.0f} m "
+                    f"corridor; battery {sm.battery:.0f}%.")
         flags = "; ".join(f"{f.id} at {f.target.x:.0f} m ({(f.note or {}).get('defect_type') or f.defect_guess}"
                           f"{', ' + f.note['severity'] if f.note and f.note.get('severity') else ''})"
                           for f in sm.flags) or "none yet"
@@ -265,6 +275,7 @@ class Mission:
         """script: {tick: command} operator commands injected at given ticks (tests stand in for voice).
         hooks: callables run with the mission before each tick (the voice script uses one)."""
         t0 = time.time()
+        self.started = True
         self.emit("start", spec={k: self.spec[k] for k in ("kind", "seed", "length", "spacing", "pylons", "trees")
                                  if k in self.spec},
                   defects=self.spec["defects"], config=self.cfg.__dict__)

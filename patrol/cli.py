@@ -3,6 +3,7 @@
   frames  OUT [--seed N]           save wide frames along a scripted pass plus zoom photos, with ground truth
   bench   FRAMES_DIR [--sizes ...] Clef-Flash on every saved frame at each size: latency and answers
   fly     [--seed N] [...]         closed-loop mission (see mission.py)
+  console [--port 8770] [...]      live web console for a mission, or --replay RUN_DIR (see console.py)
 """
 from __future__ import annotations
 
@@ -89,6 +90,10 @@ def cmd_bench(a):
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["console"]:          # the console owns its own argument parser
+        from . import console
+        return console.main(argv[1:])
     p = argparse.ArgumentParser(prog="patrol")
     sub = p.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("frames"); f.add_argument("out"); f.add_argument("--seed", type=int, default=0)
