@@ -166,7 +166,11 @@ def _frayed(d, rng):
     return g
 
 
+_VEG = [0]
+
+
 def _tree(x, y, h, rng, touching_z=None):
+    """Tree geoms are named veg_* so the rangefinder can tell vegetation from steel and wire."""
     g = [_g("capsule", fromto=(x, y, 0, x, y, h * 0.55), size=(0.25,), rgba=(0.35, 0.24, 0.15, 1))]
     top = touching_z if touching_z is not None else h
     crown_r = 2.2 if touching_z is not None else max(1.5, h * 0.28)
@@ -174,8 +178,10 @@ def _tree(x, y, h, rng, touching_z=None):
     if touching_z is not None:
         g[0] = _g("capsule", fromto=(x, y, 0, x, y, cz), size=(0.3,), rgba=(0.35, 0.24, 0.15, 1))
     for k in range(5):
+        _VEG[0] += 1
         g.append(_g("ellipsoid", pos=(x + rng.uniform(-0.8, 0.8), y + rng.uniform(-0.8, 0.8), cz + rng.uniform(-0.6, 0.6)),
-                    size=(crown_r, crown_r * 0.9, crown_r * 0.8), rgba=(0.13 + 0.05 * k / 5, 0.38, 0.12, 1)))
+                    size=(crown_r, crown_r * 0.9, crown_r * 0.8), rgba=(0.13 + 0.05 * k / 5, 0.38, 0.12, 1),
+                    name=f"veg_{_VEG[0]}"))
     return g
 
 
@@ -195,6 +201,7 @@ def _foreign(d):
 
 
 def build_mjcf(spec: dict) -> str:
+    _VEG[0] = 0
     rng = random.Random(spec["seed"] * 7919 + 1)
     sp = spec["spacing"]
     defects_at_pylon = {(d["at"], d["phase"]) for d in spec["defects"] if d["type"] == "broken_insulator"}

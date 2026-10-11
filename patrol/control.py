@@ -111,6 +111,7 @@ class Flag:
     defect_guess: str
     source: str
     note: dict | None = None          # filled by escalation (M2)
+    clearance: float | None = None    # rangefinder: nearest tree to a conductor, m (None: no trees in view)
 
 
 @dataclass

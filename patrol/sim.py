@@ -141,6 +141,37 @@ class Sim:
                             "depth": round(p[2], 1)})
         return out
 
+    def vegetation_clearance(self, camera: str = "zoom", width: int = 256, height: int = 192) -> float | None:
+        """Rangefinder: depth + segmentation from a gimbal camera. Returns the smallest 3D distance (m) between any
+        visible tree surface and any conductor, or None when no vegetation is in view. Code-owned sensing, the way
+        corridor LiDAR measures clearance; no ground truth is read."""
+        key = ("seg", height, width)
+        if key not in self._renderers:
+            self._renderers[key] = mujoco.Renderer(self.model, height, width)
+        r = self._renderers[key]
+        opt = mujoco.MjvOption(); opt.geomgroup[3] = 0
+        r.update_scene(self.data, camera=self.cam[camera], scene_option=opt)
+        r.enable_segmentation_rendering(); seg = r.render()[:, :, 0].copy(); r.disable_segmentation_rendering()
+        r.enable_depth_rendering(); depth = r.render().copy(); r.disable_depth_rendering()
+        if not hasattr(self, "_veg_ids"):
+            self._veg_ids = np.array([i for i in range(self.model.ngeom)
+                                      if (self.model.geom(i).name or "").startswith("veg_")])
+        mask = np.isin(seg, self._veg_ids)
+        if not mask.any():
+            return None
+        v, u = np.nonzero(mask)
+        d = depth[v, u]
+        i = self.cam[camera]
+        f = (height / 2) / math.tan(math.radians(self.model.cam_fovy[i]) / 2)
+        pc = np.stack([(u + 0.5 - width / 2) / f * d, -(v + 0.5 - height / 2) / f * d, -d], axis=1)  # camera frame
+        R = self.data.cam_xmat[i].reshape(3, 3)
+        pw = pc @ R.T + self.data.cam_xpos[i]
+        sp = self.spec["spacing"]
+        frac = np.clip((pw[:, 0] % sp) / sp, 0, 1)
+        zc = world.conductor_z(frac, sp)
+        best = min(float(np.min(np.hypot(pw[:, 1] - y, pw[:, 2] - zc))) for y in world.PHASES.values())
+        return round(best, 2)
+
     def close(self):
         for r in self._renderers.values():
             r.close()

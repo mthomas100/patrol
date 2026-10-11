@@ -96,6 +96,13 @@ def state_text(tel: dict, context: dict | None = None) -> str:
     ]
     if c.get("hovering"):
         lines.append("The drone is hovering and has just taken close-up photos of the spot that looked unusual.")
+    if "clearance" in c:
+        if c["clearance"] is None:
+            lines.append("Rangefinder (lidar): no trees in view of the close-up.")
+        else:
+            lines.append(f"Rangefinder (lidar): the nearest tree surface is {c['clearance']:.1f} m from the nearest "
+                         "conductor; a tree is only a hazard within about 1 m, and a tree that merely appears behind "
+                         "or in front of a wire in the photo is not touching it.")
     if c.get("revisit"):
         lines.append("The drone flew back to re-inspect a spot that looked suspicious.")
     if c.get("flags_here"):

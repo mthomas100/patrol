@@ -23,6 +23,7 @@ SYSTEM = ("You are a power-line inspection engineer writing notes from drone pho
 
 PROMPT = """Zoomed drone photo(s) from a simulated transmission-line inspection, taken at {x:.0f} m along a {length:.0f} m corridor,
 aimed at the {what}. The on-board decision model flagged possible damage; its probabilities: {nouls}.
+{lidar}
 Write the inspection note as JSON with exactly these keys:
   "defect_type": one of "broken_insulator", "frayed_conductor", "vegetation", "foreign_object", "none",
   "component": the part affected, in a few words,
@@ -49,13 +50,16 @@ def parse_note(text: str) -> dict:
         return {"defect_type": "unknown", "note": text[:300], "parse_error": True}
 
 
-def write_note(jpeg, x: float, what: str, nouls: dict, length: float = 300.0,
+def write_note(jpeg, x: float, what: str, nouls: dict, length: float = 300.0, clearance=None,
                max_wait_s: float = 900.0, timeout: float = 240.0) -> dict:
     """One qwen38 vision call; waits out GPU holds (503) up to max_wait_s. Returns the note plus timing."""
+    lidar = ("Rangefinder (lidar): no trees in view." if clearance is None else
+             f"Rangefinder (lidar): nearest tree surface {clearance:.1f} m from the nearest conductor (a tree is a "
+             "hazard only within about 1 m; one that merely looks close in the photo may be far behind the line).")
     req = {"model": MODEL, "max_tokens": 500, "temperature": 0.2, "thinking": {"type": "disabled"},
            "messages": [{"role": "system", "content": SYSTEM},
                         {"role": "user", "content": [
-                            {"type": "text", "text": PROMPT.format(x=x, length=length, what=what,
+                            {"type": "text", "text": PROMPT.format(x=x, length=length, what=what, lidar=lidar,
                                                                    nouls=json.dumps({k: round(v, 2) for k, v in
                                                                                      nouls.items()}))},
                             *[{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,"
@@ -99,7 +103,7 @@ class Escalator:
         what = flag.target.why or "nearest line equipment"
 
         def job():
-            note = write_note(jpeg, flag.target.x, what, flag.nouls, self.length)
+            note = write_note(jpeg, flag.target.x, what, flag.nouls, self.length, clearance=flag.clearance)
             with self.lock:
                 self.calls += 1
                 flag.note = note

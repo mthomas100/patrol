@@ -144,35 +144,41 @@ class Mission:
         3 m behind and ahead of the aim point (the look-ahead aim is only good to a few metres), decided together."""
         sm, sim = self.sm, self.sim
         t = sm.target
-        offsets = (0.0,) if "tower" in t.why else (-3.0, 3.0)
-        jpgs, paths = [], []
+        offsets = (0.0,) if "insulator string" in t.why else (-3.0, 3.0)
+        jpgs, paths, clear = [], [], []
         n = len(self.photos) + 1
         for k, off in enumerate(offsets):
             sim.aim("zoom", (t.x + off, t.y, t.z))
             jpg = sim.jpeg("zoom", W, H)
             jpgs.append(jpg)
+            c = sim.vegetation_clearance("zoom")
+            if c is not None:
+                clear.append(c)
             paths.append(self._save("photos", f"photo_{n:02d}{'ab'[k] if len(offsets) > 1 else ''}_x{t.x + off:05.1f}.jpg",
                                     jpg, force=True))
         path = paths[0]
+        clearance = min(clear) if clear else None
         dec = self._ask(jpgs if len(jpgs) > 1 else jpgs[0],
                         clef.state_text(sim.telemetry(), self._ctx(camera="zoom2" if len(jpgs) > 1 else "zoom",
-                                                                   hovering=True)), clef.confirm_schema())
+                                                                   hovering=True, clearance=clearance)),
+                        clef.confirm_schema())
         self._fly_blind(dec)
         g = confirm_gate(dec, "protocol: no flag without a confident confirmation; photo kept for human review")
         truth = []
         for off in offsets:
             sim.aim("zoom", (t.x + off, t.y, t.z))
             truth += [v for v in sim.visible_defects("zoom", W, H, max_depth=40) if v["id"] not in {x["id"] for x in truth}]
-        photo = {"photo": path, "photos": paths, "target": [t.x, t.y, t.z], "what": t.why,
+        photo = {"photo": path, "photos": paths, "target": [t.x, t.y, t.z], "what": t.why, "clearance_m": clearance,
                  "decision": self._dec(dec, "confirm"), "gated": self._g(g), "truth": truth}
         self.photos.append(photo)
         self.emit("photo", **photo)
         if g.action == "flag_damage":
             guess = max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
             f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs, nouls=dec.nouls,
-                     defect_guess=guess, source=g.label)
+                     defect_guess=guess, source=g.label, clearance=clearance)
             sm.flags.append(f)
             self.emit("flag", id=f.id, target=[t.x, t.y, t.z], photo=path, photos=paths, defect_guess=guess,
+                      clearance_m=clearance,
                       probs=dec.probs, nouls=dec.nouls, truth=photo["truth"])
             if self.escalator:     # off the control path; the note event arrives when qwen38 answers
                 self.escalator.submit(f, jpgs if len(jpgs) > 1 else jpgs[0], lambda fl, note: self.emit("note", id=fl.id, photo=fl.photo,
