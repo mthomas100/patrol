@@ -49,6 +49,7 @@ LOOK_GAIN = 1.3
 # 6 m or more from any conductor; the planted encroaching tree measures 0.1-0.3 m (runs/m2-seed0-c).
 VEG_HOVER_M = 1.5
 VEG_FLAG_M = 1.0
+VEG_SAME_TREE_M = 8.0   # vegetation flags closer than this along the line are one tree (one finding)
 
 
 @dataclass
