@@ -21,6 +21,9 @@ checks your Mac, asks before every large download, wires up the models and prove
 4. `tests/e2e_search.sh --only 1,2,3,4 --no-think`, then the live console in your browser.
 5. Optional: any local vision chat model on port 8090 (clue wording and alert notes), and `local-voice` for speech.
 
+**No suitable Mac?** [`HOSTED.md`](HOSTED.md) sketches running it with hosted models instead: Clef-Flash on Cloudflare
+Workers AI and any vision chat model through a proxy. It is untested and no longer offline.
+
 ## What is in this folder
 
 | Path | What |

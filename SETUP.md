@@ -19,6 +19,8 @@ and a local voice stack lets the operator speak. Everything runs on the Mac, wit
 
 Missing tools: `brew install uv git` and `uv tool install "huggingface_hub[cli]"`, after asking the user.
 
+No Apple Silicon Mac, or not enough memory? See [`HOSTED.md`](HOSTED.md) for hosted models instead (untested).
+
 Pick a tier with the user. Each tier adds to the one before it.
 
 | Tier | What works | Extra downloads |
