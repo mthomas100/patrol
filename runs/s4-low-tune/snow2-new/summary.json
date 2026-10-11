@@ -1,0 +1,115 @@
+{
+ "llm_calls": 0,
+ "llm_by_role": {},
+ "clef_qwen_idle": {
+  "n": 392,
+  "ok": 392,
+  "median_ms": 320,
+  "p90_ms": 343
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 48,
+ "sectors_done": 48,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 732.9,
+ "wall_s": 151.1,
+ "flight_s": 732.4,
+ "battery_used_pct": 61.0,
+ "state_s": {
+  "TAKEOFF": 5.5,
+  "SWEEP": 608.0,
+  "INVESTIGATE": 45.5,
+  "CONFIRM": 5.0,
+  "RESUME": 27.0,
+  "RETURN": 41.5
+ },
+ "sweep_h": 21.82,
+ "lanes": 12,
+ "lane_spacing_m": 14.23,
+ "frame_every_m": 6.54,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 276,
+ "candidates": 828,
+ "clef_sweep": {
+  "n": 385,
+  "ok": 385,
+  "median_ms": 320,
+  "p90_ms": 342
+ },
+ "clef_confirm": {
+  "n": 7,
+  "ok": 7,
+  "median_ms": 427,
+  "p90_ms": 441
+ },
+ "fallback": 0,
+ "investigations": 7,
+ "dismissed": 4,
+ "mean_investigate_s": 7.2,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    10.24,
+    -66.25
+   ],
+   "conf": 0.946,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0012_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S1",
+   "t": 60.95,
+   "seen": 1,
+   "by": "Clef"
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    -54.78,
+    -14.29
+   ],
+   "conf": 0.896,
+   "h": 20.0,
+   "photo": "media/photos/S2_20m.jpg",
+   "sweep_crop": "media/crops/f0095_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S2",
+   "t": 254.25,
+   "seen": 1,
+   "by": "Clef"
+  },
+  {
+   "id": "A3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    -35.36,
+    60.17
+   ],
+   "conf": 0.792,
+   "h": 20.0,
+   "photo": "media/photos/S5_20m.jpg",
+   "sweep_crop": "media/crops/f0235_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S5",
+   "t": 583.86,
+   "seen": 1,
+   "by": "Clef"
+  }
+ ],
+ "time_to_first_alert": 60.95
+}
