@@ -94,6 +94,7 @@ class Console:
         self.run_dir: Path | None = None
         self.running = False
         self.worker = self.speaker = None
+        self.described = None                   # clues qwen38 wrote from a description (search), else the catalogue
         self.voice_n = 0
         self.jsonl = None
         self.speed = None
@@ -119,13 +120,43 @@ class Console:
             self.jsonl.close()
         self.jsonl = M.JsonlSink(out / "mission.jsonl")
         a.chase = True                                  # the page's chase panel needs the camera rendered every tick
-        self.mission = m = search.make_mission(a, out, sinks=[self.hub, self.jsonl])
+        if self.described is None and (a.describe or a.describe_wav):
+            self.described = self._describe_from_options()
+        self.mission = m = search.make_mission(a, out, sinks=[self.hub, self.jsonl], clue_list=self.described)
+        if (a.speak or a.voice) and self.worker is None:
+            from . import voice
+            self.worker = voice.VoiceWorker()
+        if a.speak:
+            from . import voice
+            self.speaker = voice.Speaker(self.worker, out, publish=m.emit)
+            m.sinks.append(self.speaker)
         self.run_dir = out
         self.hub.reset()
         # what the page needs before takeoff (the start event repeats it once the flight begins)
-        self.hub({"type": "ready", "kind": "search", "run": out.name, "seed": a.seed, "voice": False, "spec": m.spec,
+        self.hub({"type": "ready", "kind": "search", "run": out.name, "seed": a.seed, "voice": bool(self.worker),
+                  "spec": m.spec,
                   "clues": m.clues, "config": asdict(m.cfg), "sweep_h": m.sweep_h, "lanes": m.lanes,
                   "sectors": getattr(m, "sectors", []), "home": list(m.cfg.home)})
+
+    def _describe_from_options(self) -> list[dict] | None:
+        """--describe TEXT or --describe-wav W: qwen38 writes the clues before the first flight."""
+        from . import thinker
+        a, text = self.a, self.a.describe
+        if a.describe_wav:
+            from . import voice
+            self.worker = self.worker or voice.VoiceWorker()
+            heard = self.worker.stt(ROOT / a.describe_wav)
+            text = heard.get("text") if heard.get("ok") else None
+        d = thinker.describe(text) if text else {"error": "nothing heard"}
+        print(f"description {text!r} -> {[c['name'] for c in d.get('clues', [])]} {d.get('error') or ''}", flush=True)
+        return d.get("clues") or None
+
+    def on_describe(self, d: dict):
+        """A spoken description before takeoff replaces the clues: a fresh mission with qwen38's clues, and a new ready
+        event so the page shows them. In flight the options are only shown (the clue list is fixed per flight)."""
+        if d.get("clues") and not self.running and self.kind == "search":
+            self.described = d["clues"]
+            self.prepare()
 
     def prepare(self):
         """A fresh mission on the ground, waiting for start."""
@@ -226,7 +257,7 @@ class Console:
         if r.returncode:
             return {"ok": False, "error": "ffmpeg: " + r.stderr[-200:]}
         return voice.handle_utterance(wav, self.worker, self.mission, self.speaker, self.a.clef_url,
-                                      on_start=self.start)
+                                      on_start=self.start, on_describe=self.on_describe)
 
     # ------------------------------------------------------------ replay
     def replay(self, speed: float):
@@ -354,9 +385,7 @@ def build_parser(search_mode: bool) -> argparse.ArgumentParser:
     p.add_argument("--port", type=int, default=8770)
     p.add_argument("--replay", help="stream a recorded run directory instead of flying")
     p.add_argument("--speed", type=float, default=3.0, help="replay speed (sim seconds per wall second)")
-    if not search_mode:
-        p.add_argument("--voice", action="store_true",
-                       help="push-to-talk: Parakeet + Clef routing (implied by --speak)")
+    p.add_argument("--voice", action="store_true", help="push-to-talk: Parakeet + Clef routing (implied by --speak)")
     p.add_argument("--autostart", action="store_true", help="start the mission as soon as the console is up")
     return p
 

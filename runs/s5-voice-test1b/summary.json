@@ -1,0 +1,172 @@
+{
+ "llm_calls": 6,
+ "llm_by_role": {
+  "note": 3,
+  "trail": 3
+ },
+ "clef_qwen_idle": {
+  "n": 163,
+  "ok": 163,
+  "median_ms": 321,
+  "p90_ms": 594
+ },
+ "clef_qwen_active": {
+  "n": 40,
+  "ok": 40,
+  "median_ms": 411,
+  "p90_ms": 756
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "A2",
+    "B2",
+    "C2",
+    "D2",
+    "E2",
+    "F2"
+   ],
+   "reason": "Prioritize sectors along the trail's path from the trailhead, as hikers typically follow linear features.",
+   "raw_ok": true,
+   "wall_s": 3.0,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "D3",
+    "D2",
+    "E3",
+    "E2",
+    "F3",
+    "F2"
+   ],
+   "reason": "Prioritize trail segments north of the tent find, as hikers typically continue forward along linear features.",
+   "raw_ok": true,
+   "wall_s": 4.9,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "F3",
+    "F2",
+    "E3",
+    "F4",
+    "E4",
+    "G3"
+   ],
+   "reason": "Trail continues northeast through F3/F2; stream intersects trail in E3, making these high-probability zones for hikers following linear features.",
+   "raw_ok": true,
+   "wall_s": 5.0,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 687.6,
+ "wall_s": 104.6,
+ "flight_s": 687.1,
+ "battery_used_pct": 57.3,
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "coverage": 0.9953,
+ "area_m2_covered": 25480,
+ "frames": 132,
+ "candidates": 396,
+ "clef_sweep": {
+  "n": 198,
+  "ok": 198,
+  "median_ms": 328,
+  "p90_ms": 609
+ },
+ "clef_confirm": {
+  "n": 5,
+  "ok": 5,
+  "median_ms": 668,
+  "p90_ms": 896
+ },
+ "fallback": 0,
+ "investigations": 5,
+ "dismissed": 1,
+ "mean_investigate_s": 8.8,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "gray_dog",
+   "family": "gray dog",
+   "g": [
+    -66.45,
+    -63.0
+   ],
+   "conf": 0.664,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0002_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 38.55,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible gray dog 66 meters east and 63 meters north of the search center.",
+    "check": "Ground team should visually confirm the animal at the coordinates.",
+    "agree": true,
+    "wall_s": 3.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    10.72,
+    -16.66
+   ],
+   "conf": 0.933,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0020_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S3",
+   "t": 150.49,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone confirms orange tent 11 meters east and 17 meters north of center, 88 meters from trailhead.",
+    "check": "Ground team should proceed to the coordinates to inspect the orange tent.",
+    "agree": true,
+    "wall_s": 4.0,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    9.62,
+    29.9
+   ],
+   "conf": 0.789,
+   "h": 20.0,
+   "photo": "media/photos/S4_20m.jpg",
+   "sweep_crop": "media/crops/f0030_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S4",
+   "t": 199.99,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible blue backpack spotted 10 meters east and 30 meters north of search center, 132 meters from trailhead.",
+    "check": "Ground team should visually confirm the object is the missing backpack.",
+    "agree": true,
+    "wall_s": 4.4,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 38.55
+}
