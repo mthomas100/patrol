@@ -81,7 +81,7 @@ def architecture():
                                                                          fill="var(--ink-3)"))
     o.append(band(R1, 'BEFORE TAKE-OFF', 'words become a search'))
     o.append(band(R2, 'EVERY 12 METRES OF FLIGHT', 'the fast loop, about 0.3 s per look'))
-    o.append(band(R3, 'A FEW TIMES A FLIGHT', 'the slow loop, seconds, never holds up the flying'))
+    o.append(band(R3, 'A FEW TIMES A FLIGHT', 'the slow loop, seconds; only a second opinion makes the drone wait'))
 
     # row 1
     o.append(_node(C[0], R1, w, h, 'Operator', ['hold to talk at', 'the trailhead'], 'person'))
@@ -146,7 +146,7 @@ def architecture():
     o.append(_halo(cx(0), R3 + h / 2 - 7, 'reorder', 9.5))
     # radio
     o.append(f'<rect x="{C[6]}" y="{R3 + h + 26}" width="{w}" height="30" rx="15" fill="var(--paper-2)" stroke="var(--ink-3)" stroke-width="1.2"/>')
-    o.append(_t(cx(6), R3 + h + 45, 'radio + console', 11, anchor="middle", weight=600, fill="var(--ink)"))
+    o.append(_t(cx(6), R3 + h + 45, 'console (radio-sized)', 11, anchor="middle", weight=600, fill="var(--ink)"))
     o.append(_path(f'M{cx(6)} {R3 + h} V{R3 + h + 23}', col='var(--blaze)', marker='ahb'))
 
     # safety bar
@@ -165,7 +165,7 @@ def altitude():
     W, H = 1000, 400
     G = 340                       # ground line y
     m = 6.0                       # px per metre, both axes (true geometry)
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Side view, to scale. Left: two sweep lanes at 40 metres, 22.9 '
+    o = [f'<svg viewBox="0 64 {W} {H - 64}" role="img" aria-label="Side view, to scale. Left: two sweep lanes at 40 metres, 22.9 '
          f'metres apart; each photo sees 32.6 metres of ground across the lane, so neighbouring lanes overlap. Right: a closer '
          f'look, with the drone 12 metres short of the spot at 20 metres and the zoom framed to about 4 metres of ground, and a '
          f'second step at 12 metres only if the answer is unsure.">', _defs(('ah', 'var(--ink-3)'))]
@@ -228,7 +228,188 @@ def altitude():
     return ''.join(o)
 
 
+# --------------------------------------------------------------------------------------------- state machine
+def _pill(x, y, w, h, title, sub=None, kind='state'):
+    st = {'state': ('var(--ink)', 'var(--paper-2)'), 'key': ('var(--ink)', 'var(--paper-3)'),
+          'alert': ('var(--blaze)', 'var(--blaze-wash)'), 'clef': ('var(--clef)', 'var(--paper-2)'),
+          'qwen': ('var(--qwen)', 'var(--paper-2)'), 'end': ('var(--ink-3)', 'var(--paper-2)')}[kind]
+    o = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{min(h / 2, 18)}" fill="{st[1]}" stroke="{st[0]}" stroke-width="1.7"/>']
+    if sub:
+        o.append(_t(x + w / 2, y + h / 2 - 3, title, 12, anchor="middle", weight=700, fill="var(--ink)", family=MONO))
+        o.append(_t(x + w / 2, y + h / 2 + 12, sub, 10.5, anchor="middle", fill="var(--ink-2)"))
+    else:
+        o.append(_t(x + w / 2, y + h / 2 + 4, title, 12, anchor="middle", weight=700, fill="var(--ink)", family=MONO))
+    return ''.join(o)
+
+
+def states():
+    W, H = 1100, 404
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="The search state machine. Take off, then sweep. When a crop '
+         f'passes the gate the drone investigates at 20 metres; Clef-Flash confirms (alert), dismisses (resume) or is unsure '
+         f'(step down to 12 metres and ask again; if still unsure, qwen38 gives a second opinion while the drone hovers). '
+         f'After the last spot it resumes the lane where it left. When the area is covered, the battery is low, a safety '
+         f'limit is hit or you say so, it returns home.">', _defs(('ah', 'var(--ink-3)'), ('ahb', 'var(--blaze)'), ('ahq', 'var(--qwen)'))]
+    Y, h = 168, 52
+    o.append(_pill(20, Y, 110, h, 'TAKEOFF', 'straight up', 'end'))
+    o.append(_pill(180, Y, 140, h, 'SWEEP', '40 m, 6 m/s, a photo', 'key'))
+    o.append(_t(250, Y + h + 15, 'every 12 m', 10.5, anchor="middle", fill="var(--ink-2)"))
+    o.append(_pill(380, Y, 160, h, 'INVESTIGATE', 'fly to the spot, 20 m'))
+    o.append(_pill(600, Y, 150, h, 'CLOSE-UP', 'Clef-Flash verdict', 'clef'))
+    o.append(_pill(830, 52, 130, h, 'ALERT', 'position + photo', 'alert'))
+    o.append(_pill(830, Y, 130, h, 'RESUME', 'back to the lane'))
+    o.append(_pill(600, 300, 150, h, 'STEP DOWN', '12 m, ask again'))
+    o.append(_pill(830, 300, 160, h, '2ND OPINION', 'qwen38, drone hovers', 'qwen'))
+    o.append(_pill(990, 52, 96, h, 'RETURN', None, 'end'))
+    o.append(_pill(990, Y, 96, h, 'DONE', None, 'end'))
+    m = lambda x1, y1, x2, y2: _path(f'M{x1} {y1} H{x2 - 3}' if y1 == y2 else f'M{x1} {y1} V{y2 - 3}')
+    o.append(m(130, Y + h / 2, 180, Y + h / 2))
+    o.append(_path(f'M320 {Y + h / 2} H{377}', col='var(--blaze)', marker='ahb'))
+    o.append(_halo(350, Y + h / 2 - 9, 'maybe', 9.5, fill='var(--blaze-ink)', weight=700))
+    o.append(m(540, Y + h / 2, 600, Y + h / 2))
+    o.append(_halo(570, Y + h / 2 - 9, 'zoom', 9.5))
+    # verdicts
+    o.append(_path(f'M700 {Y} V{52 + h / 2} H827', col='var(--blaze)', marker='ahb'))
+    o.append(_halo(765, 52 + h / 2 - 9, 'confirm', 10, fill='var(--blaze-ink)', weight=700))
+    o.append(_halo(765, 52 + h / 2 + 18, 'named clue ≥ 50%', 9.5))
+    o.append(m(750, Y + h / 2, 830, Y + h / 2))
+    o.append(_halo(790, Y + h / 2 - 9, 'dismiss', 10, weight=700))
+    o.append(_halo(790, Y + h / 2 + 20, 'all clues < 20%', 9.5))
+    o.append(_path(f'M650 {Y + h} V297'))
+    o.append(_halo(650, 262, 'in between', 9.5))
+    o.append(_t(675, 368, 'then confirm or dismiss as above', 10, anchor="middle", fill="var(--ink-3)"))
+    o.append(m(750, 326, 830, 326))
+    o.append(_halo(790, 318, 'still unsure', 9.5))
+    o.append(_path(f'M940 300 V{Y + h + 3}', col='var(--qwen)', marker='ahq'))
+    o.append(_path(f'M975 300 V{52 + h / 2 + 10} H963', col='var(--qwen)', marker='ahq'))
+    o.append(_halo(985, 262, 'qwen38 ≥ 60% sure:', 9.5, anchor='start'))
+    o.append(_halo(985, 275, 'alert', 9.5, anchor='start'))
+    o.append(_halo(932, 262, 'otherwise dismiss', 9.5, anchor='end'))
+    o.append(_path(f'M895 {52 + h} V{Y - 3}'))
+    o.append(_halo(895, 138, 'next spot or lane', 9.5))
+    # resume back to sweep (under everything)
+    o.append(_path(f'M895 {Y + h} V{Y + h + 50} H250 V{Y + h + 22}'))
+    o.append(_halo(470, Y + h + 46, 'rejoin the lane where it left off; photos start again 12 m on', 9.5))
+    # sweep -> return -> done
+    o.append(_path(f'M250 {Y} V24 H1038 V{52 - 3}'))
+    o.append(_halo(560, 20, 'area covered, battery reserve reached, a safety limit, or you say “come home”', 9.5))
+    o.append(m(1038, 52 + h, 1038, Y))
+    o.append(_t(20, 392, 'Any state: SAFETY (height 8 to 70 m, 25 m boundary, 10% battery for the trip home) sends the drone to RETURN. '
+                         '“Go back to the last alert” sends it to INVESTIGATE.', 11, fill="var(--ink-2)"))
+    o.append('</svg>')
+    return ''.join(o)
+
+
+# --------------------------------------------------------------------------------------------- funnel (log scale)
+DATA = {
+    # runs/s5-live-owner/summary.json (the real-time flight)
+    'funnel': [
+        ('control ticks (half-second steps)', 1234, 'var(--ink-3)', 'code'),
+        ('sweep photos', 125, 'var(--ink-3)', 'camera'),
+        ('odd spots boxed', 375, 'var(--finder)', 'finder, CPU'),
+        ('crops judged', 163, 'var(--clef)', 'Clef-Flash'),
+        ('closer looks', 8, 'var(--ink)', 'code flies'),
+        ('close-ups judged', 8, 'var(--clef)', 'Clef-Flash'),
+        ('alerts', 3, 'var(--blaze)', 'code'),
+        ('qwen38 jobs', 6, 'var(--qwen)', '3 notes, 3 plans'),
+        ('spoken alerts', 3, 'var(--voice)', 'Kokoro'),
+    ],
+    # weights resident while flying; GB. qwen38: measured (69.74 GiB resident weights);
+    # Clef server 11 GB (measured); voice 2.68 GiB (measured); sim footprint 1.7 GB measured 15:12.
+    'memory': [('qwen38', 70, 'var(--qwen)'), ('Clef-Flash', 11, 'var(--clef)'), ('voice', 2.7, 'var(--voice)'),
+               ('simulator, finder, console', 1.7, 'var(--ink-3)')],
+}
+
+
+def funnel():
+    rows = DATA['funnel']
+    W, top, rh = 760, 34, 30
+    H = top + rh * len(rows) + 34
+    x0, x1 = 250, 690
+    import math
+    X = lambda v: x0 + (math.log10(v) / math.log10(2000)) * (x1 - x0)
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="From the owner\'s flight, on a log scale: 1,234 control ticks, '
+         f'125 photos, 375 odd spots, 163 crops judged by Clef-Flash, 8 closer looks, 8 close-ups judged, 3 alerts, 6 qwen38 jobs '
+         f'and 3 spoken alerts.">']
+    for v in (1, 10, 100, 1000):
+        o.append(f'<line x1="{X(v):.1f}" y1="{top - 8}" x2="{X(v):.1f}" y2="{top + rh * len(rows)}" stroke="var(--grid)" stroke-width="1"/>')
+        o.append(_t(X(v), top + rh * len(rows) + 16, f'{v:,}', 9.5, anchor="middle", fill="var(--ink-3)", family=MONO))
+    o.append(_t(x1, top + rh * len(rows) + 30, 'count, log scale', 9.5, anchor="end", fill="var(--ink-3)"))
+    for i, (lab, v, col, who) in enumerate(rows):
+        y = top + i * rh
+        o.append(_t(x0 - 12, y + 14, lab, 12, anchor="end", fill="var(--ink)", weight=600))
+        o.append(_t(x0 - 12, y + 26, who, 9.5, anchor="end", fill="var(--ink-3)"))
+        w = max(4, X(v) - x0)
+        o.append(f'<path d="M{x0} {y + 6} h{w - 4} a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-{w - 4} z" fill="{col}"><title>{escape(lab)}: {v:,}</title></path>')
+        o.append(_t(x0 + w + 8, y + 18, f'{v:,}', 12, fill="var(--ink)", weight=700, family=MONO))
+    o.append('</svg>')
+    return ''.join(o)
+
+
+def memory():
+    rows = DATA['memory']
+    W, H = 760, 96
+    x0, x1 = 10, 750
+    sc = (x1 - x0) / 128
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Model weights resident during a flight against 128 GB of memory: '
+         f'qwen38 about 70 GB, Clef-Flash about 11, voice 2.7, simulator and console 1.7; about 43 GB left for everything else.">']
+    o.append(f'<rect x="{x0}" y="22" width="{x1 - x0}" height="26" rx="4" fill="var(--paper-3)"/>')
+    x = x0
+    for lab, v, col in rows:
+        w = v * sc
+        o.append(f'<rect x="{x:.1f}" y="22" width="{max(w - 2, 1):.1f}" height="26" fill="{col}"><title>{escape(lab)}: about {v} GB</title></rect>')
+        x += w
+    used = sum(v for _, v, _ in rows)
+    o.append(_t(x0, 14, '0', 9.5, fill="var(--ink-3)", family=MONO))
+    o.append(_t(x1, 14, '128 GB unified memory', 9.5, anchor="end", fill="var(--ink-3)", family=MONO))
+    o.append(_t(x0 + 70 * sc / 2, 39.5, 'qwen38 · 70 GB', 11.5, anchor="middle", weight=700, fill="#fff"))
+    o.append(_t(x0 + 70 * sc + 5.5 * sc, 66, 'Clef-Flash 11', 10.5, anchor="middle", fill="var(--ink-2)"))
+    o.append(_t(x0 + 81 * sc + 2, 82, 'voice 2.7 · sim 1.7', 10.5, fill="var(--ink-2)"))
+    o.append(_t(x + (x1 - x) / 2, 39.5, f'about {128 - used:.0f} GB for macOS, apps, caches', 10.5, anchor="middle", fill="var(--ink-2)"))
+    o.append('</svg>')
+    return ''.join(o)
+
+
+def deploy():
+    W, H = 1000, 250
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Two ways to field it. A: a computer in the search team\'s truck runs '
+         f'every model; the drone sends live video over a short local radio link. B: the drone carries the finder, Clef-Flash and '
+         f'the flight code; the base keeps qwen38 and voice; only alerts, about 270 bytes plus a 20 kilobyte photo, cross a weak '
+         f'radio link.">', _defs(('ah', 'var(--ink-3)'))]
+
+    def box(x, y, w, h, title, lines, col='var(--ink)'):
+        r = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="var(--paper-2)" stroke="{col}" stroke-width="1.6"/>',
+             _t(x + 12, y + 22, title, 12.5, weight=700, fill="var(--ink)")]
+        for i, ln in enumerate(lines):
+            r.append(_t(x + 12, y + 40 + i * 15, ln, 10.5, fill="var(--ink-2)"))
+        return ''.join(r)
+    for ox, lab, sub in ((0, 'A · TRUCK COMPUTER', 'closest to what runs today'), (510, 'B · SPLIT ACROSS A WEAK LINK', 'the drone decides; the base thinks')):
+        o.append(_t(ox + 10, 18, lab, 10.5, weight=600, fill="var(--ink)", family=MONO, extra=' letter-spacing="1.2"'))
+        o.append(_t(ox + 10, 34, sub, 10.5, fill="var(--ink-3)"))
+    o.append(box(10, 56, 170, 92, 'Drone', ['camera and flight', 'controller only']))
+    o.append(box(300, 56, 180, 150, 'Truck computer', ['finder, Clef-Flash,', 'qwen38, Parakeet,', 'Kokoro, flight code,', 'console', '(this laptop today)']))
+    o.append(_path('M180 92 H297'))
+    o.append(_path('M297 120 H183'))
+    o.append(_halo(239, 86, 'live video', 10))
+    o.append(_halo(239, 138, 'velocity', 10))
+    o.append(_t(10, 236, 'Needs a video link of several Mbit/s within line of sight.', 10.5, fill="var(--ink-3)"))
+    o.append(box(520, 56, 190, 150, 'Drone computer', ['camera, finder,', 'Clef-Flash (9B),', 'flight code and safety', '(needs an edge board', 'with about 12 GB free)'], 'var(--clef)'))
+    o.append(box(810, 56, 180, 120, 'Base', ['qwen38, Parakeet,', 'Kokoro, console', 'and the operator'], 'var(--qwen)'))
+    o.append(_path('M710 92 H807'))
+    o.append(_path('M807 136 H713'))
+    o.append(_halo(759, 86, 'alerts', 10, fill="var(--blaze-ink)", weight=700))
+    o.append(_halo(759, 104, '0.3 KB + photo', 9.5))
+    o.append(_halo(759, 154, 'clues, plans,', 9.5))
+    o.append(_halo(759, 167, 'commands', 9.5))
+    o.append(_t(520, 236, 'qwen38\'s jobs are slow and need no video, so a weak radio or mesh link is enough.', 10.5, fill="var(--ink-3)"))
+    o.append('</svg>')
+    return ''.join(o)
+
+
 FIGURES = {
     'arch': architecture,
     'alt': altitude,
+    'states': states,
+    'funnel': funnel,
+    'memory': memory,
+    'deploy': deploy,
 }
