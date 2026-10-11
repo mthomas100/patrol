@@ -1,0 +1,136 @@
+[
+ {
+  "seed": 5,
+  "trail": true,
+  "lockstep": true,
+  "rc": 0,
+  "run": "runs/s3-trail-ab-lock/grass5-trail",
+  "recall": "3/3",
+  "false_alerts": 0,
+  "t_finds": [
+   136.0,
+   229.5,
+   264.5
+  ],
+  "gap12": 93.5,
+  "gap13": 128.5,
+  "sim_s": 534.5,
+  "wall_s": 50.0,
+  "battery_pct": 44.5,
+  "llm": {
+   "note": 3,
+   "trail": 3
+  },
+  "plans_applied": 3,
+  "clef_idle": [
+   69,
+   300,
+   326
+  ],
+  "clef_active": [
+   52,
+   372,
+   480
+  ]
+ },
+ {
+  "seed": 5,
+  "trail": false,
+  "lockstep": true,
+  "rc": 0,
+  "run": "runs/s3-trail-ab-lock/grass5-notrail",
+  "recall": "3/3",
+  "false_alerts": 0,
+  "t_finds": [
+   136.0,
+   245.0,
+   285.0
+  ],
+  "gap12": 109.0,
+  "gap13": 149.0,
+  "sim_s": 400.5,
+  "wall_s": 48.2,
+  "battery_pct": 33.3,
+  "llm": {
+   "note": 3
+  },
+  "plans_applied": 0,
+  "clef_idle": [
+   87,
+   317,
+   324
+  ],
+  "clef_active": [
+   30,
+   415,
+   504
+  ]
+ },
+ {
+  "seed": 6,
+  "trail": true,
+  "lockstep": true,
+  "rc": 0,
+  "run": "runs/s3-trail-ab-lock/grass6-trail",
+  "recall": "3/3",
+  "false_alerts": 0,
+  "t_finds": [
+   147.5,
+   238.5,
+   273.5
+  ],
+  "gap12": 91.0,
+  "gap13": 126.0,
+  "sim_s": 551.0,
+  "wall_s": 58.4,
+  "battery_pct": 45.9,
+  "llm": {
+   "note": 3,
+   "trail": 3
+  },
+  "plans_applied": 3,
+  "clef_idle": [
+   85,
+   318,
+   345
+  ],
+  "clef_active": [
+   54,
+   386,
+   493
+  ]
+ },
+ {
+  "seed": 6,
+  "trail": false,
+  "lockstep": true,
+  "rc": 0,
+  "run": "runs/s3-trail-ab-lock/grass6-notrail",
+  "recall": "3/3",
+  "false_alerts": 0,
+  "t_finds": [
+   147.5,
+   282.0,
+   331.5
+  ],
+  "gap12": 134.5,
+  "gap13": 184.0,
+  "sim_s": 441.0,
+  "wall_s": 48.0,
+  "battery_pct": 36.7,
+  "llm": {
+   "note": 3
+  },
+  "plans_applied": 0,
+  "clef_idle": [
+   86,
+   314,
+   325
+  ],
+  "clef_active": [
+   32,
+   382,
+   466
+  ]
+ }
+]

@@ -152,3 +152,22 @@ def test_a_much_better_view_of_a_judged_spot_is_asked_again(tmp_path, monkeypatc
     # glimpse judged; 4x larger view judged again; 1.2x not; 3x judged (third ask); max_asks reached after that
     assert status == ["judged", "judged", "seen", "judged", "seen"]
     assert len(asked) == 3 and len(m.judged) == 1 and m.judged[0]["asks"] == 3
+
+
+def test_trailing_edge_boxes_are_judged_now_leading_edge_boxes_wait(tmp_path, monkeypatch):
+    """Image up is the direction of flight: a box on the bottom edge is behind the drone and no later frame of the
+    lane sees it again (runs/s3-trail-ab-rt grass6-trail), so it is judged at once; one on the top edge waits."""
+    m, spec, events = small_mission(tmp_path, fake_clef(["dismiss"]))
+    W, H = m.cfg.W, m.cfg.H
+    boxes = iter([(100, 2, 120, 22), (100, H - 22, 120, H - 2)])
+
+    def candidates(jpg, k=3):
+        x0, y0, x1, y1 = next(boxes)
+        return [{"x0": x0, "y0": y0, "x1": x1, "y1": y1, "cx": (x0 + x1) / 2, "cy": (y0 + y1) / 2, "score": 1.0,
+                 "area": 300}]
+    monkeypatch.setattr(search.anomaly, "candidates", candidates)
+    lane = {"x0": -30.0, "x1": 30.0, "y": -28.0}
+    m._sweep_frame(lane)
+    m._sweep_frame(lane)
+    st = [e["candidates"][0]["status"] for e in events if e["type"] == "frame"]
+    assert st == ["edge", "judged"], st

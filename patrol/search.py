@@ -354,8 +354,11 @@ class SearchMission:
             if near and c["area"] >= cfg.rejudge_gain * near["area"] and near["asks"] < cfg.max_asks:
                 row["rejudge"] = {"was": near["verdict"], "area_was": near["area"]}
                 near = None               # a much better view of a spot judged from a poor one: ask again
-            edge = min(c["x0"], c["y0"], cfg.W - c["x1"], cfg.H - c["y1"]) <= cfg.edge_px
-            if not g or near or edge:     # a box cut by the frame edge is judged from a neighbouring frame instead
+            # a box cut by the leading (top: image up is the direction of flight) or a side edge is judged from the
+            # next frame or lane instead; one cut by the trailing edge is judged now, as no later frame sees it again
+            # (runs/s3-trail-ab-rt grass6-trail: the backpack, missed by the finder mid-frame, then deferred forever)
+            edge = min(c["x0"], c["y0"], cfg.W - c["x1"]) <= cfg.edge_px
+            if not g or near or edge:
                 row["status"] = "seen" if near else "edge" if edge else "off-ground"
                 cands.append(row); continue
             crop = anomaly.crop(jpg, c)
@@ -654,6 +657,16 @@ def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str]
     return world.search_spec(seed, terrain, placed, size=size)
 
 
+def _same_item(a: dict, name: str) -> bool:
+    """Scoring only: does an alert's clue name the planted item? Catalogue clues use the item's own name; clues
+    qwen38 wrote from a description have their own names, so its family words are matched to the catalogue's."""
+    if a["clue"] == name:
+        return True
+    fam = cluelib.CATALOGUE.get(name, {}).get("family", "").lower().replace("gray", "grey")
+    said = f"{a.get('family', '')} {a['clue'].replace('_', ' ')}".lower().replace("gray", "grey")
+    return bool(fam) and fam in said
+
+
 def score(out: Path, match_r: float = 5.0) -> dict:
     """After the flight: compare alerts and frames with the planted items (scene.json). Scoring only."""
     out = Path(out)
@@ -676,7 +689,7 @@ def score(out: Path, match_r: float = 5.0) -> dict:
         al = [a for a in alerts if math.dist(a["g"], p) < match_r]
         rows.append({"name": it["name"], "role": it["role"], "xy": p, "frames_in_view": seen, "noticed": noticed,
                      "investigated": len(inv), "alerts": [a["id"] for a in al],
-                     "right_clue": any(a["clue"] == it["name"] for a in al),
+                     "right_clue": any(_same_item(a, it["name"]) for a in al),
                      "loc_err_m": round(min(math.dist(a["g"], p) for a in al), 2) if al else None,
                      "t_alert": min(a["t"] for a in al) if al else None})
     clue_rows = [r for r in rows if r["role"] == "clue"]

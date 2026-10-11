@@ -1,0 +1,128 @@
+{
+ "llm_calls": 3,
+ "llm_by_role": {
+  "note": 3
+ },
+ "clef_qwen_idle": {
+  "n": 96,
+  "ok": 96,
+  "median_ms": 310,
+  "p90_ms": 342
+ },
+ "clef_qwen_active": {
+  "n": 32,
+  "ok": 32,
+  "median_ms": 387,
+  "p90_ms": 456
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 459.5,
+ "wall_s": 50.4,
+ "flight_s": 459.0,
+ "battery_used_pct": 38.2,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 95,
+ "candidates": 285,
+ "clef_sweep": {
+  "n": 122,
+  "ok": 122,
+  "median_ms": 312,
+  "p90_ms": 393
+ },
+ "clef_confirm": {
+  "n": 6,
+  "ok": 6,
+  "median_ms": 399,
+  "p90_ms": 400
+ },
+ "fallback": 0,
+ "investigations": 6,
+ "dismissed": 3,
+ "mean_investigate_s": 8.2,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    34.29,
+    -25.85
+   ],
+   "conf": 0.91,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0036_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S3",
+   "t": 171.18,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Blue backpack spotted 34 meters east and 26 meters south of center, 73 meters from the trailhead.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object and search for the hiker.",
+    "agree": true,
+    "wall_s": 4.9,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    40.8,
+    18.1
+   ],
+   "conf": 0.648,
+   "h": 20.0,
+   "photo": "media/photos/S5_20m.jpg",
+   "sweep_crop": "media/crops/f0063_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S5",
+   "t": 303.05,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible orange tent 41 meters east and 18 meters north of the search center.",
+    "check": "Ground team should visually confirm the object is the missing hiker's tent.",
+    "agree": true,
+    "wall_s": 4.5,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    45.97,
+    58.6
+   ],
+   "conf": 0.851,
+   "h": 20.0,
+   "photo": "media/photos/S6_20m.jpg",
+   "sweep_crop": "media/crops/f0070_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S6",
+   "t": 343.16,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible red jacket found 46 meters east and 59 meters north of search center, 159 meters from trailhead.",
+    "check": "Ground team should visually confirm the object is a hooded jacket and search for the hiker.",
+    "agree": true,
+    "wall_s": 5.2,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 171.18
+}

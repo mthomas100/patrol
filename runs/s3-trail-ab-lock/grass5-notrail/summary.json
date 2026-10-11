@@ -1,0 +1,128 @@
+{
+ "llm_calls": 3,
+ "llm_by_role": {
+  "note": 3
+ },
+ "clef_qwen_idle": {
+  "n": 87,
+  "ok": 87,
+  "median_ms": 317,
+  "p90_ms": 324
+ },
+ "clef_qwen_active": {
+  "n": 30,
+  "ok": 30,
+  "median_ms": 415,
+  "p90_ms": 504
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 400.5,
+ "wall_s": 47.8,
+ "flight_s": 400.0,
+ "battery_used_pct": 33.3,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 95,
+ "candidates": 285,
+ "clef_sweep": {
+  "n": 113,
+  "ok": 113,
+  "median_ms": 319,
+  "p90_ms": 423
+ },
+ "clef_confirm": {
+  "n": 4,
+  "ok": 4,
+  "median_ms": 441,
+  "p90_ms": 463
+ },
+ "fallback": 0,
+ "investigations": 4,
+ "dismissed": 1,
+ "mean_investigate_s": 8.4,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    34.28,
+    -25.83
+   ],
+   "conf": 0.931,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0036_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 136.0,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a blue backpack 34 meters east and 26 meters south of the search center.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object.",
+    "agree": true,
+    "wall_s": 4.4,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    40.8,
+    18.11
+   ],
+   "conf": 0.776,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0063_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S3",
+   "t": 245.0,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible orange tent 41 meters east and 18 meters north of the search center.",
+    "check": "Ground team should visually confirm the object and search the immediate area for the missing hiker.",
+    "agree": true,
+    "wall_s": 4.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    45.97,
+    58.6
+   ],
+   "conf": 0.869,
+   "h": 20.0,
+   "photo": "media/photos/S4_20m.jpg",
+   "sweep_crop": "media/crops/f0070_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S4",
+   "t": 285.0,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Red jacket spotted on ground, 46 meters east and 59 meters north of search center.",
+    "check": "Verify item is the missing hiker's jacket and search immediate area for other belongings.",
+    "agree": true,
+    "wall_s": 4.9,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 136.0
+}

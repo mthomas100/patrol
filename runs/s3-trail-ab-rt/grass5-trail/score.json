@@ -1,0 +1,81 @@
+{
+ "items": [
+  {
+   "name": "blue_backpack",
+   "role": "clue",
+   "xy": [
+    34.31,
+    -25.88
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 1,
+   "alerts": [
+    "A1"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.05,
+   "t_alert": 153.4
+  },
+  {
+   "name": "orange_tent",
+   "role": "clue",
+   "xy": [
+    40.8,
+    18.12
+   ],
+   "frames_in_view": 1,
+   "noticed": 1,
+   "investigated": 1,
+   "alerts": [
+    "A2"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.02,
+   "t_alert": 266.37
+  },
+  {
+   "name": "red_jacket",
+   "role": "clue",
+   "xy": [
+    46.02,
+    58.52
+   ],
+   "frames_in_view": 6,
+   "noticed": 6,
+   "investigated": 1,
+   "alerts": [
+    "A3"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.09,
+   "t_alert": 303.94
+  },
+  {
+   "name": "blue_tarp",
+   "role": "decoy",
+   "xy": [
+    -26.65,
+    0.52
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 1,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  }
+ ],
+ "recall": "3/3",
+ "found": 3,
+ "clues": 3,
+ "false_alerts": [],
+ "decoys_investigated": 1,
+ "loc_err_m": [
+  0.05,
+  0.02,
+  0.09
+ ],
+ "time_to_first_find": 153.4
+}
