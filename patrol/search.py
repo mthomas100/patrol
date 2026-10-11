@@ -518,7 +518,7 @@ class SearchMission:
         clue = next(c for c in self.clues if c["name"] == a["clue"])
         closeup = (self.out / a["photo"]).read_bytes()
         crop = (self.out / a["sweep_crop"]).read_bytes() if a.get("sweep_crop") else None
-        where = f"{a['g'][0]:.0f} m east and {a['g'][1]:.0f} m north of the search-area centre"
+        where = where_words(a["g"])
         lkp = self.spec.get("map", {}).get("lkp")
         if lkp:
             where += f", {math.dist(a['g'], lkp):.0f} m from the trailhead"
@@ -659,6 +659,14 @@ def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str]
                        "texture": info["texture"], "x": round(x, 2), "y": round(y, 2),
                        "yaw": round(rng.uniform(0, 360), 1), "h": info["extent_m"][2], "size_m": info["size_m"]})
     return world.search_spec(seed, terrain, placed, size=size)
+
+
+def where_words(g) -> str:
+    """A position as a radio team says it. Signed numbers ("-66 m east") made qwen38 write the wrong direction in a
+    note (runs/s4-e2e-2/s6: a dog 66 m west and 63 m south was called "66 meters east and 63 meters north")."""
+    e, n = g
+    return (f"{abs(e):.0f} m {'east' if e >= 0 else 'west'} and {abs(n):.0f} m {'north' if n >= 0 else 'south'} "
+            "of the search-area centre")
 
 
 def _same_item(a: dict, name: str) -> bool:

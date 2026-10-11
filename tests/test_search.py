@@ -195,3 +195,8 @@ def test_a_flown_spot_blocks_only_the_ground_its_close_up_covered(tmp_path, monk
                         lambda u, v, *a, **k: (11.21, 18.56) if (u, v) == (120, 120) else orig(u, v, *a, **k))
     m._sweep_frame(m.cur)
     assert [s["g"] for s in m.investigated][1:] == [(11.21, 18.56)]
+
+
+def test_where_words_name_the_direction():
+    assert search.where_words((-66.45, -62.98)) == "66 m west and 63 m south of the search-area centre"
+    assert search.where_words((34.3, 25.8)) == "34 m east and 26 m north of the search-area centre"
