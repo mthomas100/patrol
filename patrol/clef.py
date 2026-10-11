@@ -86,14 +86,16 @@ def state_text(tel: dict, context: dict | None = None) -> str:
     c = context or {}
     lines = [
         "You are the visual inspector on a power-line inspection drone. The attached picture is the drone's "
-        + ("zoomed close-up photo" if c.get("camera") == "zoom" else "wide forward-left camera frame")
+        + ("zoomed close-up photo" if c.get("camera") == "zoom" else
+           "two zoomed close-up photos (just behind and just ahead of the aim point)" if c.get("camera") == "zoom2"
+           else "forward-left inspection camera frame")
         + ". The drone flies alongside a high-voltage line; the camera looks at the towers, the glass insulator "
           "strings hanging from each crossarm, the three conductors and the trees nearby.",
         f"Position along the corridor: {tel['x']:.0f} m of {c.get('length', 300):.0f} m; altitude {tel['z']:.0f} m; "
         f"speed {tel['speed']:.1f} m/s.",
     ]
     if c.get("hovering"):
-        lines.append("The drone is hovering and has just taken a close-up photo of the nearest structure.")
+        lines.append("The drone is hovering and has just taken close-up photos of the spot that looked unusual.")
     if c.get("revisit"):
         lines.append("The drone flew back to re-inspect a spot that looked suspicious.")
     if c.get("flags_here"):
@@ -121,9 +123,11 @@ class Decision:
         return {k: v for k, v in self.__dict__.items()}
 
 
-def ask(jpeg: bytes, state: str, questions: dict | None = None, timeout: float = 10.0, url: str = URL) -> Decision:
+def ask(jpeg, state: str, questions: dict | None = None, timeout: float = 10.0, url: str = URL) -> Decision:
+    """jpeg: bytes, or a list of bytes for several images decided together."""
+    imgs = jpeg if isinstance(jpeg, (list, tuple)) else [jpeg]
     req = {"model": MODEL, "state": state, "questions": questions or schema(),
-           "images": ["data:image/jpeg;base64," + base64.b64encode(jpeg).decode()]}
+           "images": ["data:image/jpeg;base64," + base64.b64encode(j).decode() for j in imgs]}
     t0 = time.perf_counter()
     try:
         r = urllib.request.urlopen(urllib.request.Request(url, json.dumps(req).encode(),

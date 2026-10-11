@@ -27,7 +27,14 @@ GATE = {
     "hover_deadline_ms": 8000.0,   # hovering is the safe state, so a confirm answer may take longer
     "min_top_prob": 0.30,     # Clef torn between options: its top raw probability below this
     "min_sure": 0.60,         # Clef's own "how sure" score (0..2) below this
+    "stale_m": 4.0,           # a cruise answer is stale once the drone has flown this far since its frame
+    "hard_deadline_ms": 10000.0,
 }
+
+# Cruise rule: "look closer" evidence is hover + flag (a flag needs a photo first anyway). Hover when
+# LOOK_GAIN * (p_hover + p_flag) beats p_continue. Chosen on runs/m2-seed0's logged frames: 1.3 gives every planted
+# defect at least one trigger frame while 2 of 90 clean frames hover (a hover costs seconds, not a false flag).
+LOOK_GAIN = 1.3
 
 
 @dataclass
@@ -44,11 +51,15 @@ class Gated:
 
 
 def gate(dec, legal: tuple, weights: dict, fallback_action: str, fallback_why: str,
-         deadline_ms: float | None = None) -> Gated:
-    """Turn a clef.Decision into an action. Any failure, late answer or low confidence -> FALLBACK."""
+         deadline_ms: float | None = None, moved_m: float | None = None) -> Gated:
+    """Turn a clef.Decision into an action. Any failure, stale answer or low confidence -> FALLBACK.
+    Staleness: by distance flown while waiting when moved_m is given, else by deadline_ms."""
     if not dec.ok:
         return Gated(fallback_action, "fallback", f"decision failed ({dec.error[:60]}); {fallback_why}", legal)
-    if dec.latency_ms > (deadline_ms or GATE["deadline_ms"]):
+    if moved_m is not None and (moved_m > GATE["stale_m"] or dec.latency_ms > GATE["hard_deadline_ms"]):
+        return Gated(fallback_action, "fallback", f"stale (flew {moved_m:.1f} m in {dec.latency_ms:.0f} ms); "
+                     f"{fallback_why}", legal)
+    if moved_m is None and dec.latency_ms > (deadline_ms or GATE["deadline_ms"]):
         return Gated(fallback_action, "fallback", f"late ({dec.latency_ms:.0f} ms); {fallback_why}", legal)
     probs = {a: dec.probs.get(a, 0.0) for a in legal}
     top = max(probs.values()) if probs else 0.0
@@ -56,6 +67,10 @@ def gate(dec, legal: tuple, weights: dict, fallback_action: str, fallback_why: s
         return Gated(fallback_action, "fallback",
                      f"low confidence (top {top:.2f}, sure {dec.sure:.2f}); {fallback_why}", legal)
     w = {a: round(p * weights.get(a, 1.0), 4) for a, p in probs.items()}
+    if weights is CRUISE_WEIGHTS:
+        w = {"continue": round(probs["continue"], 4),
+             "hover_and_photograph": round(LOOK_GAIN * (probs["hover_and_photograph"] + probs["flag_damage"]), 4),
+             "go_back": round(probs["go_back"], 4)}
     return Gated(max(w, key=w.get), "clef", "", legal, w)
 
 

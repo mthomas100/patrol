@@ -103,10 +103,10 @@ class Mission:
             jpg = sim.jpeg("inspect", W, H)
             frame_file = self._save("frames", f"t{self.ticks:04d}.jpg", jpg)
             dec = self._ask(jpg, clef.state_text(sim.telemetry(), self._ctx()), clef.schema())
-            self._fly_blind(dec)
+            moved = self._fly_blind(dec)
             pos = tuple(sim.pos)
             fa, fw = sm.fallback_cruise(pos[0], look, tower_ahead)
-            g2 = sm.on_cruise(gate(dec, ACTIONS, CRUISE_WEIGHTS, fa, fw), look, dec)
+            g2 = sm.on_cruise(gate(dec, ACTIONS, CRUISE_WEIGHTS, fa, fw, moved_m=moved), look, dec)
             g = g or g2
             rec.update(decision=self._dec(dec, "cruise"), aim=[look.x, look.y, look.z])
             if sm.state == "CRUISE":
@@ -140,18 +140,31 @@ class Mission:
         self.ticks += 1
 
     def _photograph(self) -> Gated:
+        """Hover photo. A tower target is one zoom on the insulator string; a mid-span target is a pair of zooms
+        3 m behind and ahead of the aim point (the look-ahead aim is only good to a few metres), decided together."""
         sm, sim = self.sm, self.sim
         t = sm.target
-        sim.aim("zoom", (t.x, t.y, t.z))
-        jpg = sim.jpeg("zoom", W, H)
-        name = f"photo_{len(self.photos) + 1:02d}_x{t.x:05.1f}.jpg"
-        path = self._save("photos", name, jpg, force=True)
-        dec = self._ask(jpg, clef.state_text(sim.telemetry(), self._ctx(camera="zoom", hovering=True)),
-                        clef.confirm_schema())
+        offsets = (0.0,) if "tower" in t.why else (-3.0, 3.0)
+        jpgs, paths = [], []
+        n = len(self.photos) + 1
+        for k, off in enumerate(offsets):
+            sim.aim("zoom", (t.x + off, t.y, t.z))
+            jpg = sim.jpeg("zoom", W, H)
+            jpgs.append(jpg)
+            paths.append(self._save("photos", f"photo_{n:02d}{'ab'[k] if len(offsets) > 1 else ''}_x{t.x + off:05.1f}.jpg",
+                                    jpg, force=True))
+        path = paths[0]
+        dec = self._ask(jpgs if len(jpgs) > 1 else jpgs[0],
+                        clef.state_text(sim.telemetry(), self._ctx(camera="zoom2" if len(jpgs) > 1 else "zoom",
+                                                                   hovering=True)), clef.confirm_schema())
         self._fly_blind(dec)
         g = confirm_gate(dec, "protocol: no flag without a confident confirmation; photo kept for human review")
-        photo = {"photo": path, "target": [t.x, t.y, t.z], "decision": self._dec(dec, "confirm"), "gated": self._g(g),
-                 "truth": sim.visible_defects("zoom", W, H, max_depth=40)}
+        truth = []
+        for off in offsets:
+            sim.aim("zoom", (t.x + off, t.y, t.z))
+            truth += [v for v in sim.visible_defects("zoom", W, H, max_depth=40) if v["id"] not in {x["id"] for x in truth}]
+        photo = {"photo": path, "photos": paths, "target": [t.x, t.y, t.z], "what": t.why,
+                 "decision": self._dec(dec, "confirm"), "gated": self._g(g), "truth": truth}
         self.photos.append(photo)
         self.emit("photo", **photo)
         if g.action == "flag_damage":
@@ -159,22 +172,25 @@ class Mission:
             f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs, nouls=dec.nouls,
                      defect_guess=guess, source=g.label)
             sm.flags.append(f)
-            self.emit("flag", id=f.id, target=[t.x, t.y, t.z], photo=path, defect_guess=guess,
+            self.emit("flag", id=f.id, target=[t.x, t.y, t.z], photo=path, photos=paths, defect_guess=guess,
                       probs=dec.probs, nouls=dec.nouls, truth=photo["truth"])
             if self.escalator:     # off the control path; the note event arrives when qwen38 answers
-                self.escalator.submit(f, jpg, lambda fl, note: self.emit("note", id=fl.id, photo=fl.photo,
+                self.escalator.submit(f, jpgs if len(jpgs) > 1 else jpgs[0], lambda fl, note: self.emit("note", id=fl.id, photo=fl.photo,
                                                                           note=note))
         sm.on_confirm(g)
         return g
 
-    def _fly_blind(self, dec):
+    def _fly_blind(self, dec) -> float:
         """Real-time honesty: while the model thinks, the drone keeps flying its last command (lockstep pauses
-        the world instead when realtime is off). Also feeds the speed governor."""
+        the world instead when realtime is off). Feeds the speed governor; returns metres flown while waiting."""
         lat = dec.latency_ms / 1000.0
         if dec.ok or lat > 0:
             self.latency_ema = lat if self.latency_ema == 0 else 0.7 * self.latency_ema + 0.3 * lat
         if self.realtime and lat > 0:
+            before = self.sim.pos.copy()
             self.sim.step(self.v_prev, min(lat, 10.0))
+            return float(((self.sim.pos - before) ** 2).sum() ** 0.5)
+        return 0.0
 
     def _return_velocity(self, pos):
         cfg, sm = self.cfg, self.sm

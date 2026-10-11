@@ -21,7 +21,7 @@ MODEL = "qwen38"          # the only llama-swap model this project may ever requ
 SYSTEM = ("You are a power-line inspection engineer writing notes from drone photos. Look at the photo yourself; "
           "the on-board model's guess may be wrong. Reply with one JSON object only, no prose around it.")
 
-PROMPT = """Zoomed drone photo from a simulated transmission-line inspection, taken at {x:.0f} m along a {length:.0f} m corridor,
+PROMPT = """Zoomed drone photo(s) from a simulated transmission-line inspection, taken at {x:.0f} m along a {length:.0f} m corridor,
 aimed at the {what}. The on-board decision model flagged possible damage; its probabilities: {nouls}.
 Write the inspection note as JSON with exactly these keys:
   "defect_type": one of "broken_insulator", "frayed_conductor", "vegetation", "foreign_object", "none",
@@ -49,7 +49,7 @@ def parse_note(text: str) -> dict:
         return {"defect_type": "unknown", "note": text[:300], "parse_error": True}
 
 
-def write_note(jpeg: bytes, x: float, what: str, nouls: dict, length: float = 300.0,
+def write_note(jpeg, x: float, what: str, nouls: dict, length: float = 300.0,
                max_wait_s: float = 900.0, timeout: float = 240.0) -> dict:
     """One qwen38 vision call; waits out GPU holds (503) up to max_wait_s. Returns the note plus timing."""
     req = {"model": MODEL, "max_tokens": 500, "temperature": 0.2, "thinking": {"type": "disabled"},
@@ -58,8 +58,9 @@ def write_note(jpeg: bytes, x: float, what: str, nouls: dict, length: float = 30
                             {"type": "text", "text": PROMPT.format(x=x, length=length, what=what,
                                                                    nouls=json.dumps({k: round(v, 2) for k, v in
                                                                                      nouls.items()}))},
-                            {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,"
-                                                                       + base64.b64encode(jpeg).decode()}}]}]}
+                            *[{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,"
+                                                                        + base64.b64encode(j).decode()}}
+                              for j in (jpeg if isinstance(jpeg, (list, tuple)) else [jpeg])]]}]}
     t0 = time.time()
     waited, attempts = 0.0, 0
     while True:

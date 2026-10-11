@@ -121,3 +121,11 @@ def test_confirm_gate_noul_upgrade():
     d.nouls = {"foreign_object": 0.05, "vegetation_close": 0.58}       # perspective false positive stays clean
     assert confirm_gate(d, "p").action == "continue"
     assert confirm_gate(Decision(ok=False, error="x"), "p").label == "FALLBACK"
+
+
+def test_staleness_by_distance_flown():
+    d = dec(**{"continue": 0.3, "hover_and_photograph": 0.4, "go_back": 0.2, "flag_damage": 0.1})
+    d.latency_ms = 4000
+    assert gate(d, ACTIONS, CRUISE_WEIGHTS, "continue", "p", moved_m=3.2).label == "CLEF"    # slow but governed
+    g = gate(d, ACTIONS, CRUISE_WEIGHTS, "continue", "p", moved_m=5.0)
+    assert g.label == "FALLBACK" and "stale" in g.reason
