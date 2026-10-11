@@ -130,6 +130,7 @@ class Flag:
     source: str
     note: dict | None = None          # filled by escalation (M2)
     clearance: float | None = None    # rangefinder: nearest tree to a conductor, m (None: no trees in view)
+    trigger: str = ""                 # what sent the drone to photograph: CLEF, FALLBACK, RANGEFINDER, OPERATOR
 
 
 @dataclass
@@ -170,6 +171,7 @@ class StateMachine:
         self.return_reason = ""
         self.phase = "near"
         self.corridor_done = False
+        self.trigger = ""        # what sent the drone to the current photo: CLEF, FALLBACK, RANGEFINDER, OPERATOR
 
     # ------------------------------------------------------------ helpers
     def photographed_near(self, t: Target) -> bool:
@@ -234,10 +236,12 @@ class StateMachine:
                 g.action = "continue"
             else:
                 self.state, self.target, self.hover_ticks = "HOVER", look, 0
+                self.trigger = g.label
         elif g.action == "go_back":
             if self.suspect and self.revisits < self.cfg.max_revisits and not self.photographed_near(self.suspect[1]):
                 self.state, self.target = "REVISIT", self.suspect[1]
                 self.revisits += 1
+                self.trigger = g.label + " go_back"
             else:
                 g.reason = (g.reason + "; " if g.reason else "") + "refused: nothing unphotographed behind"
                 g.action = "continue"
@@ -259,6 +263,7 @@ class StateMachine:
         if self.photographed_near(t):
             return None
         self.state, self.target, self.hover_ticks = "HOVER", t, 0
+        self.trigger = "RANGEFINDER"
         return Gated("hover_and_photograph", "sensor",
                      f"rangefinder: tree {r['clearance']:.1f} m from the {ph} conductor at x={r['x']:.0f}")
 
@@ -280,6 +285,7 @@ class StateMachine:
             f = self.flags[-1]
             self.photographed = [p for p in self.photographed if not p.near(f.target)]
             self.state, self.target = "REVISIT", f.target
+            self.trigger = "OPERATOR"
             return Gated("go_back", "operator", f"revisit flag {f.id} (operator)", ())
         if name == "change_target" and cmd.get("phase") in ("near", "middle", "far"):
             self.phase = cmd["phase"]

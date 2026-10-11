@@ -178,6 +178,7 @@ class Mission:
             sim.aim("zoom", (t.x + off, t.y, t.z))
             truth += [v for v in sim.visible_defects("zoom", W, H, max_depth=40) if v["id"] not in {x["id"] for x in truth}]
         photo = {"photo": path, "photos": paths, "target": [t.x, t.y, t.z], "what": t.why, "clearance_m": clearance,
+                 "trigger": sm.trigger,
                  "decision": self._dec(dec, "confirm"), "gated": self._g(g), "truth": truth}
         self.photos.append(photo)
         self.emit("photo", **photo)
@@ -185,10 +186,10 @@ class Mission:
             guess = "vegetation_close" if g.source == "sensor" else \
                 max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
             f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs, nouls=dec.nouls,
-                     defect_guess=guess, source=g.label, clearance=clearance)
+                     defect_guess=guess, source=g.label, clearance=clearance, trigger=sm.trigger)
             sm.flags.append(f)
             self.emit("flag", id=f.id, target=[t.x, t.y, t.z], photo=path, photos=paths, defect_guess=guess,
-                      clearance_m=clearance,
+                      clearance_m=clearance, trigger=sm.trigger, source=g.label,
                       probs=dec.probs, nouls=dec.nouls, truth=photo["truth"])
             if self.escalator:     # off the control path; the note event arrives when qwen38 answers
                 self.escalator.submit(f, jpgs if len(jpgs) > 1 else jpgs[0], lambda fl, note: self.emit("note", id=fl.id, photo=fl.photo,
@@ -293,7 +294,7 @@ class Mission:
             "llm_frame_fraction": round((self.escalator.calls if self.escalator else 0) / n, 4) if n else None,
             "notes_ok": sum(1 for f in sm.flags if f.note and not f.note.get("error")),
             "photos": len(self.photos), "flags": [{"id": f.id, "x": f.target.x, "y": f.target.y,
-                                                   "guess": f.defect_guess, "source": f.source,
+                                                   "guess": f.defect_guess, "source": f.source, "trigger": f.trigger,
                                                    "note": bool(f.note)} for f in sm.flags],
             "defects": len(defects), "defects_found": sorted(matched), "recall": round(len(matched) / len(defects), 3)
             if defects else None, "false_alarms": false_alarms,

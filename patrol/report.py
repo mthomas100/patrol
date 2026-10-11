@@ -30,7 +30,18 @@ def versions() -> dict:
     return v
 
 
-def build(run: Path, min_recall: float, max_false_alarms: int, require_notes: bool) -> tuple[str, bool]:
+def match(spec: dict, flags: list[dict]) -> dict:
+    """defect id -> the first flag within 8 m along the corridor and on the same phase (the summary's rule)."""
+    found = {}
+    for f in flags:
+        for d in spec["defects"]:
+            if abs(d["x"] - f["x"]) <= 8 and abs(d["y"] - f["y"]) < 2:
+                found.setdefault(d["id"], f)
+    return found
+
+
+def build(run: Path, min_recall: float, max_false_alarms: int, require_notes: bool,
+          min_clef_share: float = 0.0) -> tuple[str, bool, list]:
     s = json.loads((run / "summary.json").read_text())
     spec = json.loads((run / "scene.json").read_text())
     events = [json.loads(l) for l in (run / "mission.jsonl").read_text().splitlines()]
@@ -48,6 +59,14 @@ def build(run: Path, min_recall: float, max_false_alarms: int, require_notes: bo
     if require_notes:
         checks.append(("every flag has an LLM note", all(fid in notes and not notes[fid].get("error")
                                                          for fid in flags)))
+    src = s.get("decision_sources") or {}
+    clef_share = src.get("CLEF", 0) / max(1, s["decisions"])
+    if min_clef_share:
+        checks.append((f"Clef decided >= {min_clef_share:.0%} of decisions (measured {clef_share:.0%})",
+                       clef_share >= min_clef_share))
+    found = match(spec, s["flags"])
+    typed = [(d, notes.get(found[d["id"]]["id"])) for d in spec["defects"] if d["id"] in found]
+    note_right = sum(1 for d, n in typed if n and n.get("defect_type") == d["type"])
     ok = all(c[1] for c in checks)
     L = [f"# Patrol run report: {run.name}", "",
          f"**Result: {'PASS' if ok else 'FAIL'}**", ""]
@@ -55,48 +74,50 @@ def build(run: Path, min_recall: float, max_false_alarms: int, require_notes: bo
     L += ["", "## What ran", "",
           f"Scene `{spec['kind']}` seed {spec['seed']}, {spec['length']:.0f} m, {len(spec['defects'])} planted defects. "
           f"Versions: {json.dumps(versions())}.", "",
+          f"Headline: recall {s['recall']}, false alarms {len(s['false_alarms'])}, LLM on "
+          f"{(s['llm_frame_fraction'] or 0):.1%} of decisions, decision latency median {s['latency_ms']['median']} ms "
+          f"(p90 {s['latency_ms']['p90']}), Clef decided {clef_share:.0%} of decisions, LLM note names the planted "
+          f"defect type for {note_right}/{len(typed)} found defects, wall time {s['wall_time_s']} s.", "",
           "| measure | value |", "|---|---|"]
     for k in ("ticks", "sim_time_s", "wall_time_s", "realtime_factor", "distance_m", "battery_end", "return_reason",
               "decisions", "decisions_ok", "decision_sources", "latency_ms", "photos", "llm_calls",
               "llm_frame_fraction", "notes_ok", "recall", "false_alarms"):
         if k in s:
             L.append(f"| {k} | {json.dumps(s[k]) if isinstance(s[k], (dict, list)) else s[k]} |")
-    L += ["", "## Planted defects against flags", "", "| defect | type | x | found by | Clef's guess | LLM note |",
-          "|---|---|---|---|---|---|"]
-    found = {}
-    for f in s["flags"]:
-        for d in spec["defects"]:
-            if abs(d["x"] - f["x"]) <= 8 and abs(d["y"] - f["y"]) < 2:
-                found.setdefault(d["id"], f)
+    L += ["", "## Planted defects against flags", "",
+          "| defect | type | x | found by | photo triggered by | Clef's guess | LLM note |", "|---|---|---|---|---|---|---|"]
     for d in spec["defects"]:
         f = found.get(d["id"])
         n = notes.get(f["id"]) if f else None
         nt = (f"{n.get('defect_type')}, {n.get('severity')}: {n.get('note', '')[:160]}" if n and not n.get("error")
               else (n.get("error", "")[:80] if n else ""))
         L.append(f"| {d['id']} | {d['type']} | {d['x']:.0f} | {f['id'] + ' (' + f['source'] + ')' if f else 'MISSED'} | "
-                 f"{f['guess'] if f else ''} | {nt.replace('|', '/')} |")
+                 f"{f.get('trigger', '') if f else ''} | {f['guess'] if f else ''} | {nt.replace('|', '/')} |")
     if s["false_alarms"]:
         L += ["", "False alarms: " + ", ".join(
             f"{fid} at x={flags[fid]['target'][0]:.0f} (note: {notes.get(fid, {}).get('defect_type', 'none')})"
             for fid in s["false_alarms"] if fid in flags)]
-    L += ["", "## Photos", "", "| photo | target x | decided by | action | p(flag) |", "|---|---|---|---|---|"]
+    L += ["", "## Photos", "", "| photo | target x | triggered by | decided by | action | p(flag) | clearance m |",
+          "|---|---|---|---|---|---|---|"]
     for p in photos:
-        L.append(f"| {p['photo']} | {p['target'][0]:.0f} | {p['gated']['source']} | {p['gated']['action']} | "
-                 f"{p['decision']['probs'].get('flag_damage', 0):.2f} |")
+        L.append(f"| {p['photo']} | {p['target'][0]:.0f} | {p.get('trigger', '')} | {p['gated']['source']} | "
+                 f"{p['gated']['action']} | {p['decision']['probs'].get('flag_damage', 0):.2f} | "
+                 f"{p.get('clearance_m')} |")
     if ops:
         L += ["", "## Operator commands", ""] + [f"- t={e['t']}: {e['command']} accepted={e['accepted']} "
                                                  f"({e['reason']})" for e in ops]
     L += ["", f"Mission log: `{run.name}/mission.jsonl`; frames and photos under `{run.name}/media/` (not in git).", ""]
-    return "\n".join(L), ok
+    return "\n".join(L), ok, checks
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("run"); ap.add_argument("--min-recall", type=float, default=0.0)
     ap.add_argument("--max-false-alarms", type=int, default=99); ap.add_argument("--require-notes", action="store_true")
+    ap.add_argument("--min-clef-share", type=float, default=0.0, help="fraction of decisions Clef must have made")
     a = ap.parse_args(argv)
     run = Path(a.run)
-    text, ok = build(run, a.min_recall, a.max_false_alarms, a.require_notes)
+    text, ok, _ = build(run, a.min_recall, a.max_false_alarms, a.require_notes, a.min_clef_share)
     (run / "REPORT.md").write_text(text)
     print(f"{'PASS' if ok else 'FAIL'}: {run / 'REPORT.md'}")
     sys.exit(0 if ok else 1)
