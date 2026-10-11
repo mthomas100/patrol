@@ -1,0 +1,143 @@
+{
+ "llm_calls": 4,
+ "llm_by_role": {
+  "note": 2,
+  "trail": 2
+ },
+ "clef_qwen_idle": {
+  "n": 38,
+  "ok": 38,
+  "median_ms": 315,
+  "p90_ms": 337
+ },
+ "clef_qwen_active": {
+  "n": 16,
+  "ok": 16,
+  "median_ms": 387,
+  "p90_ms": 795
+ },
+ "sectors": 28,
+ "sectors_done": 8,
+ "plans": [
+  {
+   "first": [
+    "B2",
+    "B3",
+    "C2",
+    "C3",
+    "D2",
+    "D3"
+   ],
+   "reason": "Hikers likely continued north from the tent along the trail, so prioritize sectors directly north of the find.",
+   "raw_ok": true,
+   "wall_s": 4.4,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "D2",
+    "D3",
+    "E2",
+    "E3",
+    "D1",
+    "C1"
+   ],
+   "reason": "Prioritize sectors near the trail's northward path and the stream intersection, following the hikers' likely trajectory.",
+   "raw_ok": true,
+   "wall_s": 1.8,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 248.6,
+ "wall_s": 27.6,
+ "flight_s": 248.1,
+ "battery_used_pct": 20.7,
+ "state_s": {
+  "TAKEOFF": 9.0,
+  "SWEEP": 162.9,
+  "INVESTIGATE": 24.5,
+  "CONFIRM": 1.7,
+  "RESUME": 20.5,
+  "RETURN": 29.5
+ },
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "lane_spacing_m": 23.72,
+ "frame_every_m": 10.9,
+ "coverage": 0.3522,
+ "area_m2_covered": 9016,
+ "frames": 38,
+ "candidates": 114,
+ "clef_sweep": {
+  "n": 51,
+  "ok": 51,
+  "median_ms": 318,
+  "p90_ms": 439
+ },
+ "clef_confirm": {
+  "n": 3,
+  "ok": 3,
+  "median_ms": 499,
+  "p90_ms": 499
+ },
+ "fallback": 0,
+ "investigations": 3,
+ "dismissed": 0,
+ "mean_investigate_s": 8.7,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    4.17,
+    -60.78
+   ],
+   "conf": 0.955,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0008_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 59.93,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Orange tent spotted 4 meters east and 61 meters south of search center, 40 meters from trailhead.",
+    "check": "Verify the object on the ground and search the immediate area for the missing hiker.",
+    "agree": true,
+    "wall_s": 4.1,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    -45.41,
+    -29.6
+   ],
+   "conf": 0.935,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0033_c2.jpg",
+   "sweep_h": 36.4,
+   "spot": "S3",
+   "t": 193.48,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Blue backpack spotted 45 meters west and 30 meters south of the search center, 77 meters from the trailhead.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object and search for the hiker.",
+    "agree": true,
+    "wall_s": 2.8,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 59.93
+}

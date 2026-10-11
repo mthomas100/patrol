@@ -1,0 +1,105 @@
+{
+ "llm_calls": 3,
+ "llm_by_role": {
+  "second_opinion": 1,
+  "note": 1,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 153,
+  "ok": 153,
+  "median_ms": 217,
+  "p90_ms": 227
+ },
+ "clef_qwen_active": {
+  "n": 23,
+  "ok": 23,
+  "median_ms": 265,
+  "p90_ms": 358
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "E2",
+    "F2",
+    "G2",
+    "F1",
+    "G1",
+    "E3"
+   ],
+   "reason": "Prioritize sectors along the trail's northward path and near the stream intersection, following the hiker's likely trajectory.",
+   "raw_ok": true,
+   "wall_s": 3.4,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 436.6,
+ "wall_s": 48.7,
+ "flight_s": 436.1,
+ "battery_used_pct": 36.3,
+ "state_s": {
+  "TAKEOFF": 10.0,
+  "SWEEP": 362.4,
+  "INVESTIGATE": 15.1,
+  "CONFIRM": 0.6,
+  "RESUME": 8.0,
+  "RETURN": 40.0
+ },
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lane_spacing_m": 26.09,
+ "frame_every_m": 11.98,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 107,
+ "candidates": 321,
+ "clef_sweep": {
+  "n": 174,
+  "ok": 174,
+  "median_ms": 218,
+  "p90_ms": 260
+ },
+ "clef_confirm": {
+  "n": 2,
+  "ok": 2,
+  "median_ms": 295,
+  "p90_ms": 293
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 15.7,
+ "mean_decision_h": 12.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -45.67,
+    18.83
+   ],
+   "conf": 0.396,
+   "h": 12.0,
+   "photo": "media/photos/S1_12m.jpg",
+   "sweep_crop": "media/crops/f0058_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 218.44,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Drone spotted a grey dog lying on the ground 46 meters west and 19 meters north of the search center.",
+    "check": "Verify the animal's status and location at the coordinates 46m west and 19m north of the center.",
+    "agree": true,
+    "wall_s": 3.8,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 218.44
+}
