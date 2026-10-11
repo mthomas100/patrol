@@ -321,6 +321,16 @@ td code { font-size: 0.8em; }
 .annot-key li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; font-family: var(--font-display); font-size: 0.9rem; line-height: 1.4; color: var(--ink-2); }
 .annot-key strong { color: var(--ink); }
 .pin-n { width: 24px; height: 24px; border-radius: 50%; background: var(--blaze); color: #fff; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600; }
+.vid { position: relative; box-shadow: var(--shadow); background: #0b1014; }
+.vid video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+.bigplay { position: absolute; inset: 0; width: 100%; border: 0; padding: 0; cursor: pointer; display: grid; place-content: center; justify-items: center; gap: 14px; background: rgba(8, 12, 16, 0.38); color: #fff; font-family: var(--font-display); transition: background .2s; }
+.bigplay:hover { background: rgba(8, 12, 16, 0.22); }
+.bigplay .tri { width: clamp(84px, 14vw, 132px); height: clamp(84px, 14vw, 132px); border-radius: 50%; background: var(--blaze); box-shadow: 0 0 0 6px rgba(255,255,255,.9), 0 10px 30px rgba(0,0,0,.45); display: grid; place-items: center; transition: transform .2s; }
+.bigplay .tri::after { content: ""; margin-left: 9%; border-style: solid; border-width: clamp(18px, 3vw, 28px) 0 clamp(18px, 3vw, 28px) clamp(30px, 5vw, 46px); border-color: transparent transparent transparent #fff; }
+.bigplay:hover .tri { transform: scale(1.06); }
+@media (prefers-reduced-motion: reduce) { .bigplay .tri, .bigplay { transition: none; } }
+.bp-label { display: grid; justify-items: center; gap: 2px; font-weight: 800; font-size: clamp(1.1rem, 2.4vw, 1.6rem); text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.bp-label small { font-weight: 600; font-size: 0.6em; opacity: .9; letter-spacing: 0.04em; }
 footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); display: grid; gap: 6px; }
 </style>
 
@@ -362,7 +372,7 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
       <div class="stat" role="listitem"><span class="v">6<small> cm</small></span><span class="k">between the backpack alert and the backpack (tent 24 cm, jacket 7 cm)</span><span class="src">same flight, distance to each planted item</span></div>
       <div class="stat" role="listitem"><span class="v">57<small>%</small></span><span class="k">of a simulated 20-minute battery for a 160 m square, with 8 closer looks (the battery is now set to 30 minutes)</span><span class="src">same flight, battery used</span></div>
     </div>
-    <p class="muted" style="font-family:var(--font-display); font-size:0.92rem"><a href="#glance">See the console at a glance ↓</a></p>
+    <p class="muted" style="font-family:var(--font-display); font-size:0.92rem"><a href="#glance">▶ Watch the console run a full search ↓</a></p>
   </div>
 
   <figure class="mapcard" aria-labelledby="map-cap">
@@ -397,16 +407,19 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
   <div class="s-head">
     <p class="eyebrow"><b>At a glance</b> · the console</p>
     <h2>Everything the drone sees, thinks and finds, on one screen</h2>
-    <p class="lede">The console is a web page the laptop serves to itself. It runs a live search with push-to-talk, or replays any recorded flight. This is the moment of an alert in the demo flight: Clef-Flash has just confirmed the blue backpack from 20 m.</p>
+    <p class="lede">The console is a web page the laptop serves to itself. It runs a live search with push-to-talk, or replays any recorded flight. Press play to watch a whole search, or read the annotated still below: the moment Clef-Flash confirms the blue backpack from 20 m.</p>
   </div>
+  <figure class="vidfig">
+    <div class="vid frame">
+      <video id="demo-video" preload="none" playsinline poster="assets/console-alert.jpg" src="assets/demo-flight.mp4" aria-label="Recording of a full search in the console, replayed at 3.5 times speed, with the alerts read aloud"></video>
+      <button type="button" class="bigplay" id="bigplay" aria-label="Play the demo flight video"><span class="tri" aria-hidden="true"></span><span class="bp-label">Watch a full search<small>3 min 23 s · sound on</small></span></button>
+    </div>
+    <figcaption><strong>Watch the whole flight</strong> (3 min 23 s, replayed at 3.5× with the alerts read aloud): three finds, the tarp checked and dismissed, no false alerts. This recording is also the stage fallback. The opening read-back of the clues was added from the console's own line, the operator's spoken commands are not in the audio, and qwen38's notes arrive about 10 s after their alerts.<span class="src">the stage fallback recording, re-encoded small for this page</span></figcaption>
+  </figure>
   <figure class="annot-fig">
     <div class="annot frame"><img src="assets/console-alert.jpg" alt="The Patrol console mid-flight: header with state SWEEP, 43% searched, 80% battery and decision counts; clue cards for a blue backpack, orange tent and gray dog; the zoom camera showing ALERT A3 blue backpack found, confirmed at 79%; the decision trace with Clef-Flash's bars; the sector map with three alerts and qwen38's next sectors; the chase view; the log with the spoken alert; and alert cards with the sweep crop beside the confirming close-up and qwen38's radio note."><span class="pin" style="left:63%; top:4.2%" aria-hidden="true">1</span><span class="pin" style="left:2.6%; top:8.2%" aria-hidden="true">2</span><span class="pin" style="left:16%; top:16.2%" aria-hidden="true">3</span><span class="pin" style="left:14%; top:64%" aria-hidden="true">4</span><span class="pin" style="left:45%; top:16.2%" aria-hidden="true">5</span><span class="pin" style="left:47.5%; top:60.2%" aria-hidden="true">6</span><span class="pin" style="left:44%; top:82%" aria-hidden="true">7</span><span class="pin" style="left:72%; top:16.2%" aria-hidden="true">8</span></div>
     <ol class="annot-key"><li><span class="pin-n" aria-hidden="true">1</span><div><strong>The header</strong> what the drone is doing (SWEEP, INVESTIGATE, RETURN), area searched, battery, and who made the decisions: Clef-Flash, fallback or qwen38</div></li><li><span class="pin-n" aria-hidden="true">2</span><div><strong>Looking for</strong> the clue cards: the family's words, qwen38's sentence about how each looks from above, and its size</div></li><li><span class="pin-n" aria-hidden="true">3</span><div><strong>The camera</strong> the latest sweep photo with the finder's boxes and Clef-Flash's score on each; during a closer look, the zoom close-up and the verdict</div></li><li><span class="pin-n" aria-hidden="true">4</span><div><strong>Decision trace</strong> the exact crop Clef-Flash judged and its odds, one bar per clue, with the thresholds marked</div></li><li><span class="pin-n" aria-hidden="true">5</span><div><strong>The map</strong> lanes and sectors over the trail, stream and last known point; ground already seen; spots checked (grey) and alerts (red); qwen38's next sectors, numbered</div></li><li><span class="pin-n" aria-hidden="true">6</span><div><strong>Chase view</strong> a camera behind the drone, for the people watching; no model uses it</div></li><li><span class="pin-n" aria-hidden="true">7</span><div><strong>The log</strong> every decision, note, plan and spoken line, newest first</div></li><li><span class="pin-n" aria-hidden="true">8</span><div><strong>Alerts</strong> one card per find: what the sweep saw beside the close-up that confirmed it, position, confidence and qwen38's radio note</div></li></ol>
     <figcaption>A replay of the recorded demo flight (grass, three clues and a blue tarp decoy) at 16× speed, captured mid-flight.<span class="src">recorded demo flight, console replay</span></figcaption>
-  </figure>
-  <figure class="wide">
-    <div class="frame"><video controls preload="none" poster="assets/demo-flight-poster.jpg" src="assets/demo-flight.mp4" aria-label="Recording of the demo flight replayed in the console at 3.5 times speed, with the alerts read aloud"></video></div>
-    <figcaption><strong>Watch the whole flight</strong> (3 min 23 s, replayed at 3.5× with the alerts read aloud): three finds, the tarp checked and dismissed, no false alerts. This recording is also the stage fallback. The opening read-back of the clues was added from the console's own line, the operator's spoken commands are not in the audio, and qwen38's notes arrive about 10 s after their alerts.<span class="src">the stage fallback recording, re-encoded small for this page</span></figcaption>
   </figure>
 </section>
 <!-- SECTIONS:BEGIN -->
@@ -1058,5 +1071,12 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
     if (e.isIntersecting) { links.forEach(a => a.classList.remove('on')); const a = byId[e.target.id]; if (a) a.classList.add('on'); }
   }), { rootMargin: '-35% 0px -60% 0px' });
   Object.keys(byId).forEach(id => { const s = document.getElementById(id); if (s) io.observe(s); });
+})();
+/* big play button over the demo video */
+(() => {
+  const v = document.getElementById('demo-video'), b = document.getElementById('bigplay');
+  if (!v || !b) return;
+  b.addEventListener('click', () => { b.hidden = true; v.controls = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+  v.addEventListener('ended', () => { v.controls = false; b.hidden = false; });
 })();
 </script>
