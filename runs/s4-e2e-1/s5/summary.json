@@ -1,0 +1,173 @@
+{
+ "llm_calls": 10,
+ "llm_by_role": {
+  "second_opinion": 4,
+  "note": 3,
+  "trail": 3
+ },
+ "clef_qwen_idle": {
+  "n": 220,
+  "ok": 220,
+  "median_ms": 368,
+  "p90_ms": 455
+ },
+ "clef_qwen_active": {
+  "n": 49,
+  "ok": 49,
+  "median_ms": 434,
+  "p90_ms": 560
+ },
+ "sectors": 48,
+ "sectors_done": 48,
+ "plans": [
+  {
+   "first": [
+    "J3",
+    "I3",
+    "J2",
+    "K3",
+    "K2",
+    "I4"
+   ],
+   "reason": "Prioritize sectors along the trail's northward path and near the stream intersection where the dog was found.",
+   "raw_ok": true,
+   "wall_s": 4.1,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "K2",
+    "L2",
+    "K1",
+    "L1",
+    "L3",
+    "K4"
+   ],
+   "reason": "Prioritize trail segments between finds and northward continuation, plus stream intersections in northern sectors.",
+   "raw_ok": true,
+   "wall_s": 4.2,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "L3",
+    "L4",
+    "K4",
+    "L2",
+    "K1",
+    "L1"
+   ],
+   "reason": "Yellow helmet at (10,67) suggests northward movement along trail; prioritize sectors north of this find.",
+   "raw_ok": true,
+   "wall_s": 4.0,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 890.2,
+ "wall_s": 126.6,
+ "flight_s": 889.7,
+ "battery_used_pct": 74.1,
+ "sweep_h": 21.818181818181817,
+ "lanes": 12,
+ "coverage": 0.9756,
+ "area_m2_covered": 24976,
+ "frames": 176,
+ "candidates": 528,
+ "clef_sweep": {
+  "n": 248,
+  "ok": 248,
+  "median_ms": 372,
+  "p90_ms": 446
+ },
+ "clef_confirm": {
+  "n": 21,
+  "ok": 21,
+  "median_ms": 474,
+  "p90_ms": 557
+ },
+ "fallback": 0,
+ "investigations": 17,
+ "dismissed": 14,
+ "mean_investigate_s": 8.0,
+ "mean_decision_h": 18.1,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -18.91,
+    30.14
+   ],
+   "conf": 0.121,
+   "h": 12.0,
+   "photo": "media/photos/S12_12m.jpg",
+   "sweep_crop": "media/crops/f0115_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S12",
+   "t": 543.34,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Drone spotted a possible grey dog lying on the ground, 129 meters from the trailhead.",
+    "check": "Ground team should visually confirm if the object is a dog or debris.",
+    "agree": true,
+    "wall_s": 4.2,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "yellow_helmet",
+   "family": "yellow helmet",
+   "g": [
+    10.48,
+    66.98
+   ],
+   "conf": 0.193,
+   "h": 12.0,
+   "photo": "media/photos/S14_12m.jpg",
+   "sweep_crop": "media/crops/f0136_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S14",
+   "t": 648.07,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Possible yellow helmet spotted 10 meters east and 67 meters north of search center.",
+    "check": "Verify the object at the coordinates to confirm if it is the missing yellow climbing helmet.",
+    "agree": true,
+    "wall_s": 3.8,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    -62.89,
+    53.37
+   ],
+   "conf": 0.863,
+   "h": 20.0,
+   "photo": "media/photos/S15_20m.jpg",
+   "sweep_crop": "media/crops/f0147_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S15",
+   "t": 702.83,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a rock SOS 63 meters east and 53 meters north of search center, 161 meters from trailhead.",
+    "check": "Ground team should verify the rock formation and search the immediate area for other signs.",
+    "agree": true,
+    "wall_s": 5.1,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 543.34
+}

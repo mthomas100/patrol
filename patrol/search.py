@@ -354,12 +354,13 @@ class SearchMission:
             if near and c["area"] >= cfg.rejudge_gain * near["area"] and near["asks"] < cfg.max_asks:
                 row["rejudge"] = {"was": near["verdict"], "area_was": near["area"]}
                 near = None               # a much better view of a spot judged from a poor one: ask again
-            # a box cut by the leading (top: image up is the direction of flight) or a side edge is judged from the
-            # next frame or lane instead; one cut by the trailing edge is judged now, as no later frame sees it again
-            # (runs/s3-trail-ab-rt grass6-trail: the backpack, missed by the finder mid-frame, then deferred forever)
-            edge = min(c["x0"], c["y0"], cfg.W - c["x1"]) <= cfg.edge_px
-            if not g or near or edge:
-                row["status"] = "seen" if near else "edge" if edge else "off-ground"
+            # A box cut by the frame edge is judged now, not left for a neighbouring frame: on 20 tuning flights 558 of
+            # 960 deferred edge boxes were never judged from any frame (DECISIONS 13:50). A later, much larger view of
+            # the same spot is asked again (rejudge_gain), so a cut first view does not hide the whole object.
+            if min(c["x0"], c["y0"], cfg.W - c["x1"], cfg.H - c["y1"]) <= cfg.edge_px:
+                row["edge"] = True
+            if not g or near:
+                row["status"] = "seen" if near else "off-ground"
                 cands.append(row); continue
             crop = anomaly.crop(jpg, c)
             row["crop"] = self._save("crops", f"f{n:04d}_c{k}.jpg", crop, force=True)

@@ -1,0 +1,133 @@
+{
+ "llm_calls": 4,
+ "llm_by_role": {
+  "note": 2,
+  "trail": 2
+ },
+ "clef_qwen_idle": {
+  "n": 38,
+  "ok": 38,
+  "median_ms": 306,
+  "p90_ms": 319
+ },
+ "clef_qwen_active": {
+  "n": 23,
+  "ok": 23,
+  "median_ms": 349,
+  "p90_ms": 477
+ },
+ "sectors": 28,
+ "sectors_done": 8,
+ "plans": [
+  {
+   "first": [
+    "A2",
+    "B2",
+    "C2",
+    "D2",
+    "E2",
+    "F2"
+   ],
+   "reason": "Prioritize the hiking trail path north from the trailhead, as hikers typically follow linear features.",
+   "raw_ok": true,
+   "wall_s": 4.1,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "F3",
+    "F2",
+    "F4",
+    "G3",
+    "G2",
+    "G4"
+   ],
+   "reason": "Blue backpack at (10,30) suggests hikers continued north along the trail into sectors F3, F2, and F4.",
+   "raw_ok": true,
+   "wall_s": 2.7,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 249.7,
+ "wall_s": 29.5,
+ "flight_s": 249.2,
+ "battery_used_pct": 20.8,
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "coverage": 0.4048,
+ "area_m2_covered": 10364,
+ "frames": 37,
+ "candidates": 111,
+ "clef_sweep": {
+  "n": 58,
+  "ok": 58,
+  "median_ms": 309,
+  "p90_ms": 442
+ },
+ "clef_confirm": {
+  "n": 3,
+  "ok": 3,
+  "median_ms": 508,
+  "p90_ms": 508
+ },
+ "fallback": 0,
+ "investigations": 3,
+ "dismissed": 0,
+ "mean_investigate_s": 9.1,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "gray_dog",
+   "family": "gray dog",
+   "g": [
+    -66.45,
+    -62.98
+   ],
+   "conf": 0.729,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0002_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 36.24,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible gray dog 66 meters east and 63 meters north of the search center.",
+    "check": "Ground team should visually confirm the object at the specified coordinates.",
+    "agree": true,
+    "wall_s": 4.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    9.6,
+    29.89
+   ],
+   "conf": 0.804,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0034_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S3",
+   "t": 195.09,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible blue backpack spotted 10 meters east and 30 meters north of search center, 132 meters from trailhead.",
+    "check": "Verify object on ground is the missing blue backpack and search immediate area for hiker.",
+    "agree": true,
+    "wall_s": 2.9,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 36.24
+}

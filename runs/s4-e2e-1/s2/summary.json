@@ -1,0 +1,50 @@
+{
+ "llm_calls": 0,
+ "llm_by_role": {},
+ "clef_qwen_idle": {
+  "n": 127,
+  "ok": 127,
+  "median_ms": 362,
+  "p90_ms": 380
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 371.3,
+ "wall_s": 53.2,
+ "flight_s": 370.8,
+ "battery_used_pct": 30.9,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 96,
+ "candidates": 288,
+ "clef_sweep": {
+  "n": 126,
+  "ok": 126,
+  "median_ms": 362,
+  "p90_ms": 379
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 469,
+  "p90_ms": 469
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 1,
+ "mean_investigate_s": 8.5,
+ "mean_decision_h": 20.0,
+ "alerts": [],
+ "time_to_first_alert": null
+}

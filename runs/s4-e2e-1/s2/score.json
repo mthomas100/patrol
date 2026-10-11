@@ -1,0 +1,71 @@
+{
+ "items": [
+  {
+   "name": "blue_tarp",
+   "role": "decoy",
+   "xy": [
+    48.39,
+    60.05
+   ],
+   "frames_in_view": 4,
+   "noticed": 4,
+   "investigated": 1,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  },
+  {
+   "name": "red_rock",
+   "role": "decoy",
+   "xy": [
+    -34.79,
+    -40.53
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  },
+  {
+   "name": "orange_leaf_pile",
+   "role": "decoy",
+   "xy": [
+    12.19,
+    -55.52
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  },
+  {
+   "name": "grey_boulder",
+   "role": "decoy",
+   "xy": [
+    1.31,
+    22.14
+   ],
+   "frames_in_view": 1,
+   "noticed": 1,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  }
+ ],
+ "recall": "0/0",
+ "found": 0,
+ "clues": 0,
+ "false_alerts": [],
+ "decoys_investigated": 1,
+ "loc_err_m": [],
+ "time_to_first_find": null
+}
