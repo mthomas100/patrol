@@ -200,8 +200,30 @@ def _foreign(d):
             _g("capsule", fromto=(x, y, z, x + 0.3, y, z - 1.8), size=(0.015,), rgba=(0.9, 0.9, 0.9, 1))]
 
 
+DRONE_XML = """    <body name="drone" mocap="true" pos="{x:.1f} {y:.1f} {z:.1f}">
+      <geom type="box" size="0.35 0.35 0.1" rgba="0.92 0.92 0.95 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="capsule" fromto="-0.6 -0.6 0.05 0.6 0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="capsule" fromto="-0.6 0.6 0.05 0.6 -0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="0.6 0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="0.6 -0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="-0.6 0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="cylinder" pos="-0.6 -0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
+      <geom type="sphere" pos="0.3 0 -0.15" size="0.12" rgba="0.1 0.1 0.12 1" contype="0" conaffinity="0" group="3"/>
+      <body name="gimbal">
+        <camera name="wide" pos="0 0 -0.1" fovy="62" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
+        <camera name="inspect" pos="0 0 -0.1" fovy="34" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
+        <camera name="zoom" pos="0 0 -0.1" fovy="24" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
+      </body>
+    </body>
+    <camera name="chase" pos="-25 -20 18" fovy="55"/>
+"""
+
+
 def build_mjcf(spec: dict) -> str:
+    if spec["kind"] == "search":
+        return build_search_mjcf(spec)
     _VEG[0] = 0
+    drone = DRONE_XML.format(x=-15, y=-12, z=13)
     rng = random.Random(spec["seed"] * 7919 + 1)
     sp = spec["spacing"]
     defects_at_pylon = {(d["at"], d["phase"]) for d in spec["defects"] if d["type"] == "broken_insulator"}
@@ -244,22 +266,7 @@ def build_mjcf(spec: dict) -> str:
   <worldbody>
     <light directional="true" pos="0 0 50" dir="-0.3 0.4 -1" diffuse="0.75 0.72 0.65" castshadow="true"/>
     <geom type="plane" size="{L + 200:.0f} 200 0.1" pos="{L / 2:.1f} 0 0" material="grass"/>
-    <body name="drone" mocap="true" pos="-15 -12 13">
-      <geom type="box" size="0.35 0.35 0.1" rgba="0.92 0.92 0.95 1" contype="0" conaffinity="0" group="3"/>
-      <geom type="capsule" fromto="-0.6 -0.6 0.05 0.6 0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
-      <geom type="capsule" fromto="-0.6 0.6 0.05 0.6 -0.6 0.05" size="0.05" rgba="0.2 0.2 0.22 1" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="0.6 0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="0.6 -0.6 0.12" size="0.32 0.015" rgba="1.0 0.45 0.05 0.85" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="-0.6 0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
-      <geom type="cylinder" pos="-0.6 -0.6 0.12" size="0.32 0.015" rgba="0.15 0.15 0.15 0.85" contype="0" conaffinity="0" group="3"/>
-      <geom type="sphere" pos="0.3 0 -0.15" size="0.12" rgba="0.1 0.1 0.12 1" contype="0" conaffinity="0" group="3"/>
-      <body name="gimbal">
-        <camera name="wide" pos="0 0 -0.1" fovy="62" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
-        <camera name="inspect" pos="0 0 -0.1" fovy="34" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
-        <camera name="zoom" pos="0 0 -0.1" fovy="24" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
-      </body>
-    </body>
-    <camera name="chase" pos="-25 -20 18" fovy="55"/>
+{drone}
     <camera name="map" pos="{L / 2:.1f} -10 {L * 0.9:.0f}" xyaxes="1 0 0 0 1 0" fovy="60"/>
       {body}
   </worldbody>
@@ -287,3 +294,87 @@ def describe_target(spec: dict, target, phase: str = "near") -> str:
             return f"{phase}-phase insulator string and crossarm of tower {p['i']}"
     i = int(target[0] // spec["spacing"])
     return f"{phase}-phase conductor between towers {i} and {i + 1}"
+
+
+# ---------------------------------------------------------------- Direction 2: open-terrain search scenes
+TERRAINS = {   # ground texture colours (MuJoCo builtin checker, low contrast, random marks) and clutter style
+    "snow": {"rgb1": "0.90 0.92 0.95", "rgb2": "0.88 0.90 0.94", "mark": "0.80 0.83 0.88", "trees": "conifer"},
+    "grass": {"rgb1": "0.33 0.45 0.22", "rgb2": "0.36 0.48 0.24", "mark": "0.45 0.52 0.30", "trees": "broadleaf"},
+}
+
+
+def search_spec(seed: int = 0, terrain: str = "snow", items: list[dict] | None = None, size: float = 200.0,
+                n_rocks: int = 60, n_trees: int = 40) -> dict:
+    """An open search area centred on the origin. items: [{"name", "obj", "texture", "x", "y", "yaw", "role"}]
+    with role "clue" or "decoy"; mesh paths come from patrol.items. Rocks and trees are seeded clutter. The item
+    positions are ground truth: for placement and scoring only, never for the decision path."""
+    rng = random.Random(seed * 31 + 7)
+    h = size / 2
+    rocks = [{"x": round(rng.uniform(-h, h), 1), "y": round(rng.uniform(-h, h), 1),
+              "r": round(rng.uniform(0.3, 1.2), 2), "flat": round(rng.uniform(0.4, 0.8), 2)} for _ in range(n_rocks)]
+    trees = [{"x": round(rng.uniform(-h, h), 1), "y": round(rng.uniform(-h, h), 1),
+              "h": round(rng.uniform(5, 12), 1)} for _ in range(n_trees)]
+    for it in items or []:   # keep clutter off the items so S0 measures the item, not an occlusion
+        rocks = [r for r in rocks if math.hypot(r["x"] - it["x"], r["y"] - it["y"]) > 4]
+        trees = [t for t in trees if math.hypot(t["x"] - it["x"], t["y"] - it["y"]) > 8]
+    return {"kind": "search", "seed": seed, "terrain": terrain, "size": size, "length": size,
+            "items": items or [], "rocks": rocks, "trees": trees, "defects": []}
+
+
+def _search_tree(t, style, k):
+    x, y, h = t["x"], t["y"], t["h"]
+    if style == "conifer":
+        g = [_g("capsule", fromto=(x, y, 0, x, y, h * 0.3), size=(0.2,), rgba=(0.3, 0.22, 0.15, 1))]
+        for j in range(3):
+            z = h * (0.3 + 0.22 * j)
+            g.append(_g("ellipsoid", pos=(x, y, z + h * 0.1), size=(h * (0.22 - 0.05 * j),) * 2 + (h * 0.16,),
+                        rgba=(0.12, 0.25 + 0.03 * j, 0.15, 1)))
+        return g
+    return [_g("capsule", fromto=(x, y, 0, x, y, h * 0.55), size=(0.25,), rgba=(0.35, 0.24, 0.15, 1)),
+            _g("ellipsoid", pos=(x, y, h * 0.75), size=(h * 0.3, h * 0.28, h * 0.25), rgba=(0.15, 0.38, 0.12, 1))]
+
+
+def build_search_mjcf(spec: dict) -> str:
+    T = TERRAINS[spec["terrain"]]
+    S = spec["size"]
+    assets, world = [], []
+    for r in spec["rocks"]:
+        world.append(_g("ellipsoid", pos=(r["x"], r["y"], r["r"] * r["flat"] * 0.5),
+                        size=(r["r"], r["r"] * 0.8, r["r"] * r["flat"]), rgba=(0.45, 0.44, 0.42, 1)))
+    for k, t in enumerate(spec["trees"]):
+        world += _search_tree(t, T["trees"], k)
+    for i, it in enumerate(spec["items"]):
+        n = f"item{i}"
+        assets.append(f'<texture name="{n}_tex" type="2d" file="{it["texture"]}"/>')
+        assets.append(f'<material name="{n}_mat" texture="{n}_tex" specular="0.2"/>')
+        assets.append(f'<mesh name="{n}_mesh" file="{it["obj"]}"/>')
+        world.append(f'<geom name="{n}" type="mesh" mesh="{n}_mesh" material="{n}_mat" '
+                     f'pos="{it["x"]:.2f} {it["y"]:.2f} {it.get("z", 0.0):.3f}" euler="0 0 {it.get("yaw", 0):.1f}" '
+                     'contype="0" conaffinity="0"/>')
+    body = "\n      ".join(world)
+    a = "\n    ".join(assets)
+    return f"""<mujoco model="patrol-search-{spec['terrain']}-{spec['seed']}">
+  <compiler angle="degree"/>
+  <visual>
+    <global offwidth="1280" offheight="960" fovy="60"/>
+    <quality shadowsize="4096"/>
+    <headlight ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45" specular="0.1 0.1 0.1"/>
+    <map znear="0.001" zfar="3" haze="0.2"/>
+    <rgba haze="0.8 0.85 0.9 1"/>
+  </visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.55 0.7 0.9" rgb2="0.9 0.93 0.97" width="512" height="512"/>
+    <texture name="ground" type="2d" builtin="checker" rgb1="{T['rgb1']}" rgb2="{T['rgb2']}" mark="random"
+             random="0.06" markrgb="{T['mark']}" width="512" height="512"/>
+    <material name="ground" texture="ground" texrepeat="{S / 4:.0f} {S / 4:.0f}" reflectance="0"/>
+    {a}
+  </asset>
+  <worldbody>
+    <light directional="true" pos="0 0 80" dir="-0.3 0.4 -1" diffuse="0.75 0.72 0.65" castshadow="true"/>
+    <geom type="plane" size="{S:.0f} {S:.0f} 0.1" material="ground"/>
+    {DRONE_XML.format(x=0, y=-S / 2, z=40)}
+    <camera name="map" pos="0 0 {S * 1.2:.0f}" xyaxes="1 0 0 0 1 0" fovy="60"/>
+      {body}
+  </worldbody>
+</mujoco>
+"""

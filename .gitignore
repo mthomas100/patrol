@@ -8,3 +8,10 @@ runs/*/*.mp4
 runs/*/*.wav
 logs/
 MUJOCO_LOG.TXT
+# m3d item builds: binaries are rebuildable from the logged prompt + seed; provenance (json, log) stays tracked
+assets/**/*.glb
+assets/**/*.usdz
+assets/**/*.png
+assets/**/*.obj
+assets/**/*.jpg
+assets/**/*.mtl
