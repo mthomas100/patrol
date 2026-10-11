@@ -317,7 +317,7 @@ def make_handler(con: Console):
 
         def _file(self, base: Path, rel: str):
             p = (base / rel).resolve()
-            if not str(p).startswith(str(base.resolve())) or not p.is_file():
+            if not p.is_relative_to(base.resolve()) or not p.is_file():
                 return self._send(404, b"not found", "text/plain")
             self._send(200, p.read_bytes(), mimetypes.guess_type(p.name)[0] or "application/octet-stream")
 
