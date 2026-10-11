@@ -1,0 +1,25 @@
+{"file": "insp_00_x070.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 70.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_01_x074.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 74.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_02_x078.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 78.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 751, "v": 116, "depth": 21.3}]}
+{"file": "insp_03_x082.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 82.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 679, "v": 137, "depth": 18.4}]}
+{"file": "insp_04_x086.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 86.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 282, "depth": 15.9}]}
+{"file": "insp_05_x090.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 90.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 280, "depth": 12.5}]}
+{"file": "insp_06_x094.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 94.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 278, "depth": 9.6}]}
+{"file": "insp_07_x098.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 98.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 276, "depth": 7.8}]}
+{"file": "insp_08_x102.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 102.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 276, "depth": 7.8}]}
+{"file": "insp_09_x106.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 106.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_10_x130.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 130.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_11_x148.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 148.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_12_x166.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 166.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_13_x184.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 184.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_14_x202.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 202.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_15_x220.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 220.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_16_x238.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 238.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_17_x256.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 256.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_18_x274.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 274.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "insp_19_x292.jpg", "camera": "inspect", "tel": {"t": 0.0, "x": 292.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "zoom_p1.jpg", "camera": "zoom", "tel": {"t": 0.0, "x": 46.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "zoom_p2.jpg", "camera": "zoom", "tel": {"t": 0.0, "x": 96.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": [{"id": "D1", "type": "broken_insulator", "u": 384, "v": 264, "depth": 8.5}]}
+{"file": "zoom_p3.jpg", "camera": "zoom", "tel": {"t": 0.0, "x": 146.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "zoom_p4.jpg", "camera": "zoom", "tel": {"t": 0.0, "x": 196.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}
+{"file": "zoom_p5.jpg", "camera": "zoom", "tel": {"t": 0.0, "x": 246.0, "y": -12.0, "z": 13.0, "vx": 0.0, "speed": 0.0, "odometer": 0.0}, "truth": []}

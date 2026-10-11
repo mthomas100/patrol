@@ -1,0 +1,132 @@
+"""Clef-Flash client: one frame plus symbolic telemetry in, four-action decision out, via POST /v1/systemone.
+
+Every option is described in words (bare labels route badly in testing). The questions are decided jointly in one
+forward pass. Errors and timeouts never raise into the control loop; they return Decision(ok=False) and the gate
+turns that into FALLBACK.
+"""
+from __future__ import annotations
+
+import base64
+import json
+import time
+import urllib.error
+import urllib.request
+from dataclasses import dataclass, field
+
+URL = "http://127.0.0.1:8097/v1/systemone"
+MODEL = "clef-flash-mlx"
+
+ACTIONS = {
+    "continue": "the towers, insulators, conductors and trees in view all look intact and normal, or no line "
+                "equipment is close enough to judge; keep flying along the corridor",
+    "hover_and_photograph": "something on a tower, insulator string, conductor or a nearby tree looks unusual "
+                            "(a gap, a dark spot, an odd shape, a branch near a wire) but is too small or unclear "
+                            "to judge from here; stop and take a zoomed close-up photo",
+    "go_back": "a possible problem was just passed and is now at the edge of the picture or out of view; fly back "
+               "a short way to look at it again",
+    "flag_damage": "damage or a hazard is clearly visible: insulator discs missing, cracked or hanging askew; "
+                   "conductor strands broken and splayed out; a tree crown touching or within a metre of a "
+                   "conductor; a bird nest or debris lodged on a crossarm or conductor",
+}
+
+DEFECTS = {
+    "none": "no defect visible; the equipment looks normal",
+    "broken_insulator": "an insulator string (the stack of glass discs hanging from the crossarm) has missing, "
+                        "cracked, scorched or tilted discs",
+    "frayed_conductor": "a conductor (the long hanging wire) has broken strands sticking out or a burnt patch",
+    "vegetation": "a tree crown reaches up into the wires or is within a metre of a conductor",
+    "foreign_object": "a bird nest, sticks, plastic sheet, kite or other debris is on a crossarm or hanging on a wire",
+}
+
+SURE = ["not sure at all: the picture is unclear or the equipment is too far away",
+        "fairly sure",
+        "certain: the equipment is close and clearly visible"]
+
+
+def schema(defect_types=True) -> dict:
+    q = {
+        "action": {"type": "choice", "instructions": "Pick the drone's next action for this camera frame.",
+                   "criteria": ACTIONS},
+        "damage": {"type": "noul", "instructions": "Is any damage or hazard visible on the power line equipment in "
+                   "the picture: a broken insulator, a frayed conductor, a tree touching a wire, or a nest or "
+                   "debris on the line?"},
+        "sure": {"type": "score", "instructions": "How sure are you about what the picture shows?", "criteria": SURE},
+    }
+    if defect_types:
+        q["defect"] = {"type": "choice", "instructions": "Which kind of defect, if any, is visible?",
+                       "criteria": DEFECTS}
+    return q
+
+
+def state_text(tel: dict, context: dict | None = None) -> str:
+    """Symbolic state beside the image: what code knows that pixels do not show."""
+    c = context or {}
+    lines = [
+        "You are the visual inspector on a power-line inspection drone. The attached picture is the drone's "
+        + ("zoomed close-up photo" if c.get("camera") == "zoom" else "wide forward-left camera frame")
+        + ". The drone flies alongside a high-voltage line; the camera looks at the towers, the glass insulator "
+          "strings hanging from each crossarm, the three conductors and the trees nearby.",
+        f"Position along the corridor: {tel['x']:.0f} m of {c.get('length', 300):.0f} m; altitude {tel['z']:.0f} m; "
+        f"speed {tel['speed']:.1f} m/s.",
+    ]
+    if c.get("hovering"):
+        lines.append("The drone is hovering and has just taken a close-up photo of the nearest structure.")
+    if c.get("revisit"):
+        lines.append("The drone flew back to re-inspect a spot that looked suspicious.")
+    if c.get("flags_here"):
+        lines.append(f"Damage already flagged within 10 m of here: {c['flags_here']}.")
+    return "\n".join(lines)
+
+
+@dataclass
+class Decision:
+    ok: bool
+    action: str = "continue"
+    probs: dict = field(default_factory=dict)
+    confidence: float = 0.0
+    damage: float = 0.0
+    sure: float = 0.0           # expected level 0..2
+    defect: str = "none"
+    defect_probs: dict = field(default_factory=dict)
+    latency_ms: float = 0.0
+    input_tokens: int = 0
+    error: str = ""
+
+    def to_dict(self) -> dict:
+        return {k: v for k, v in self.__dict__.items()}
+
+
+def ask(jpeg: bytes, state: str, questions: dict | None = None, timeout: float = 10.0, url: str = URL) -> Decision:
+    req = {"model": MODEL, "state": state, "questions": questions or schema(),
+           "images": ["data:image/jpeg;base64," + base64.b64encode(jpeg).decode()]}
+    t0 = time.perf_counter()
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(url, json.dumps(req).encode(),
+                                                          {"Content-Type": "application/json"}), timeout=timeout)
+        body = json.loads(r.read())
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
+        return Decision(ok=False, error=f"{type(e).__name__}: {e}"[:200],
+                        latency_ms=round((time.perf_counter() - t0) * 1000, 1))
+    ms = round((time.perf_counter() - t0) * 1000, 1)
+    a = body.get("answers") or {}
+    if "action" not in a:
+        return Decision(ok=False, error=f"no action in answer: {str(body)[:160]}", latency_ms=ms)
+    act = a["action"]
+    d = Decision(ok=True, action=act["choice"], probs=act.get("probabilities", {}),
+                 confidence=float(act.get("confidence", 0.0)), latency_ms=ms,
+                 input_tokens=int((body.get("usage") or {}).get("input_tokens", 0)))
+    if "damage" in a:
+        d.damage = float(a["damage"]["noul"])
+    if "sure" in a:
+        d.sure = float(a["sure"]["score"])
+    if "defect" in a:
+        d.defect = a["defect"]["choice"]
+        d.defect_probs = a["defect"].get("probabilities", {})
+    return d
+
+
+def health(url: str = "http://127.0.0.1:8097/health", timeout: float = 3.0) -> bool:
+    try:
+        return json.loads(urllib.request.urlopen(url, timeout=timeout).read()).get("status") == "ok"
+    except Exception:
+        return False

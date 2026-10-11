@@ -1,0 +1,36 @@
+== A_current (pos 6, neg 17)
+  action.continue                        pos min 0.27 mean 0.43  neg max 0.61 mean 0.56  gap -0.35
+  action.hover_and_photograph            pos min 0.24 mean 0.32  neg max 0.23 mean 0.20  gap +0.01
+  action.go_back                         pos min 0.10 mean 0.16  neg max 0.23 mean 0.17  gap -0.13
+  action.flag_damage                     pos min 0.07 mean 0.09  neg max 0.13 mean 0.07  gap -0.07
+  damage                                 pos min 0.10 mean 0.29  neg max 0.18 mean 0.04  gap -0.07
+  defect.none                            pos min 0.20 mean 0.65  neg max 0.96 mean 0.92  gap -0.76
+  defect.broken_insulator                pos min 0.03 mean 0.06  neg max 0.03 mean 0.02  gap +0.00
+  defect.frayed_conductor                pos min 0.01 mean 0.02  neg max 0.02 mean 0.01  gap -0.00
+  defect.vegetation                      pos min 0.01 mean 0.02  neg max 0.13 mean 0.03  gap -0.13
+  defect.foreign_object                  pos min 0.07 mean 0.25  neg max 0.03 mean 0.01  gap +0.05
+== B_component_nouls (pos 6, neg 17)
+  action.continue                        pos min 0.24 mean 0.44  neg max 0.71 mean 0.66  gap -0.47
+  action.hover_and_photograph            pos min 0.25 mean 0.32  neg max 0.31 mean 0.19  gap -0.06
+  action.go_back                         pos min 0.10 mean 0.12  neg max 0.14 mean 0.11  gap -0.05
+  action.flag_damage                     pos min 0.04 mean 0.12  neg max 0.05 mean 0.04  gap -0.01
+  insulator_damaged                      pos min 0.11 mean 0.21  neg max 0.07 mean 0.04  gap +0.04
+  conductor_frayed                       pos min 0.01 mean 0.04  neg max 0.02 mean 0.01  gap -0.01
+  vegetation_close                       pos min 0.02 mean 0.03  neg max 0.59 mean 0.11  gap -0.57
+  foreign_object                         pos min 0.13 mean 0.29  neg max 0.04 mean 0.02  gap +0.09
+== C_action_only_short (pos 6, neg 17)
+  action.continue                        pos min 0.19 mean 0.46  neg max 0.82 mean 0.76  gap -0.63
+  action.hover_and_photograph            pos min 0.21 mean 0.31  neg max 0.19 mean 0.14  gap +0.02
+  action.go_back                         pos min 0.08 mean 0.12  neg max 0.11 mean 0.08  gap -0.04
+  action.flag_damage                     pos min 0.03 mean 0.12  neg max 0.03 mean 0.02  gap -0.00
+== D_nouls_first_then_action (pos 6, neg 17)
+  insulator_damaged                      pos min 0.14 mean 0.26  neg max 0.09 mean 0.06  gap +0.05
+  conductor_frayed                       pos min 0.01 mean 0.05  neg max 0.02 mean 0.02  gap -0.01
+  vegetation_close                       pos min 0.02 mean 0.04  neg max 0.56 mean 0.12  gap -0.55
+  foreign_object                         pos min 0.12 mean 0.32  neg max 0.03 mean 0.02  gap +0.09
+  action.continue                        pos min 0.30 mean 0.51  neg max 0.76 mean 0.72  gap -0.46
+  action.hover_and_photograph            pos min 0.19 mean 0.31  neg max 0.16 mean 0.12  gap +0.03
+  action.go_back                         pos min 0.08 mean 0.11  neg max 0.14 mean 0.11  gap -0.06
+  action.flag_damage                     pos min 0.04 mean 0.07  neg max 0.13 mean 0.06  gap -0.08
+== E_damage_only (pos 6, neg 17)
+  damage                                 pos min 0.04 mean 0.22  neg max 0.18 mean 0.03  gap -0.14

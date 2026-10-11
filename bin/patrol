@@ -1,0 +1,4 @@
+#!/bin/sh
+# patrol CLI: runs the package with the project venv. See patrol/cli.py for subcommands.
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$HERE" && exec "$HERE/.venv/bin/python" -m patrol.cli "$@"

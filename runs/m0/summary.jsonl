@@ -1,0 +1,6 @@
+{"size": 256, "n": 25, "tokens": 932, "lat_median_ms": 563.2, "lat_p90_ms": 593.3, "defect_frames_noticed": "1/7", "clean_frames_alarmed": "0/18"}
+{"size": 384, "n": 25, "tokens": 970, "lat_median_ms": 413.9, "lat_p90_ms": 606.6, "defect_frames_noticed": "1/7", "clean_frames_alarmed": "0/18"}
+{"size": 512, "n": 25, "tokens": 1054, "lat_median_ms": 445.6, "lat_p90_ms": 448.9, "defect_frames_noticed": "1/7", "clean_frames_alarmed": "0/18"}
+{"size": 768, "n": 25, "tokens": 1294, "lat_median_ms": 581.7, "lat_p90_ms": 587.6, "defect_frames_noticed": "1/7", "clean_frames_alarmed": "0/18"}
+{"size": 384, "n": 25, "tokens": 970, "lat_median_ms": 746.2, "lat_p90_ms": 779.9, "defect_frames_noticed": "1/8", "clean_frames_alarmed": "0/17"}
+{"size": 512, "n": 25, "tokens": 1054, "lat_median_ms": 433.2, "lat_p90_ms": 819.4, "defect_frames_noticed": "1/8", "clean_frames_alarmed": "0/17"}
