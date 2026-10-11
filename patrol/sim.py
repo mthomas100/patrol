@@ -141,10 +141,14 @@ class Sim:
                             "depth": round(p[2], 1)})
         return out
 
-    def vegetation_clearance(self, camera: str = "zoom", width: int = 256, height: int = 192) -> float | None:
+    def vegetation_clearance(self, camera: str = "zoom", width: int = 256, height: int = 192, where: bool = False,
+                             x_window: tuple | None = None):
         """Rangefinder: depth + segmentation from a gimbal camera. Returns the smallest 3D distance (m) between any
         visible tree surface and any conductor, or None when no vegetation is in view. Code-owned sensing, the way
-        corridor LiDAR measures clearance; no ground truth is read."""
+        corridor LiDAR measures clearance; no ground truth is read. With where=True it returns, per phase, the
+        clearance and the conductor point beside the closest tree point: {phase: {clearance, x, y, z}}.
+        x_window=(lo, hi) keeps only tree points in that stretch of corridor, so a tree in the background of a photo
+        is not charged to the spot being photographed."""
         key = ("seg", height, width)
         if key not in self._renderers:
             self._renderers[key] = mujoco.Renderer(self.model, height, width)
@@ -166,11 +170,23 @@ class Sim:
         pc = np.stack([(u + 0.5 - width / 2) / f * d, -(v + 0.5 - height / 2) / f * d, -d], axis=1)  # camera frame
         R = self.data.cam_xmat[i].reshape(3, 3)
         pw = pc @ R.T + self.data.cam_xpos[i]
+        if x_window is not None:
+            pw = pw[(pw[:, 0] >= x_window[0]) & (pw[:, 0] <= x_window[1])]
+            if not len(pw):
+                return None
         sp = self.spec["spacing"]
         frac = np.clip((pw[:, 0] % sp) / sp, 0, 1)
         zc = world.conductor_z(frac, sp)
-        best = min(float(np.min(np.hypot(pw[:, 1] - y, pw[:, 2] - zc))) for y in world.PHASES.values())
-        return round(best, 2)
+        if not where:
+            best = min(float(np.min(np.hypot(pw[:, 1] - y, pw[:, 2] - zc))) for y in world.PHASES.values())
+            return round(best, 2)
+        out = {}
+        for name, y in world.PHASES.items():
+            dist = np.hypot(pw[:, 1] - y, pw[:, 2] - zc)
+            k = int(np.argmin(dist))
+            out[name] = {"clearance": round(float(dist[k]), 2), "x": round(float(pw[k, 0]), 2), "y": y,
+                         "z": round(float(zc[k]), 2)}
+        return out
 
     def close(self):
         for r in self._renderers.values():

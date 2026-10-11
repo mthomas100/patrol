@@ -15,7 +15,8 @@ from collections import deque
 from pathlib import Path
 
 from . import clef, world
-from .control import (ACTIONS, CRUISE_WEIGHTS, Config, Flag, Gated, StateMachine, Target, confirm_gate, gate)
+from .control import (ACTIONS, CRUISE_WEIGHTS, Config, Flag, Gated, StateMachine, Target, confirm_gate, gate,
+                      rangefinder_flag)
 from .sim import Sim
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,13 +103,20 @@ class Mission:
             sim.aim("inspect", (look.x, look.y, look.z))
             jpg = sim.jpeg("inspect", W, H)
             frame_file = self._save("frames", f"t{self.ticks:04d}.jpg", jpg)
-            dec = self._ask(jpg, clef.state_text(sim.telemetry(), self._ctx()), clef.schema())
-            moved = self._fly_blind(dec)
-            pos = tuple(sim.pos)
-            fa, fw = sm.fallback_cruise(pos[0], look, tower_ahead)
-            g2 = sm.on_cruise(gate(dec, ACTIONS, CRUISE_WEIGHTS, fa, fw, moved_m=moved), look, dec)
+            # the rangefinder (a few ms) runs first: a measured encroachment needs no model to stop the drone
+            rf = sim.vegetation_clearance("inspect", where=True, x_window=(pos[0] - 2, pos[0] + 14)) \
+                if self.spec["kind"] == "corridor" else None
+            g2 = sm.on_rangefinder(rf, pos[0])
+            if g2 is None:
+                dec = self._ask(jpg, clef.state_text(sim.telemetry(), self._ctx()), clef.schema())
+                moved = self._fly_blind(dec)
+                pos = tuple(sim.pos)
+                fa, fw = sm.fallback_cruise(pos[0], look, tower_ahead)
+                g2 = sm.on_cruise(gate(dec, ACTIONS, CRUISE_WEIGHTS, fa, fw, moved_m=moved), look, dec)
+                rec["decision"] = self._dec(dec, "cruise")
             g = g or g2
-            rec.update(decision=self._dec(dec, "cruise"), aim=[look.x, look.y, look.z])
+            rec.update(aim=[look.x, look.y, look.z],
+                       rangefinder=min((r["clearance"] for r in rf.values()), default=None) if rf else None)
             if sm.state == "CRUISE":
                 v = sm.velocity_hold(pos, sm.governed_cruise(self.latency_ema))
             else:
@@ -151,7 +159,7 @@ class Mission:
             sim.aim("zoom", (t.x + off, t.y, t.z))
             jpg = sim.jpeg("zoom", W, H)
             jpgs.append(jpg)
-            c = sim.vegetation_clearance("zoom")
+            c = sim.vegetation_clearance("zoom", x_window=(t.x + off - 8, t.x + off + 8))
             if c is not None:
                 clear.append(c)
             paths.append(self._save("photos", f"photo_{n:02d}{'ab'[k] if len(offsets) > 1 else ''}_x{t.x + off:05.1f}.jpg",
@@ -163,7 +171,8 @@ class Mission:
                                                                    hovering=True, clearance=clearance)),
                         clef.confirm_schema())
         self._fly_blind(dec)
-        g = confirm_gate(dec, "protocol: no flag without a confident confirmation; photo kept for human review")
+        g = rangefinder_flag(confirm_gate(dec, "protocol: no flag without a confident confirmation; photo kept for "
+                                               "human review"), clearance)
         truth = []
         for off in offsets:
             sim.aim("zoom", (t.x + off, t.y, t.z))
@@ -173,7 +182,8 @@ class Mission:
         self.photos.append(photo)
         self.emit("photo", **photo)
         if g.action == "flag_damage":
-            guess = max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
+            guess = "vegetation_close" if g.source == "sensor" else \
+                max(dec.nouls, key=dec.nouls.get) if dec.nouls else "unknown"
             f = Flag(id=f"F{len(sm.flags) + 1}", target=t, photo=path, t=sim.t, probs=dec.probs, nouls=dec.nouls,
                      defect_guess=guess, source=g.label, clearance=clearance)
             sm.flags.append(f)

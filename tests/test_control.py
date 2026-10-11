@@ -129,3 +129,32 @@ def test_staleness_by_distance_flown():
     assert gate(d, ACTIONS, CRUISE_WEIGHTS, "continue", "p", moved_m=3.2).label == "CLEF"    # slow but governed
     g = gate(d, ACTIONS, CRUISE_WEIGHTS, "continue", "p", moved_m=5.0)
     assert g.label == "FALLBACK" and "stale" in g.reason
+
+
+def _rf(near, middle=9.0, far=9.0, x=120.0):
+    return {ph: {"clearance": c, "x": x, "y": y, "z": 11.8}
+            for ph, c, y in (("near", near, -4.5), ("middle", middle, 0.0), ("far", far, 4.5))}
+
+
+def test_rangefinder_hovers_on_an_encroaching_tree_once():
+    from patrol.control import rangefinder_flag
+    sm = StateMachine(Config())
+    assert sm.on_rangefinder(_rf(6.0), 110) is None and sm.state == "CRUISE"       # healthy tree: keep flying
+    assert sm.on_rangefinder(_rf(0.2, x=140), 110) is None                         # too far ahead to photograph
+    g = sm.on_rangefinder(_rf(0.2, middle=0.1), 110)
+    assert g.label == "RANGEFINDER" and sm.state == "HOVER"
+    assert sm.target.y == -4.5          # the inspected phase wins when it is itself within the trigger distance
+    photo = gate(dec(flag_damage=0.05, **{"continue": 0.95}), ("continue", "flag_damage"), CONFIRM_WEIGHTS,
+                 "continue", "p")
+    g = rangefinder_flag(photo, 0.2)
+    assert g.action == "flag_damage" and g.label == "RANGEFINDER"
+    sm.on_confirm(g)
+    assert sm.state == "CRUISE" and sm.on_rangefinder(_rf(0.2, x=121), 112) is None   # settled: no second hover
+
+
+def test_rangefinder_flag_leaves_clear_trees_to_the_photo():
+    from patrol.control import rangefinder_flag
+    photo = gate(dec(flag_damage=0.05, **{"continue": 0.95}), ("continue", "flag_damage"), CONFIRM_WEIGHTS,
+                 "continue", "p")
+    assert rangefinder_flag(photo, 1.4).action == "continue"
+    assert rangefinder_flag(photo, None).action == "continue"

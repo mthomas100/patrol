@@ -38,18 +38,26 @@ GATE = {
 # defect at least one trigger frame while 2 of 90 clean frames hover (a hover costs seconds, not a false flag).
 LOOK_GAIN = 1.3
 
+# Rangefinder rules (code-owned, like corridor LiDAR): clearance is geometry, which one photo cannot judge (a background
+# tree looks "on" a wire through perspective). A tree within VEG_HOVER_M of a conductor close ahead stops the drone for
+# a photo; within VEG_FLAG_M it is flagged whatever the photo answer says. Healthy trees in the seeded corridors stand
+# 6 m or more from any conductor; the planted encroaching tree measures 0.1-0.3 m (runs/m2-seed0-c).
+VEG_HOVER_M = 1.5
+VEG_FLAG_M = 1.0
+
 
 @dataclass
 class Gated:
     action: str
-    source: str               # "clef" | "fallback" | "safety" | "operator"
+    source: str               # "clef" | "fallback" | "safety" | "operator" | "sensor"
     reason: str = ""
     legal: tuple = ACTIONS
     weighted: dict = field(default_factory=dict)
 
     @property
     def label(self) -> str:
-        return {"clef": "CLEF", "fallback": "FALLBACK", "safety": "SAFETY", "operator": "OPERATOR"}[self.source]
+        return {"clef": "CLEF", "fallback": "FALLBACK", "safety": "SAFETY", "operator": "OPERATOR",
+                "sensor": "RANGEFINDER"}[self.source]
 
 
 def gate(dec, legal: tuple, weights: dict, fallback_action: str, fallback_why: str,
@@ -87,6 +95,14 @@ def confirm_gate(dec, fallback_why: str) -> Gated:
             k = max(over, key=over.get)
             g.action, g.reason = "flag_damage", f"{k} = {over[k]:.2f} >= {NOUL_FLAG[k]}"
     return g
+
+
+def rangefinder_flag(g: Gated, clearance: float | None) -> Gated:
+    """A measured clearance under VEG_FLAG_M is a finding in itself; Clef's photo answer cannot clear it."""
+    if clearance is None or clearance >= VEG_FLAG_M or g.action == "flag_damage":
+        return g
+    return Gated("flag_damage", "sensor", f"rangefinder: tree {clearance:.1f} m from a conductor (< {VEG_FLAG_M} m); "
+                 f"photo answer was {g.label} {g.action}", ("continue", "flag_damage"))
 
 
 # ---------------------------------------------------------------- mission state
@@ -227,10 +243,29 @@ class StateMachine:
                 g.action = "continue"
         return g
 
+    def on_rangefinder(self, rf: dict | None, x: float) -> Gated | None:
+        """Code-owned trigger on a cruise frame: a tree within VEG_HOVER_M of a conductor in [x-2, x+14] m makes the
+        drone hover and photograph that spot. rf is Sim.vegetation_clearance(where=True); the phase under
+        inspection is preferred when it is itself within the trigger distance."""
+        if self.state != "CRUISE" or not rf:
+            return None
+        ph = self.phase if rf.get(self.phase, {}).get("clearance", 99) < VEG_HOVER_M else \
+            min(rf, key=lambda k: rf[k]["clearance"])
+        r = rf[ph]
+        if r["clearance"] >= VEG_HOVER_M or not (x - 2 <= r["x"] <= x + 14):
+            return None
+        t = Target(r["x"], r["y"], r["z"], why=f"{ph}-phase conductor beside a tree {r['clearance']:.1f} m from it "
+                   "(rangefinder)")
+        if self.photographed_near(t):
+            return None
+        self.state, self.target, self.hover_ticks = "HOVER", t, 0
+        return Gated("hover_and_photograph", "sensor",
+                     f"rangefinder: tree {r['clearance']:.1f} m from the {ph} conductor at x={r['x']:.0f}")
+
     def on_confirm(self, g: Gated):
-        """After the hover photo: flag or move on. A confident answer settles the spot; a FALLBACK leaves it open
-        for one more look if Clef later asks for it."""
-        (self.photographed if g.source == "clef" else self.unconfirmed).append(self.target)
+        """After the hover photo: flag or move on. A confident answer (Clef's or a rangefinder measurement) settles
+        the spot; a FALLBACK leaves it open for one more look if Clef later asks for it."""
+        (self.photographed if g.source in ("clef", "sensor") else self.unconfirmed).append(self.target)
         if self.suspect and self.suspect[1].near(self.target):
             self.suspect = None
         self.state = "CRUISE"
