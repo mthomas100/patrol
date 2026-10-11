@@ -52,14 +52,12 @@ uv pip install --python .venv/bin/python mujoco==3.15.0 numpy==2.5.4 pillow==12.
 
 **Check:** `.venv/bin/python -m pytest -q tests/` passes (about 70 tests, no models needed).
 
-**Workaround (no code change needed).** Patrol's test preflight calls a `hold` command that exists only on the
-author's Mac, so give it a harmless stand-in:
+**No `hold` command needed.** The author's Mac has a GPU hold gate; Patrol's test preflight now reports
+"no hold command on this Mac" when it is missing and carries on.
 
-```sh
-mkdir -p ~/.local/bin && printf '#!/bin/sh\necho "no hold gate on this Mac"\n' > ~/.local/bin/hold && chmod +x ~/.local/bin/hold
-```
-
-Make sure `~/.local/bin` is on `PATH` (`command -v hold` prints its path).
+**Model addresses.** Patrol looks for Clef on `http://127.0.0.1:8097` and the chat model (named `qwen38`) on
+`http://127.0.0.1:8090`. To use other addresses, set `PATROL_CLEF_BASE` and `PATROL_LLM_BASE` (base URLs, no path),
+for example `PATROL_CLEF_BASE=http://127.0.0.1:9097 tests/e2e_search.sh --only 1 --no-think`.
 
 ## 2. Clef-Flash, the decision model (Tier 1)
 
@@ -174,9 +172,8 @@ passes. It plays recorded voice clips, so no microphone is needed.
 
 | Symptom | Cause and fix |
 |---|---|
-| `Clef-Flash is not answering on :8097` | Clef server not running: step 2. It answers one request at a time, so `/health` can be slow while it is busy. |
+| `Clef-Flash is not answering on :8097` | Clef server not running (or `PATROL_CLEF_BASE` points elsewhere): step 2. It answers one request at a time, so `/health` can be slow while it is busy. |
 | MuJoCo error about a missing `.obj` or `.png` | Item meshes missing, or `mujoco.json` still names the author's paths: step 3. |
-| `FileNotFoundError: 'hold'` | The stand-in from step 1 is not on `PATH`. |
 | Notes never appear, or chat calls return 404 | Nothing on 8090, or the model is not named `qwen38`: step 5. |
 | Voice silent, or `local-voice` errors | `~/repos/local-voice/orchestrator/.venv` missing: step 6. |
 | Results drift between runs | Normal within limits. The author measured 17 of 18 scenario flights passing over three seed sets. |

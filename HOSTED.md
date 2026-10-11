@@ -14,7 +14,8 @@ Two things change when the models are hosted:
 
 ## The idea: keep Patrol's addresses, put a small proxy behind each
 
-Patrol calls fixed local addresses. Rather than editing code, run a small local proxy on each address that forwards
+Patrol calls local addresses (by default the two below; `PATROL_CLEF_BASE` and `PATROL_LLM_BASE` move them, see
+SETUP.md step 1). Rather than editing code, run a small local proxy on each address that forwards
 to the hosted service and adds the API key:
 
 | Patrol calls | Speaks | Hosted equivalent | Proxy |
