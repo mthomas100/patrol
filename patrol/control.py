@@ -17,6 +17,11 @@ ACTIONS = ("continue", "hover_and_photograph", "go_back", "flag_damage")
 CRUISE_WEIGHTS = {"continue": 1.0, "hover_and_photograph": 1.8, "go_back": 1.0, "flag_damage": 2.0}
 CONFIRM_WEIGHTS = {"continue": 1.0, "flag_damage": 3.0}       # flag when p(flag) > 0.25
 
+# Confirm-photo component questions that also justify a flag (Clef's own nouls, thresholded by code). Measured on
+# runs/m2-probe (seed 0, 24-degree zoom): clean photos reach vegetation 0.58 (perspective: a background tree looks
+# close to a wire) and at most 0.06 on the others; defects aimed within 2 m reach 0.43-0.84 on their own noul.
+NOUL_FLAG = {"insulator_damaged": 0.35, "conductor_frayed": 0.35, "foreign_object": 0.35, "vegetation_close": 0.65}
+
 GATE = {
     "deadline_ms": 2500.0,    # a cruise answer later than this is dropped (the drone has moved on)
     "hover_deadline_ms": 8000.0,   # hovering is the safe state, so a confirm answer may take longer
@@ -52,6 +57,19 @@ def gate(dec, legal: tuple, weights: dict, fallback_action: str, fallback_why: s
                      f"low confidence (top {top:.2f}, sure {dec.sure:.2f}); {fallback_why}", legal)
     w = {a: round(p * weights.get(a, 1.0), 4) for a, p in probs.items()}
     return Gated(max(w, key=w.get), "clef", "", legal, w)
+
+
+def confirm_gate(dec, fallback_why: str) -> Gated:
+    """Gate for the hover photo: the weighted flag/continue choice, upgraded to a flag when one of Clef's component
+    answers clears its threshold."""
+    g = gate(dec, ("continue", "flag_damage"), CONFIRM_WEIGHTS, "continue", fallback_why,
+             deadline_ms=GATE["hover_deadline_ms"])
+    if g.source == "clef" and g.action == "continue":
+        over = {k: v for k, v in dec.nouls.items() if v >= NOUL_FLAG.get(k, 2.0)}
+        if over:
+            k = max(over, key=over.get)
+            g.action, g.reason = "flag_damage", f"{k} = {over[k]:.2f} >= {NOUL_FLAG[k]}"
+    return g
 
 
 # ---------------------------------------------------------------- mission state

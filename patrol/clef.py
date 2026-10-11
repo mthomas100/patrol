@@ -112,6 +112,7 @@ class Decision:
     defect: str = "none"
     defect_probs: dict = field(default_factory=dict)
     nouls: dict = field(default_factory=dict)
+    extra: dict = field(default_factory=dict)     # other choice answers, e.g. "where"
     latency_ms: float = 0.0
     input_tokens: int = 0
     error: str = ""
@@ -140,6 +141,7 @@ def ask(jpeg: bytes, state: str, questions: dict | None = None, timeout: float =
                  confidence=float(act.get("confidence", 0.0)), latency_ms=ms,
                  input_tokens=int((body.get("usage") or {}).get("input_tokens", 0)))
     d.nouls = {k: float(v["noul"]) for k, v in a.items() if v.get("type") == "noul"}
+    d.extra = {k: v["choice"] for k, v in a.items() if v.get("type") == "choice" and k not in ("action", "defect")}
     if "damage" in a:
         d.damage = float(a["damage"]["noul"])
     elif d.nouls:

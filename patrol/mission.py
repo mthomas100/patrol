@@ -15,8 +15,7 @@ from collections import deque
 from pathlib import Path
 
 from . import clef, world
-from .control import (ACTIONS, CONFIRM_WEIGHTS, CRUISE_WEIGHTS, GATE, Config, Flag, Gated, StateMachine, Target,
-                      gate)
+from .control import (ACTIONS, CRUISE_WEIGHTS, Config, Flag, Gated, StateMachine, Target, confirm_gate, gate)
 from .sim import Sim
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -150,9 +149,7 @@ class Mission:
         dec = self._ask(jpg, clef.state_text(sim.telemetry(), self._ctx(camera="zoom", hovering=True)),
                         clef.confirm_schema())
         self._fly_blind(dec)
-        g = gate(dec, ("continue", "flag_damage"), CONFIRM_WEIGHTS, "continue",
-                 "protocol: no flag without a confident confirmation; photo kept for human review",
-                 deadline_ms=GATE["hover_deadline_ms"])
+        g = confirm_gate(dec, "protocol: no flag without a confident confirmation; photo kept for human review")
         photo = {"photo": path, "target": [t.x, t.y, t.z], "decision": self._dec(dec, "confirm"), "gated": self._g(g),
                  "truth": sim.visible_defects("zoom", W, H, max_depth=40)}
         self.photos.append(photo)

@@ -246,7 +246,7 @@ def build_mjcf(spec: dict) -> str:
       <body name="gimbal">
         <camera name="wide" pos="0 0 -0.1" fovy="62" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
         <camera name="inspect" pos="0 0 -0.1" fovy="34" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
-        <camera name="zoom" pos="0 0 -0.1" fovy="16" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
+        <camera name="zoom" pos="0 0 -0.1" fovy="24" mode="fixed" xyaxes="0 -1 0 0 0 1"/>
       </body>
     </body>
     <camera name="chase" mode="trackcom" pos="-14 -22 22" xyaxes="0.8 -0.6 0 0.3 0.4 0.87" target="drone"/>

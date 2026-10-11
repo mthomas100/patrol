@@ -111,3 +111,13 @@ def test_speed_governor():
     assert sm.governed_cruise(0.45) == 3.0
     assert abs(sm.governed_cruise(1.0) - 1.6) < 1e-9
     assert sm.governed_cruise(10) == 0.8
+
+
+def test_confirm_gate_noul_upgrade():
+    from patrol.control import confirm_gate
+    d = dec(flag_damage=0.22, **{"continue": 0.78}); d.nouls = {"foreign_object": 0.5, "vegetation_close": 0.1}
+    g = confirm_gate(d, "p")
+    assert g.action == "flag_damage" and "foreign_object" in g.reason
+    d.nouls = {"foreign_object": 0.05, "vegetation_close": 0.58}       # perspective false positive stays clean
+    assert confirm_gate(d, "p").action == "continue"
+    assert confirm_gate(Decision(ok=False, error="x"), "p").label == "FALLBACK"
