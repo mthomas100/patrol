@@ -68,7 +68,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("out"); ap.add_argument("--views", type=int, default=5); ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no-clef", action="store_true", help="finder and renders only")
+    ap.add_argument("--res", type=int, nargs=2, default=[512, 384], help="sweep render size (the finder's input)")
     a = ap.parse_args(argv)
+    global W, H
+    W, H = a.res
     out = Path(a.out); (out / "media").mkdir(parents=True, exist_ok=True)
     if not a.no_clef and not clef.health(timeout=20):
         sys.exit("Clef-Flash is not answering on :8097")

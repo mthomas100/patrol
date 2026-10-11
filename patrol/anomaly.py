@@ -17,6 +17,7 @@ from scipy import ndimage
 
 LEVELS = 12            # quantisation levels per channel
 MIN_PIX = 4            # smallest blob kept, pixels
+RANK = "mean"          # "mean": mean rarity x log(1 + area); "sum": summed rarity (first version)
 
 
 def _rgb(img) -> np.ndarray:
@@ -50,8 +51,11 @@ def candidates(img, k: int = 3, pct: float = 99.0, min_rarity: float = 6.0, pad:
     score = ndimage.sum(r, lab, idx)
     boxes = ndimage.find_objects(lab)
     H, W = r.shape
+    # rank by how rare the blob's colours are on average, with a weak size bonus: a small, very rare patch (a lost item)
+    # must beat a large, moderately rare one (a tree on snow); summed rarity ranked trees first (runs/s0-altitude-hires)
+    rank = (score / np.maximum(area, 1)) * np.log1p(area) if RANK == "mean" else score
     out = []
-    for i in np.argsort(-score):
+    for i in np.argsort(-rank):
         if area[i] < MIN_PIX:
             continue
         sy, sx = boxes[i]
