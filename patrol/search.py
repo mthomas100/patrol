@@ -64,7 +64,8 @@ class SearchConfig:
     alert_r: float = 6.0             # a find this close to an alert of the same clue updates it (one alert per item)
     h_band: tuple = (8.0, 70.0)      # SAFETY: height above ground while searching
     area_margin: float = 25.0        # SAFETY: how far outside the area the drone may stray
-    battery_s: float = 1200.0        # endurance, flight seconds
+    battery_s: float = 1800.0        # endurance, flight seconds: 30 min, what a 40-45 min SAR drone keeps in the cold
+    #                                  (was 1,200 s until 15:55; scenario 5 ran out at 21.8 m in 3 of 3; DECISIONS 15:55)
     reserve: float = 10.0            # battery % kept for landing
     clef_timeout: float = 6.0
     max_confirm_tries: int = 2
