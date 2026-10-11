@@ -311,6 +311,16 @@ td code { font-size: 0.8em; }
 .m3d-prompt .tag { font-style: normal; }
 .m3d .cap { font-family: var(--font-display); font-size: 0.84rem; line-height: 1.4; color: var(--ink-2); }
 .m3d .cap b { display: block; color: var(--ink); }
+.glance { padding-block: 24px 56px; display: grid; gap: 22px; }
+.glance > * { min-width: 0; }
+.annot-fig { gap: 14px; }
+.annot { position: relative; box-shadow: var(--shadow); }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; background: var(--blaze); color: #fff; border: 2px solid #fff; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.45); pointer-events: none; }
+@media (max-width: 600px) { .pin { width: 18px; height: 18px; font-size: 0.6rem; border-width: 1.5px; } }
+.annot-key { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px 22px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.annot-key li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; font-family: var(--font-display); font-size: 0.9rem; line-height: 1.4; color: var(--ink-2); }
+.annot-key strong { color: var(--ink); }
+.pin-n { width: 24px; height: 24px; border-radius: 50%; background: var(--blaze); color: #fff; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600; }
 footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); display: grid; gap: 6px; }
 </style>
 
@@ -352,6 +362,7 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
       <div class="stat" role="listitem"><span class="v">6<small> cm</small></span><span class="k">between the backpack alert and the backpack (tent 24 cm, jacket 7 cm)</span><span class="src">same flight, distance to each planted item</span></div>
       <div class="stat" role="listitem"><span class="v">57<small>%</small></span><span class="k">of a simulated 20-minute battery for a 160 m square, with 8 closer looks (the battery is now set to 30 minutes)</span><span class="src">same flight, battery used</span></div>
     </div>
+    <p class="muted" style="font-family:var(--font-display); font-size:0.92rem"><a href="#glance">See the console at a glance ↓</a></p>
   </div>
 
   <figure class="mapcard" aria-labelledby="map-cap">
@@ -382,6 +393,22 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
   </figure>
 </header>
 
+<section class="glance" id="glance">
+  <div class="s-head">
+    <p class="eyebrow"><b>At a glance</b> · the console</p>
+    <h2>Everything the drone sees, thinks and finds, on one screen</h2>
+    <p class="lede">The console is a web page the laptop serves to itself. It runs a live search with push-to-talk, or replays any recorded flight. This is the moment of an alert in the demo flight: Clef-Flash has just confirmed the blue backpack from 20 m.</p>
+  </div>
+  <figure class="annot-fig">
+    <div class="annot frame"><img src="assets/console-alert.jpg" alt="The Patrol console mid-flight: header with state SWEEP, 43% searched, 80% battery and decision counts; clue cards for a blue backpack, orange tent and gray dog; the zoom camera showing ALERT A3 blue backpack found, confirmed at 79%; the decision trace with Clef-Flash's bars; the sector map with three alerts and qwen38's next sectors; the chase view; the log with the spoken alert; and alert cards with the sweep crop beside the confirming close-up and qwen38's radio note."><span class="pin" style="left:63%; top:4.2%" aria-hidden="true">1</span><span class="pin" style="left:2.6%; top:8.2%" aria-hidden="true">2</span><span class="pin" style="left:16%; top:16.2%" aria-hidden="true">3</span><span class="pin" style="left:14%; top:64%" aria-hidden="true">4</span><span class="pin" style="left:45%; top:16.2%" aria-hidden="true">5</span><span class="pin" style="left:47.5%; top:60.2%" aria-hidden="true">6</span><span class="pin" style="left:44%; top:82%" aria-hidden="true">7</span><span class="pin" style="left:72%; top:16.2%" aria-hidden="true">8</span></div>
+    <ol class="annot-key"><li><span class="pin-n" aria-hidden="true">1</span><div><strong>The header</strong> what the drone is doing (SWEEP, INVESTIGATE, RETURN), area searched, battery, and who made the decisions: Clef-Flash, fallback or qwen38</div></li><li><span class="pin-n" aria-hidden="true">2</span><div><strong>Looking for</strong> the clue cards: the family's words, qwen38's sentence about how each looks from above, and its size</div></li><li><span class="pin-n" aria-hidden="true">3</span><div><strong>The camera</strong> the latest sweep photo with the finder's boxes and Clef-Flash's score on each; during a closer look, the zoom close-up and the verdict</div></li><li><span class="pin-n" aria-hidden="true">4</span><div><strong>Decision trace</strong> the exact crop Clef-Flash judged and its odds, one bar per clue, with the thresholds marked</div></li><li><span class="pin-n" aria-hidden="true">5</span><div><strong>The map</strong> lanes and sectors over the trail, stream and last known point; ground already seen; spots checked (grey) and alerts (red); qwen38's next sectors, numbered</div></li><li><span class="pin-n" aria-hidden="true">6</span><div><strong>Chase view</strong> a camera behind the drone, for the people watching; no model uses it</div></li><li><span class="pin-n" aria-hidden="true">7</span><div><strong>The log</strong> every decision, note, plan and spoken line, newest first</div></li><li><span class="pin-n" aria-hidden="true">8</span><div><strong>Alerts</strong> one card per find: what the sweep saw beside the close-up that confirmed it, position, confidence and qwen38's radio note</div></li></ol>
+    <figcaption>A replay of the recorded demo flight (grass, three clues and a blue tarp decoy) at 16× speed, captured mid-flight.<span class="src">recorded demo flight, console replay</span></figcaption>
+  </figure>
+  <figure class="wide">
+    <div class="frame"><video controls preload="none" poster="assets/demo-flight-poster.jpg" src="assets/demo-flight.mp4" aria-label="Recording of the demo flight replayed in the console at 3.5 times speed, with the alerts read aloud"></video></div>
+    <figcaption><strong>Watch the whole flight</strong> (3 min 23 s, replayed at 3.5× with the alerts read aloud): three finds, the tarp checked and dismissed, no false alerts. This recording is also the stage fallback. The opening read-back of the clues was added from the console's own line, the operator's spoken commands are not in the audio, and qwen38's notes arrive about 10 s after their alerts.<span class="src">the stage fallback recording, re-encoded small for this page</span></figcaption>
+  </figure>
+</section>
 <!-- SECTIONS:BEGIN -->
 <section class="s" id="problem">
   <div class="s-head">
@@ -689,7 +716,7 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
   <div class="s-head">
     <p class="eyebrow"><b>09</b> · The console</p>
     <h2>One screen shows what the drone sees, what each model thinks, and what it found</h2>
-    <p class="lede">The console is a web page served from the laptop. It runs live, with push-to-talk, or replays any recorded flight. Below is the demo scene (grass, seed 26) after landing: three alerts, the tarp dismissed, no false alerts.</p>
+    <p class="lede">The console is a web page served from the laptop. It runs live, with push-to-talk, or replays any recorded flight. The annotated view at the top of this page shows it mid-flight; below is the same demo flight after landing, and what each panel is for.</p>
   </div>
   <figure class="wide">
     <div class="frame"><img src="assets/demo-flight-poster.jpg" alt="The Patrol console after a search: header with DONE, 100% area searched, 47% battery, decision sources CLEF 196, FALLBACK 0, QWEN38 9; clue chips for blue backpack, orange tent and gray dog with qwen38's descriptions; the onboard camera with finder boxes; the decision trace with Clef-Flash's bars; the sector map with three red alerts; the chase view; the log; and alert cards showing each sweep crop beside its close-up with qwen38's radio note." loading="lazy"></div>
@@ -707,10 +734,6 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
       <tr><td><strong>Alerts</strong></td><td>one card per find: the sweep crop beside the close-up, position, confidence and qwen38's radio note with what to check</td></tr>
     </tbody>
   </table></div>
-  <figure class="wide">
-    <div class="frame"><video controls preload="none" poster="assets/demo-flight-poster.jpg" src="assets/demo-flight.mp4" aria-label="Recording of the demo flight replayed in the console at 3.5 times speed, with the alerts read aloud"></video></div>
-    <figcaption>The demo flight replayed at 3.5× speed with the spoken alerts (3 min 23 s). This is the stage fallback. The opening read-back of the clues was added from the console's own line, the operator's spoken commands are not in the audio, and qwen38's notes arrive about 10 s after their alerts.<span class="src">the stage fallback recording, re-encoded small for this page</span></figcaption>
-  </figure>
 </section>
 <section class="s" id="laptop">
   <div class="s-head">
