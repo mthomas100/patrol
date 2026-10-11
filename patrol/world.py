@@ -334,6 +334,46 @@ def _search_tree(t, style, k):
             _g("ellipsoid", pos=(x, y, h * 0.75), size=(h * 0.3, h * 0.28, h * 0.25), rgba=(0.15, 0.38, 0.12, 1))]
 
 
+def _stones_along(points, step=0.32):
+    """Small stones every `step` metres along a polyline (the SOS letters)."""
+    out = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        n = max(1, int(math.hypot(x1 - x0, y1 - y0) / step))
+        out += [(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n) for k in range(n)]
+    return out + [points[-1]]
+
+
+def _arc(cx, cy, r, a0, a1, n=24):
+    return [(cx + r * math.cos(math.radians(a0 + (a1 - a0) * k / n)), cy + r * math.sin(math.radians(a0 + (a1 - a0) * k / n)))
+            for k in range(n + 1)]
+
+
+def _sos():
+    s_pts = _arc(0, 0.5, 0.5, 20, 270) + _arc(0, -0.5, 0.5, 90, -160)
+    o_pts = [(0.6 * math.cos(math.radians(a)), 1.0 * math.sin(math.radians(a))) for a in range(0, 361, 15)]
+    stone = (0.16, 0.13, 0.08, (0.63, 0.61, 0.58, 1))
+    out = []
+    for dx, pts in ((-1.7, s_pts), (0.0, o_pts), (1.7, s_pts)):
+        out += [(x + dx, y) + stone for x, y in _stones_along(pts)]
+    return out
+
+
+# items made of MuJoCo primitives (rocks need no mesh model): name -> [(dx, dy, sx, sy, sz, rgba)], plus real size
+PRIMS = {
+    "red_rock": ([(0.0, 0.0, 0.45, 0.35, 0.25, (0.55, 0.24, 0.17, 1))], 0.9),
+    "grey_boulder": ([(0.0, 0.0, 0.7, 0.55, 0.45, (0.50, 0.50, 0.52, 1))], 1.4),
+    "sos_rocks": (_sos(), 5.0),
+}
+
+
+def prim_geoms(it: dict, n: str) -> list[str]:
+    yaw = math.radians(it.get("yaw", 0.0))
+    c, s = math.cos(yaw), math.sin(yaw)
+    return [_g("ellipsoid", pos=(it["x"] + c * dx - s * dy, it["y"] + s * dx + c * dy, sz * 0.5), size=(sx, sy, sz),
+               rgba=rgba, euler=(0, 0, it.get("yaw", 0.0)), name=f"{n}_{j}")
+            for j, (dx, dy, sx, sy, sz, rgba) in enumerate(PRIMS[it["prim"]][0])]
+
+
 def build_search_mjcf(spec: dict) -> str:
     T = TERRAINS[spec["terrain"]]
     S = spec["size"]
@@ -345,6 +385,9 @@ def build_search_mjcf(spec: dict) -> str:
         world += _search_tree(t, T["trees"], k)
     for i, it in enumerate(spec["items"]):
         n = f"item{i}"
+        if it.get("prim"):
+            world += prim_geoms(it, n)
+            continue
         assets.append(f'<texture name="{n}_tex" type="2d" file="{it["texture"]}"/>')
         assets.append(f'<material name="{n}_mat" texture="{n}_tex" specular="0.2"/>')
         assets.append(f'<mesh name="{n}_mesh" file="{it["obj"]}"/>')

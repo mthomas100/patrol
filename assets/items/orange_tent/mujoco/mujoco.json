@@ -1,0 +1,13 @@
+{
+ "glb": "concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+ "obj": "assets/items/orange_tent/mujoco/mesh.obj",
+ "texture": "assets/items/orange_tent/mujoco/texture.png",
+ "size_m": 2.2,
+ "extent_m": [
+  2.2,
+  2.199,
+  1.472
+ ],
+ "faces": 20000,
+ "has_uv": true
+}

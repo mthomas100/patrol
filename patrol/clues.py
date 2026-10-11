@@ -14,7 +14,7 @@ SURE = ["not sure at all: the picture is unclear or the object is too far away o
         "fairly sure",
         "certain: the object is close and clearly visible"]
 
-CATALOGUE = {   # tuning: blue_backpack, orange_tent, red_jacket; held out: grey_dog, green_sleeping_bag, yellow_helmet
+CATALOGUE = {   # tuning: blue_backpack, orange_tent, red_jacket; held out: grey_dog, green_sleeping_bag, yellow_helmet, sos_rocks
     "blue_backpack": {"family": "blue backpack", "size_m": 0.55,
                       "words": "a blue hiking backpack lying on the ground: a bag with shoulder straps and pockets, "
                                "about half a metre long"},
@@ -33,6 +33,8 @@ CATALOGUE = {   # tuning: blue_backpack, orange_tent, red_jacket; held out: grey
     "yellow_helmet": {"family": "yellow helmet", "size_m": 0.3,
                       "words": "a yellow climbing helmet on the ground: a small round hard hat about thirty "
                                "centimetres across"},
+    "sos_rocks": {"family": "SOS made of rocks", "size_m": 5.0,
+                  "words": "the letters SOS laid out on the ground with small stones, a few metres long"},
 }
 # generic confusers in open terrain, the same for every clue (not chosen from the held-out decoys)
 OTHER = ("something else of a similar colour that is not one of the missing person's belongings: a flat tarp or "

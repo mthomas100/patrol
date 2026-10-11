@@ -1,0 +1,51 @@
+{
+ "state": "DONE",
+ "return_reason": "battery 15% leaves only the return reserve",
+ "sim_s": 1059.5,
+ "wall_s": 66.3,
+ "flight_s": 1059.0,
+ "battery_used_pct": 88.2,
+ "sweep_h": 40.0,
+ "lanes": 6,
+ "lanes_done": 5,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 78,
+ "clef_sweep": {
+  "n": 80,
+  "ok": 80,
+  "median_ms": 232,
+  "p90_ms": 924
+ },
+ "clef_confirm": {
+  "n": 63,
+  "ok": 63,
+  "median_ms": 318,
+  "p90_ms": 1237
+ },
+ "fallback": 0,
+ "investigations": 62,
+ "dismissed": 61,
+ "mean_investigate_s": 6.9,
+ "mean_decision_h": 19.9,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    -32.83,
+    25.28
+   ],
+   "conf": 0.707,
+   "h": 12.0,
+   "photo": "media/photos/S41_12m.jpg",
+   "sweep_crop": "media/crops/f0048_c1.jpg",
+   "sweep_h": 40.0,
+   "spot": "S41",
+   "t": 686.5,
+   "seen": 1
+  }
+ ],
+ "time_to_first_alert": 686.5
+}

@@ -94,6 +94,9 @@ def main(argv=None):
     if argv[:1] == ["console"]:          # the console owns its own argument parser
         from . import console
         return console.main(argv[1:])
+    if argv[:1] == ["search"]:           # Direction 2: the search mission (patrol/search.py)
+        from . import search
+        return search.main(argv[1:])
     p = argparse.ArgumentParser(prog="patrol")
     sub = p.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("frames"); f.add_argument("out"); f.add_argument("--seed", type=int, default=0)
