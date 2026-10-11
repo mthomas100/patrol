@@ -8,12 +8,15 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 
-URL = "http://127.0.0.1:8097/v1/systemone"
+# PATROL_CLEF_BASE points Patrol at another Clef server or a proxy (HOSTED.md); the default is this Mac's :8097
+BASE = os.environ.get("PATROL_CLEF_BASE", "http://127.0.0.1:8097").rstrip("/")
+URL = BASE + "/v1/systemone"
 MODEL = "clef-flash-mlx"
 
 ACTIONS = {
@@ -166,7 +169,7 @@ def ask(jpeg, state: str, questions: dict | None = None, timeout: float = 10.0, 
     return d
 
 
-def health(url: str = "http://127.0.0.1:8097/health", timeout: float = 3.0) -> bool:
+def health(url: str = BASE + "/health", timeout: float = 3.0) -> bool:
     try:
         return json.loads(urllib.request.urlopen(url, timeout=timeout).read()).get("status") == "ok"
     except Exception:

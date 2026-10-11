@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from . import clef, report
+from . import clef, report, thinker
 
 ROOT = Path(__file__).resolve().parents[1]
 PY = str(ROOT / ".venv" / "bin" / "python")
@@ -62,7 +62,7 @@ def preflight(wait_s: float = 120.0) -> dict:
            "messages": [{"role": "user", "content": "Reply with the single word OK."}]}
     t1 = time.time()
     try:
-        r = urllib.request.urlopen(urllib.request.Request("http://127.0.0.1:8090/v1/chat/completions",
+        r = urllib.request.urlopen(urllib.request.Request(thinker.URL,
                                                           json.dumps(req).encode(),
                                                           {"Content-Type": "application/json"}), timeout=120)
         pre["qwen38"] = "ok: " + (json.loads(r.read())["choices"][0]["message"].get("content") or "")[:20].strip()

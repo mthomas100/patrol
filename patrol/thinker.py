@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import re
 import threading
 import time
@@ -24,7 +25,8 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-URL = "http://127.0.0.1:8090/v1/chat/completions"
+# PATROL_LLM_BASE points the qwen38 calls at another OpenAI-style server or a proxy (HOSTED.md)
+URL = os.environ.get("PATROL_LLM_BASE", "http://127.0.0.1:8090").rstrip("/") + "/v1/chat/completions"
 MODEL = "qwen38"          # the only llama-swap model this project may ever request
 CACHE = Path(__file__).resolve().parents[1] / "fixtures" / "clues"
 CALLS: Counter = Counter()
