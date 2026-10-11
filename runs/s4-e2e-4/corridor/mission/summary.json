@@ -1,0 +1,107 @@
+{
+ "ticks": 297,
+ "sim_time_s": 243.6,
+ "wall_time_s": 106.4,
+ "realtime_factor": 2.29,
+ "corridor_complete": true,
+ "returned_home": true,
+ "return_reason": "corridor complete",
+ "battery_end": 81.8,
+ "distance_m": 660.7,
+ "decisions": 142,
+ "decisions_ok": 142,
+ "decision_sources": {
+  "CLEF": 138,
+  "RANGEFINDER": 2,
+  "OPERATOR": 1,
+  "FALLBACK": 4,
+  "SAFETY": 1
+ },
+ "latency_ms": {
+  "median": 463.1,
+  "p90": 807.3,
+  "max": 4972.8
+ },
+ "llm_calls": 8,
+ "llm_frame_fraction": 0.0563,
+ "notes_ok": 7,
+ "photos": 9,
+ "flags": [
+  {
+   "id": "F1",
+   "x": 17.43,
+   "y": 0.0,
+   "guess": "vegetation_close",
+   "source": "CLEF",
+   "trigger": "RANGEFINDER",
+   "note": true
+  },
+  {
+   "id": "F2",
+   "x": 18.89,
+   "y": -4.5,
+   "guess": "vegetation_close",
+   "source": "CLEF",
+   "trigger": "RANGEFINDER",
+   "note": true
+  },
+  {
+   "id": "F3",
+   "x": 100.0,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": true
+  },
+  {
+   "id": "F4",
+   "x": 124.07292896922546,
+   "y": -4.5,
+   "guess": "conductor_frayed",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": true
+  },
+  {
+   "id": "F5",
+   "x": 200.0,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": true
+  },
+  {
+   "id": "F6",
+   "x": 250.0,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": true
+  },
+  {
+   "id": "F7",
+   "x": 262.89308014158576,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": true
+  }
+ ],
+ "defects": 6,
+ "defects_found": [
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+  "D6"
+ ],
+ "recall": 0.833,
+ "false_alarms": [
+  "F1",
+  "F7"
+ ]
+}

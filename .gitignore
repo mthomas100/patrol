@@ -22,3 +22,4 @@ runs/**/*.png
 demo/*.mp4
 # S7 real imagery: dataset files stay local (licence and size); provenance.json is tracked
 assets/real/*/data/
+streams/*/.relay/

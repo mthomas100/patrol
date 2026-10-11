@@ -1,0 +1,43 @@
+{
+ "ticks": 138,
+ "sim_time_s": 94.8,
+ "wall_time_s": 27.6,
+ "realtime_factor": 3.43,
+ "corridor_complete": false,
+ "returned_home": true,
+ "return_reason": "operator asked",
+ "battery_end": 91.7,
+ "distance_m": 330.6,
+ "decisions": 60,
+ "decisions_ok": 60,
+ "decision_sources": {
+  "CLEF": 60,
+  "OPERATOR": 1
+ },
+ "latency_ms": {
+  "median": 423.2,
+  "p90": 444.7,
+  "max": 643.2
+ },
+ "llm_calls": 0,
+ "llm_frame_fraction": 0.0,
+ "notes_ok": 0,
+ "photos": 1,
+ "flags": [
+  {
+   "id": "F1",
+   "x": 100.0,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": false
+  }
+ ],
+ "defects": 1,
+ "defects_found": [
+  "D1"
+ ],
+ "recall": 1.0,
+ "false_alarms": []
+}

@@ -1,0 +1,114 @@
+{
+ "items": [
+  {
+   "name": "grey_dog",
+   "role": "clue",
+   "xy": [
+    -49.31,
+    -24.95
+   ],
+   "frames_in_view": 3,
+   "noticed": 3,
+   "investigated": 1,
+   "alerts": [
+    "A2"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.05,
+   "t_alert": 503.01
+  },
+  {
+   "name": "green_sleeping_bag",
+   "role": "clue",
+   "xy": [
+    46.97,
+    17.19
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 1,
+   "alerts": [
+    "A3"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.61,
+   "t_alert": 648.95
+  },
+  {
+   "name": "yellow_helmet",
+   "role": "clue",
+   "xy": [
+    14.16,
+    -44.37
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 1,
+   "alerts": [
+    "A1"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.03,
+   "t_alert": 201.27
+  },
+  {
+   "name": "sos_rocks",
+   "role": "clue",
+   "xy": [
+    1.87,
+    46.14
+   ],
+   "frames_in_view": 6,
+   "noticed": 6,
+   "investigated": 1,
+   "alerts": [
+    "A4"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.01,
+   "t_alert": 992.18
+  },
+  {
+   "name": "grey_boulder",
+   "role": "decoy",
+   "xy": [
+    -54.45,
+    28.5
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  },
+  {
+   "name": "orange_leaf_pile",
+   "role": "decoy",
+   "xy": [
+    -18.43,
+    4.34
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  }
+ ],
+ "recall": "4/4",
+ "found": 4,
+ "clues": 4,
+ "false_alerts": [],
+ "decoys_investigated": 0,
+ "loc_err_m": [
+  0.05,
+  0.61,
+  0.03,
+  0.01
+ ],
+ "time_to_first_find": 201.27
+}

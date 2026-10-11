@@ -1,0 +1,45 @@
+{
+ "items": [
+  {
+   "name": "grey_dog",
+   "role": "clue",
+   "xy": [
+    18.9,
+    -25.94
+   ],
+   "frames_in_view": 2,
+   "noticed": 1,
+   "investigated": 1,
+   "alerts": [
+    "A1"
+   ],
+   "right_clue": true,
+   "loc_err_m": 0.02,
+   "t_alert": 148.01
+  },
+  {
+   "name": "grey_boulder",
+   "role": "decoy",
+   "xy": [
+    -41.62,
+    31.91
+   ],
+   "frames_in_view": 4,
+   "noticed": 4,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  }
+ ],
+ "recall": "1/1",
+ "found": 1,
+ "clues": 1,
+ "false_alerts": [],
+ "decoys_investigated": 0,
+ "loc_err_m": [
+  0.02
+ ],
+ "time_to_first_find": 148.01
+}

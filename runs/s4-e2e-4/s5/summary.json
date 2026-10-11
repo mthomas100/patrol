@@ -1,0 +1,222 @@
+{
+ "llm_calls": 12,
+ "llm_by_role": {
+  "note": 4,
+  "trail": 4,
+  "second_opinion": 4
+ },
+ "clef_qwen_idle": {
+  "n": 423,
+  "ok": 423,
+  "median_ms": 370,
+  "p90_ms": 412
+ },
+ "clef_qwen_active": {
+  "n": 71,
+  "ok": 71,
+  "median_ms": 454,
+  "p90_ms": 603
+ },
+ "sectors": 56,
+ "sectors_done": 56,
+ "plans": [
+  {
+   "first": [
+    "D3",
+    "D4",
+    "E3",
+    "E4",
+    "F3",
+    "F4"
+   ],
+   "reason": "Hikers likely continued north along the trail; these sectors cover the immediate path ahead of the last find.",
+   "raw_ok": true,
+   "wall_s": 5.3,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "H3",
+    "H4",
+    "I3",
+    "I4",
+    "J3",
+    "J4"
+   ],
+   "reason": "Trail continues northeast through these sectors; hikers likely continued along the path past the last find.",
+   "raw_ok": true,
+   "wall_s": 4.9,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "I4",
+    "J4",
+    "K4",
+    "L4",
+    "M4",
+    "N4"
+   ],
+   "reason": "Hikers likely continued northeast along the trail; these sectors cover the unsearched trail path ahead of the last find.",
+   "raw_ok": true,
+   "wall_s": 5.1,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "K3",
+    "J2",
+    "K2",
+    "L2",
+    "H2",
+    "I2"
+   ],
+   "reason": "SOS at (2,46) suggests hikers are nearby; prioritize sectors adjacent to the trail and SOS location.",
+   "raw_ok": true,
+   "wall_s": 4.8,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 1293.5,
+ "wall_s": 228.2,
+ "flight_s": 1293.0,
+ "battery_used_pct": 71.8,
+ "state_s": {
+  "TAKEOFF": 5.5,
+  "SWEEP": 975.2,
+  "INVESTIGATE": 178.4,
+  "CONFIRM": 16.0,
+  "RESUME": 98.5,
+  "RETURN": 19.5
+ },
+ "sweep_h": 21.818181818181817,
+ "lanes": 14,
+ "lane_spacing_m": 11.79,
+ "frame_every_m": 6.54,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 354,
+ "candidates": 1062,
+ "clef_sweep": {
+  "n": 463,
+  "ok": 463,
+  "median_ms": 373,
+  "p90_ms": 441
+ },
+ "clef_confirm": {
+  "n": 31,
+  "ok": 31,
+  "median_ms": 484,
+  "p90_ms": 609
+ },
+ "fallback": 0,
+ "investigations": 25,
+ "dismissed": 21,
+ "mean_investigate_s": 7.8,
+ "mean_decision_h": 18.1,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "yellow_helmet",
+   "family": "yellow helmet",
+   "g": [
+    14.18,
+    -44.35
+   ],
+   "conf": 0.54,
+   "h": 12.0,
+   "photo": "media/photos/S6_12m.jpg",
+   "sweep_crop": "media/crops/f0056_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S6",
+   "t": 201.27,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible yellow helmet spotted 14 meters east and 44 meters south of search center.",
+    "check": "Ground team should visually confirm the object at the specified coordinates.",
+    "agree": true,
+    "wall_s": 5.0,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -49.3,
+    -25.0
+   ],
+   "conf": 0.306,
+   "h": 12.0,
+   "photo": "media/photos/S12_12m.jpg",
+   "sweep_crop": "media/crops/f0137_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S12",
+   "t": 503.01,
+   "seen": 1,
+   "by": "Clef + qwen38",
+   "note": {
+    "alert": "Possible grey dog found 49 meters west and 25 meters south of search center.",
+    "check": "Ground team should visually inspect the object to confirm if it is a dog.",
+    "agree": true,
+    "wall_s": 4.4,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "green_sleeping_bag",
+   "family": "green sleeping bag",
+   "g": [
+    46.38,
+    17.33
+   ],
+   "conf": 0.773,
+   "h": 20.0,
+   "photo": "media/photos/S16_20m.jpg",
+   "sweep_crop": "media/crops/f0167_c1.jpg",
+   "sweep_h": 21.8,
+   "spot": "S16",
+   "t": 648.95,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible green sleeping bag spotted 46 meters east and 17 meters north of search center.",
+    "check": "Verify object identity and search immediate area for other belongings.",
+    "agree": true,
+    "wall_s": 4.5,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A4",
+   "clue": "sos_rocks",
+   "family": "SOS made of rocks",
+   "g": [
+    1.86,
+    46.13
+   ],
+   "conf": 0.824,
+   "h": 20.0,
+   "photo": "media/photos/S21_20m.jpg",
+   "sweep_crop": "media/crops/f0267_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S21",
+   "t": 992.18,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a rock SOS signal 2 meters east and 46 meters north of the search center.",
+    "check": "Ground team should verify the signal and search the immediate area for the hiker.",
+    "agree": true,
+    "wall_s": 4.8,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 201.27
+}

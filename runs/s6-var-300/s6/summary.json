@@ -1,0 +1,143 @@
+{
+ "llm_calls": 4,
+ "llm_by_role": {
+  "note": 2,
+  "trail": 2
+ },
+ "clef_qwen_idle": {
+  "n": 35,
+  "ok": 35,
+  "median_ms": 320,
+  "p90_ms": 347
+ },
+ "clef_qwen_active": {
+  "n": 4,
+  "ok": 3,
+  "median_ms": 1564,
+  "p90_ms": 1564
+ },
+ "sectors": 28,
+ "sectors_done": 4,
+ "plans": [
+  {
+   "first": [
+    "B3",
+    "C3",
+    "C4",
+    "D4",
+    "D3",
+    "C2"
+   ],
+   "reason": "Prioritize trail segments north of the tent find, following the hikers' likely northward trajectory along the path.",
+   "raw_ok": true,
+   "wall_s": 2.2,
+   "held_wait_s": 0.0
+  },
+  {
+   "first": [
+    "B3",
+    "C3",
+    "C4",
+    "D4",
+    "D3",
+    "C2"
+   ],
+   "reason": "Hikers likely continued northeast along the trail; B3-C4 align with the path between found items and the trailhead.",
+   "raw_ok": true,
+   "wall_s": 2.8,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 186.5,
+ "wall_s": 29.8,
+ "flight_s": 186.0,
+ "battery_used_pct": 10.3,
+ "state_s": {
+  "TAKEOFF": 9.0,
+  "SWEEP": 91.5,
+  "INVESTIGATE": 29.5,
+  "CONFIRM": 3.6,
+  "RESUME": 24.5,
+  "RETURN": 28.0
+ },
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "lane_spacing_m": 23.72,
+ "frame_every_m": 10.9,
+ "coverage": 0.2336,
+ "area_m2_covered": 5980,
+ "frames": 21,
+ "candidates": 63,
+ "clef_sweep": {
+  "n": 36,
+  "ok": 35,
+  "median_ms": 320,
+  "p90_ms": 347
+ },
+ "clef_confirm": {
+  "n": 3,
+  "ok": 3,
+  "median_ms": 516,
+  "p90_ms": 516
+ },
+ "fallback": 1,
+ "investigations": 3,
+ "dismissed": 0,
+ "mean_investigate_s": 11.0,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    64.05,
+    -44.95
+   ],
+   "conf": 0.93,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0017_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 89.19,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a likely orange tent 64 meters east and 45 meters south of the search center.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the object and search for the hiker.",
+    "agree": true,
+    "wall_s": 4.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    16.82,
+    -33.43
+   ],
+   "conf": 0.9,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0019_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S3",
+   "t": 145.75,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible blue backpack located 17 meters east and 33 meters south of the search area center.",
+    "check": "Ground team should visually inspect the object to confirm it is the missing backpack.",
+    "agree": true,
+    "wall_s": 2.4,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 89.19
+}

@@ -1,0 +1,104 @@
+{
+ "llm_calls": 2,
+ "llm_by_role": {
+  "note": 1,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 136,
+  "ok": 136,
+  "median_ms": 224,
+  "p90_ms": 243
+ },
+ "clef_qwen_active": {
+  "n": 23,
+  "ok": 23,
+  "median_ms": 284,
+  "p90_ms": 337
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "D1",
+    "E1",
+    "D2",
+    "E2",
+    "D3",
+    "E3"
+   ],
+   "reason": "Prioritize trail segments near the last known point and the stream intersection, following the hikers' likely northward trajectory.",
+   "raw_ok": true,
+   "wall_s": 3.5,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 397.6,
+ "wall_s": 46.9,
+ "flight_s": 397.1,
+ "battery_used_pct": 22.1,
+ "state_s": {
+  "TAKEOFF": 10.0,
+  "SWEEP": 323.6,
+  "INVESTIGATE": 7.5,
+  "CONFIRM": 2.0,
+  "RESUME": 7.0,
+  "RETURN": 47.0
+ },
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lane_spacing_m": 26.09,
+ "frame_every_m": 11.98,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 97,
+ "candidates": 291,
+ "clef_sweep": {
+  "n": 158,
+  "ok": 158,
+  "median_ms": 227,
+  "p90_ms": 265
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 2026,
+  "p90_ms": 2026
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 9.5,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    18.88,
+    -25.94
+   ],
+   "conf": 0.885,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0036_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 148.01,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Ground team, drone spotted a grey dog lying on the ground 19 meters east and 26 meters south of center.",
+    "check": "Verify the animal's status and check the immediate area for the missing hiker's belongings.",
+    "agree": true,
+    "wall_s": 4.1,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 148.01
+}
