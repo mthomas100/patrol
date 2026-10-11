@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -53,8 +54,9 @@ def preflight(wait_s: float = 120.0) -> dict:
         time.sleep(10)
     pre["clef_ok"] = clef.health(timeout=20)
     pre["clef_wait_s"] = round(time.time() - t0, 1)
-    pre["hold_status"] = sh(["hold", "status"])[2][:300]
-    mp = sh(["memory_pressure"])[2].splitlines()
+    # `hold` and `memory_pressure` exist only on some Macs (SETUP.md); a missing one is reported, not fatal
+    pre["hold_status"] = sh(["hold", "status"])[2][:300] if shutil.which("hold") else "no hold command on this Mac"
+    mp = sh(["memory_pressure"])[2].splitlines() if shutil.which("memory_pressure") else []
     pre["memory_free"] = mp[-1].strip() if mp else "unknown"
     req = {"model": "qwen38", "max_tokens": 8, "thinking": {"type": "disabled"},
            "messages": [{"role": "user", "content": "Reply with the single word OK."}]}
