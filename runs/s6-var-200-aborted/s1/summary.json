@@ -1,0 +1,104 @@
+{
+ "llm_calls": 2,
+ "llm_by_role": {
+  "note": 1,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 138,
+  "ok": 138,
+  "median_ms": 262,
+  "p90_ms": 272
+ },
+ "clef_qwen_active": {
+  "n": 21,
+  "ok": 21,
+  "median_ms": 348,
+  "p90_ms": 434
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [
+  {
+   "first": [
+    "E2",
+    "F2",
+    "F1",
+    "G2",
+    "G1",
+    "E3"
+   ],
+   "reason": "Prioritize trail continuation north and stream intersection; dog found near trail suggests hikers followed linear features.",
+   "raw_ok": true,
+   "wall_s": 4.4,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 428.8,
+ "wall_s": 50.8,
+ "flight_s": 428.3,
+ "battery_used_pct": 35.7,
+ "state_s": {
+  "TAKEOFF": 10.0,
+  "SWEEP": 362.4,
+  "INVESTIGATE": 8.5,
+  "CONFIRM": 0.4,
+  "RESUME": 7.0,
+  "RETURN": 40.0
+ },
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lane_spacing_m": 26.09,
+ "frame_every_m": 11.98,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 108,
+ "candidates": 324,
+ "clef_sweep": {
+  "n": 158,
+  "ok": 158,
+  "median_ms": 264,
+  "p90_ms": 329
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 386,
+  "p90_ms": 386
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 8.9,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "grey_dog",
+   "family": "grey dog",
+   "g": [
+    -45.68,
+    18.83
+   ],
+   "conf": 0.527,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0062_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 210.11,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Possible grey dog spotted 46 meters west and 19 meters north of search center.",
+    "check": "Ground team should visually confirm the animal at the specified coordinates.",
+    "agree": true,
+    "wall_s": 4.4,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 210.11
+}
