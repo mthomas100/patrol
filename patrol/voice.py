@@ -280,13 +280,27 @@ def handle_utterance(wav: str | Path, worker: VoiceWorker, mission, speaker: Spe
         if speaker and not spoken:
             speaker.say(f"clues_{mission.ticks}", clue_options_text(d))
     else:
-        mission.command(cmd)
+        # acknowledge what the mission did, not what was asked: it applies the command at its next tick and may
+        # refuse it (no alert yet, already returning), so wait for its decision (this runs off the control path)
+        decided, out = threading.Event(), {}
+
+        def reply(ok: bool, why: str):
+            out.update(ok=ok, why=why)
+            decided.set()
+        mission.command(dict(cmd, _reply=reply))
+        decided.wait(timeout=10.0)
         if speaker:
-            speaker.say(f"ack_{mission.ticks}", {"return_home": "Returning home.",
-                                                 "revisit_last_flag": "Going back to the last flag.",
-                                                 "go_back_to_last_alert": "Going back to the last alert.",
-                                                 "change_target": f"Inspecting the {cmd.get('phase', 'near')} phase."}
-                        .get(cmd["name"], "Okay."))
+            ack = {"return_home": "Returning home",
+                   "revisit_last_flag": "Going back to the last flag",
+                   "go_back_to_last_alert": "Going back to the last alert",
+                   "change_target": f"Inspecting the {cmd.get('phase', 'near')} phase"}.get(cmd["name"], "Okay")
+            if not out:
+                text = "The drone has not taken the command."
+            elif out["ok"]:
+                text = f"{ack} {out['why']}." if out["why"] else f"{ack}."
+            else:
+                text = f"I can't do that now: {out['why']}."
+            speaker.say(f"ack_{mission.ticks}", text)
     return ev
 
 

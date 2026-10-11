@@ -442,7 +442,7 @@ class SearchMission:
     # ------------------------------------------------------------ investigate: fly over, descend, close-up, confirm
     def _next_spot(self):
         p = self.sim.pos
-        self.pending.sort(key=lambda s: math.dist(s["g"], (p[0], p[1])))
+        self.pending.sort(key=lambda s: (not s.get("revisit"), math.dist(s["g"], (p[0], p[1]))))   # operator's first
         s = self.pending.pop(0)
         d = np.array([p[0] - s["g"][0], p[1] - s["g"][1]])
         n = float(np.linalg.norm(d))
@@ -582,19 +582,35 @@ class SearchMission:
 
     # ------------------------------------------------------------ operator
     def _operator(self, cmd: dict):
+        """Apply an operator command at a tick. A "_reply" callable in the command (voice) hears the decision, so a
+        refused command is not acknowledged aloud as if it had been taken."""
+        reply = cmd.pop("_reply", None)
         name = cmd.get("name")
         ok, why = False, "not applicable"
-        if name == "return_home" and self.state not in ("RETURN", "DONE"):
-            self._begin_return("operator: return home"); ok, why = True, ""
-        elif name == "go_back_to_last_alert" and self.alerts and self.state in ("SWEEP", "RESUME"):
-            a = self.alerts[-1]
-            if self.state == "SWEEP":
-                self.resume_xy = (float(self.sim.pos[0]), self.cur["y"])
-            self.pending.insert(0, {"g": tuple(a["g"]), "clue": a["clue"], "p_inv": 1.0, "noul": a["conf"],
-                                    "frame": None, "crop": a["sweep_crop"], "box": None, "sweep_h": a["sweep_h"],
-                                    "t_seen": round(self.sim.t, 2), "revisit": a["id"]})
-            self._next_spot(); ok, why = True, ""
+        if name == "return_home":
+            if self.state in ("RETURN", "DONE"):
+                why = "already returning home" if self.state == "RETURN" else "the flight is over"
+            else:
+                self._begin_return("operator: return home"); ok, why = True, ""
+        elif name == "go_back_to_last_alert":
+            if not self.alerts:
+                why = "there is no alert yet"
+            elif self.state not in ("SWEEP", "RESUME", "INVESTIGATE"):
+                why = f"the drone is {self.state.lower()}"
+            else:
+                a = self.alerts[-1]
+                if self.state == "SWEEP":
+                    self.resume_xy = (float(self.sim.pos[0]), self.cur["y"])
+                self.pending.insert(0, {"g": tuple(a["g"]), "clue": a["clue"], "p_inv": 1.0, "noul": a["conf"],
+                                        "frame": None, "crop": a["sweep_crop"], "box": None, "sweep_h": a["sweep_h"],
+                                        "t_seen": round(self.sim.t, 2), "revisit": a["id"]})
+                if self.state == "INVESTIGATE":     # the spot being checked finishes first; the revisit is next
+                    ok, why = True, f"after the spot being checked ({self.spot['id']})"
+                else:
+                    self._next_spot(); ok, why = True, ""
         self.emit("operator", command=cmd, accepted=ok, reason=why)
+        if reply:
+            reply(ok, why)
 
     def status_text(self) -> str:
         found = "; ".join(f"{a['id']} {a['family']} at ({a['g'][0]:.0f}, {a['g'][1]:.0f})" for a in self.alerts)

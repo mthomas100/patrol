@@ -90,8 +90,11 @@ class Mission:
         g: Gated | None = None
         while self.commands:
             cmd = self.commands.popleft()
+            reply = cmd.pop("_reply", None)          # voice: hears the decision before acknowledging aloud
             og = sm.operator(cmd)
             self.emit("operator", command=cmd, accepted=og is not None, reason=og.reason if og else "not applicable")
+            if reply:
+                reply(og is not None, "" if og else "not applicable")
             if og:
                 g = og
         sm.drain(cfg.dt)
