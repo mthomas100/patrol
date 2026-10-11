@@ -1,0 +1,733 @@
+<title>Patrol Search Drone</title>
+<meta name="description" content="How Patrol's models, one laptop and no internet search a hillside for a missing hiker's things, and what has been proven so far.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Overpass+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: a search-and-rescue field briefing. Map-paper ground with a faint survey grid, a left contents rail on
+   wide screens, a 66ch reading column with figures that break wider, and one blaze-orange accent reserved for finds. */
+:root {
+  --paper: #f3f5f2;
+  --paper-2: #fbfcfa;
+  --paper-3: #e8ede8;
+  --ink: #15212b;
+  --ink-2: #44525d;
+  --ink-3: #6b7882;
+  --rule: #d2d9d3;
+  --grid: #e1e6e0;
+  --blaze: #e4570e;
+  --blaze-ink: #b3430a;
+  --blaze-wash: rgba(228, 87, 14, 0.10);
+  --clef: #2a78d6;
+  --qwen: #6250d6;
+  --voice: #13976a;
+  --finder: #c98a00;
+  --build: #c2577f;
+  --water: #5b9bd0;
+  --trail: #9a6b3f;
+  --tree: #a9c0a3;
+  --ok: #0c8a3e;
+  --warn: #b7791f;
+  --bad: #c53030;
+  --shadow: 0 1px 2px rgba(21, 33, 43, 0.06), 0 8px 24px rgba(21, 33, 43, 0.06);
+  --font-display: "Overpass", "Avenir Next Condensed", "Avenir Next", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Serif 4", "Iowan Old Style", Charter, Georgia, serif;
+  --font-mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --step--1: 0.84rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.6rem;
+  --step-3: clamp(1.9rem, 3.4vw, 2.7rem);
+  --step-4: clamp(2.3rem, 4.6vw, 3.7rem);
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1418; --paper-2: #151d22; --paper-3: #1c262c; --ink: #e5ebe8; --ink-2: #aab6bc; --ink-3: #82909a;
+    --rule: #2a353c; --grid: #182127; --blaze: #ff7433; --blaze-ink: #ff9257; --blaze-wash: rgba(255, 116, 51, 0.14);
+    --clef: #4b93ea; --qwen: #9a90ee; --voice: #2bb784; --finder: #d9a020; --build: #e07aa0; --water: #4f8fc4;
+    --trail: #c39361; --tree: #2f4a35; --ok: #3ccf74; --warn: #e2a63c; --bad: #f06a6a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1418; --paper-2: #151d22; --paper-3: #1c262c; --ink: #e5ebe8; --ink-2: #aab6bc; --ink-3: #82909a;
+  --rule: #2a353c; --grid: #182127; --blaze: #ff7433; --blaze-ink: #ff9257; --blaze-wash: rgba(255, 116, 51, 0.14);
+  --clef: #4b93ea; --qwen: #9a90ee; --voice: #2bb784; --finder: #d9a020; --build: #e07aa0; --water: #4f8fc4;
+  --trail: #c39361; --tree: #2f4a35; --ok: #3ccf74; --warn: #e2a63c; --bad: #f06a6a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, video, svg { max-width: 100%; }
+a { color: var(--blaze-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--blaze); outline-offset: 2px; border-radius: 2px; }
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-4); font-weight: 800; line-height: 1.02; letter-spacing: -0.025em; }
+h2 { font-size: var(--step-3); font-weight: 800; line-height: 1.08; letter-spacing: -0.015em; }
+h3 { font-size: var(--step-1); font-weight: 700; line-height: 1.25; letter-spacing: -0.005em; }
+h4 { font-size: var(--step-0); font-weight: 700; line-height: 1.3; }
+p { margin: 0; }
+strong { font-weight: 600; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--paper-3); padding: 0.08em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 0.74rem; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.lede { font-size: var(--step-1); line-height: 1.5; color: var(--ink-2); max-width: var(--measure); }
+.prose { display: grid; gap: 1.05em; max-width: var(--measure); }
+.prose > * { min-width: 0; }
+.muted { color: var(--ink-3); }
+.blaze { color: var(--blaze-ink); }
+.nowrap { white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* page frame: contents rail + main column */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+@media (min-width: 1180px) {
+  .page { grid-template-columns: 196px minmax(0, 1fr); gap: 48px; padding-inline: 32px; }
+}
+.rail { display: none; }
+@media (min-width: 1180px) {
+  .rail {
+    display: block; position: sticky; top: env(safe-area-inset-top, 0px); align-self: start;
+    padding-block: 36px; max-height: 100vh; overflow-y: auto;
+  }
+}
+.rail .mark { font-family: var(--font-display); font-weight: 900; font-size: 1.15rem; letter-spacing: 0.02em; }
+.rail .mark span { color: var(--blaze); }
+.rail ol { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 2px; counter-reset: toc; }
+.rail li { counter-increment: toc; }
+.rail a {
+  display: grid; grid-template-columns: 2.1em 1fr; align-items: baseline; padding: 4px 6px; border-radius: 4px;
+  color: var(--ink-2); text-decoration: none; font-family: var(--font-display); font-size: 0.92rem; line-height: 1.3;
+}
+.rail a::before { content: counter(toc, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-3); }
+.rail a:hover { background: var(--paper-3); color: var(--ink); }
+.rail a.on { color: var(--ink); background: var(--paper-3); }
+.rail a.on::before { color: var(--blaze-ink); }
+.rail .stamp { margin-top: 22px; font-family: var(--font-mono); font-size: 0.68rem; line-height: 1.5; color: var(--ink-3); }
+
+.toc-mobile { margin: 0 0 8px; }
+@media (min-width: 1180px) { .toc-mobile { display: none; } }
+.toc-mobile summary { cursor: pointer; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding-block: 10px; }
+.toc-mobile ol { margin: 4px 0 12px; padding-left: 1.4em; font-family: var(--font-display); columns: 2; column-gap: 24px; }
+.toc-mobile a { color: var(--ink-2); text-decoration: none; }
+
+main { min-width: 0; }
+section.s { padding-block: 72px 24px; border-top: 1px solid var(--rule); display: grid; gap: 28px; scroll-margin-top: 8px; }
+section.s > * { min-width: 0; }
+.s-head { display: grid; gap: 10px; max-width: 880px; }
+.s-head .eyebrow b { color: var(--blaze-ink); font-weight: 600; }
+
+/* hero */
+.hero { padding-block: 40px 56px; display: grid; gap: 36px; position: relative; }
+.hero::before {
+  content: ""; position: absolute; inset: 0 -20px; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+@media (min-width: 980px) {
+  .hero { grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); align-items: start; gap: 48px; }
+}
+.hero-text { display: grid; gap: 22px; align-content: start; padding-top: 8px; }
+.hero-text > * { min-width: 0; }
+.hero h1 em { font-style: normal; color: var(--blaze); }
+.quote-line {
+  font-family: var(--font-body); font-style: italic; font-size: var(--step-1); color: var(--ink);
+  border-left: 3px solid var(--blaze); padding: 2px 0 2px 16px; max-width: 40ch;
+}
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1260px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat { background: var(--paper-2); padding: 14px 14px 12px; display: grid; gap: 4px; align-content: start; }
+.stat .v { font-family: var(--font-display); font-weight: 800; font-size: 1.85rem; line-height: 1; letter-spacing: -0.02em; }
+.stat .v small { font-size: 0.55em; font-weight: 700; color: var(--ink-3); letter-spacing: 0; }
+.stat .k { font-family: var(--font-display); font-size: 0.86rem; line-height: 1.3; color: var(--ink-2); }
+.stat .src { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-3); overflow-wrap: anywhere; }
+
+/* map card */
+.mapcard { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+.mapcard header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 10px 14px; border-bottom: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.mapcard header b { color: var(--ink); font-weight: 600; }
+.mapwrap { position: relative; }
+#map { display: block; width: 100%; height: auto; }
+#profile { display: block; width: 100%; height: auto; border-top: 1px solid var(--rule); }
+.player { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--rule); }
+.player button {
+  font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  border-radius: 999px; padding: 6px 14px 5px; cursor: pointer; min-width: 92px;
+}
+.player button:hover { background: var(--blaze); border-color: var(--blaze); color: #fff; }
+.player input[type=range] { width: 100%; accent-color: var(--blaze); }
+.player .clock { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; min-width: 9.5ch; text-align: right; }
+.readout { padding: 10px 14px 14px; border-top: 1px solid var(--rule); display: grid; gap: 4px; min-height: 5.6em; }
+.readout .st { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.readout .st b { color: var(--ink); font-weight: 600; }
+.readout .ev { font-family: var(--font-display); font-size: 0.95rem; line-height: 1.4; color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 14px; border-top: 1px solid var(--rule); font-family: var(--font-display); font-size: 0.8rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { flex: none; }
+
+/* figures */
+figure { margin: 0; display: grid; gap: 10px; }
+figure > * { min-width: 0; }
+figcaption { font-family: var(--font-display); font-size: 0.88rem; line-height: 1.45; color: var(--ink-2); max-width: 78ch; }
+figcaption .src { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-3); overflow-wrap: anywhere; }
+.frame { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.frame img, .frame video { display: block; width: 100%; height: auto; }
+.diagram { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; height: auto; min-width: 640px; color: var(--ink); }
+.diagram.narrow svg { min-width: 0; }
+.wide { max-width: 1060px; }
+
+/* model chips: identity colour beside ink text, never coloured text */
+.chip { display: inline-flex; align-items: baseline; gap: 0.38em; font-family: var(--font-display); font-weight: 700; font-size: 0.92em; white-space: nowrap; }
+.chip::before { content: ""; width: 0.62em; height: 0.62em; border-radius: 50%; background: var(--c, var(--ink)); transform: translateY(-0.04em); flex: none; }
+.c-clef { --c: var(--clef); } .c-qwen { --c: var(--qwen); } .c-voice { --c: var(--voice); } .c-finder { --c: var(--finder); }
+.c-code { --c: var(--ink); } .c-build { --c: var(--build); } .c-alert { --c: var(--blaze); } .c-sim { --c: var(--ink-3); }
+.keyrow { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.9rem; }
+
+/* three reasons, steps */
+.trio { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.trio > div { border-top: 2px solid var(--ink); padding-top: 12px; display: grid; gap: 6px; align-content: start; }
+.trio h3 { font-size: 1.08rem; }
+.trio p { font-size: 0.98rem; color: var(--ink-2); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; counter-reset: step; }
+.steps > li { counter-increment: step; display: grid; gap: 18px; }
+@media (min-width: 900px) { .steps > li { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 36px; align-items: start; } }
+.steps > li > * { min-width: 0; }
+.step-text { display: grid; gap: 10px; align-content: start; }
+.step-text h3 { display: flex; gap: 12px; align-items: baseline; font-size: var(--step-2); font-weight: 800; letter-spacing: -0.01em; }
+.step-text h3::before { content: counter(step); font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--blaze-ink); border: 1.5px solid var(--blaze); border-radius: 50%; width: 1.9rem; height: 1.9rem; display: inline-grid; place-items: center; flex: none; transform: translateY(-0.2rem); }
+.step-text p { color: var(--ink-2); max-width: 60ch; }
+.who { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.88rem; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pair figure { gap: 6px; }
+.pair figcaption { font-size: 0.8rem; }
+.tag { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.verbatim { font-family: var(--font-body); font-style: italic; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; color: var(--ink); }
+.verbatim .tag { display: block; font-style: normal; margin-bottom: 4px; }
+
+/* the cast */
+.cast { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 16px 14px; display: grid; gap: 8px; align-content: start; }
+.card > * { min-width: 0; }
+.card .role { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.card h3 { display: flex; align-items: baseline; gap: 8px; font-size: 1.2rem; }
+.card h3::before { content: ""; width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--c, var(--ink)); flex: none; transform: translateY(-0.05em); }
+.card p { font-size: 0.95rem; color: var(--ink-2); line-height: 1.5; }
+.card dl { margin: 4px 0 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; font-size: 0.82rem; border-top: 1px solid var(--rule); padding-top: 8px; }
+.card dt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 0.15em; }
+.card dd { margin: 0; font-family: var(--font-display); color: var(--ink); }
+.card.build { border-style: dashed; }
+.subhead { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; margin-top: 8px; }
+
+/* tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper-2); }
+table { border-collapse: collapse; width: 100%; font-family: var(--font-display); font-size: 0.9rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); background: var(--paper-3); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td code { font-size: 0.8em; }
+
+/* callouts */
+.callout { border: 1px solid var(--rule); border-left: 3px solid var(--ink); background: var(--paper-2); border-radius: 0 8px 8px 0; padding: 14px 16px; display: grid; gap: 6px; max-width: 880px; }
+.callout h4 { font-size: 1rem; }
+.callout p { font-size: 0.97rem; color: var(--ink-2); }
+.callout.alert { border-left-color: var(--blaze); }
+.two { display: grid; gap: 28px; }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.two > * { min-width: 0; }
+
+/* evidence and gaps */
+.proof { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.proof .card { gap: 6px; }
+.proof .big { font-family: var(--font-display); font-weight: 800; font-size: 1.9rem; line-height: 1.05; letter-spacing: -0.02em; }
+.proof .big small { font-size: 0.5em; color: var(--ink-3); font-weight: 700; letter-spacing: 0; }
+.proof .src { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-3); overflow-wrap: anywhere; }
+.state { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; padding: 2px 8px 1px; border-radius: 999px; border: 1px solid currentColor; width: fit-content; }
+.state::before { font-size: 0.9em; }
+.state.done { color: var(--ok); } .state.done::before { content: "✓"; }
+.state.part { color: var(--warn); } .state.part::before { content: "◐"; }
+.state.open { color: var(--bad); } .state.open::before { content: "○"; }
+.gaps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--rule); max-width: 960px; }
+.gaps li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .gaps li { grid-template-columns: 150px minmax(0, 1fr); gap: 18px; } }
+.gaps li > * { min-width: 0; }
+.gaps h4 { font-size: 1rem; }
+.gaps p { font-size: 0.95rem; color: var(--ink-2); }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-width: 880px; }
+.timeline li { display: grid; grid-template-columns: 4.2em minmax(0, 1fr); gap: 14px; padding: 7px 0; border-bottom: 1px dashed var(--rule); font-family: var(--font-display); font-size: 0.94rem; }
+.timeline time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-3); padding-top: 0.15em; }
+.timeline li.key time { color: var(--blaze-ink); font-weight: 600; }
+.gallery { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+.gallery figure { gap: 4px; }
+.gallery .frame img { aspect-ratio: 1; object-fit: cover; }
+.gallery figcaption { font-size: 0.78rem; }
+.ladder { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.ladder figure { gap: 4px; }
+.ladder figcaption { font-size: 0.8rem; font-family: var(--font-mono); }
+.glossary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; max-width: 900px; margin: 0; }
+@media (min-width: 700px) { .glossary { grid-template-columns: 12em minmax(0, 1fr); } }
+.glossary dt { font-family: var(--font-display); font-weight: 700; padding: 8px 0 0; }
+.glossary dd { margin: 0; padding: 8px 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); font-size: 0.97rem; }
+@media (min-width: 700px) { .glossary dt { border-bottom: 1px solid var(--rule); padding: 8px 0; } }
+footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); display: grid; gap: 6px; }
+</style>
+
+<div class="page">
+<nav class="rail" aria-label="Contents">
+  <div class="mark">PATROL<span>.</span></div>
+  <ol id="toc">
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#flight">A flight, start to finish</a></li>
+    <li><a href="#cast">Who does what</a></li>
+    <li><a href="#compose">How the models fit together</a></li>
+    <li><a href="#drone">What the drone does</a></li>
+    <li><a href="#altitude">Fly high, look close</a></li>
+    <li><a href="#funnel">Each model sees only what it must</a></li>
+    <li><a href="#voice">Talking to it</a></li>
+    <li><a href="#console">The console</a></li>
+    <li><a href="#laptop">One laptop, no internet</a></li>
+    <li><a href="#evidence">What has been proven</a></li>
+    <li><a href="#gaps">What doesn't work yet</a></li>
+    <li><a href="#history">Where it came from</a></li>
+    <li><a href="#next">What comes next</a></li>
+    <li><a href="#appendix">Glossary and sources</a></li>
+  </ol>
+  <p class="stamp">Field briefing v0.1<br>11 Oct 2026, 15:00 PDT<br>from STATUS.md at d6c064b</p>
+</nav>
+
+<main>
+<details class="toc-mobile"><summary>Contents</summary><ol id="toc-m"></ol></details>
+
+<header class="hero" id="top">
+  <div class="hero-text">
+    <p class="eyebrow">Multi Model Hackathon · SF Tech Week · Field briefing</p>
+    <h1>A search drone that looks for one missing person's things, <em>with no internet</em>.</h1>
+    <p class="quote-line">“The camper had a blue backpack, an orange tent, and a gray dog.”</p>
+    <p class="lede">You said that into Patrol's console at 14:33. Patrol turns words like these into a search. It sweeps the ground from 40 metres up, drops down for a closer look at anything that might match, and sends back a position, a photo and a short note when it finds something. Four AI models share the work on one laptop, and none of them calls the internet.</p>
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><span class="v">3<small> of 3</small></span><span class="k">things found on your real-time flight, with no false alerts</span><span class="src">runs/s5-live-owner/score.json</span></div>
+      <div class="stat" role="listitem"><span class="v">0.32<small> s</small></span><span class="k">median time for Clef-Flash to judge one odd-looking spot</span><span class="src">same flight, 163 judgements</span></div>
+      <div class="stat" role="listitem"><span class="v">6<small> cm</small></span><span class="k">between the backpack alert and the backpack (tent 24 cm, jacket 7 cm)</span><span class="src">score.json loc_err_m</span></div>
+      <div class="stat" role="listitem"><span class="v">57<small>%</small></span><span class="k">of one simulated 20-minute battery for a 160 m square, with 8 closer looks</span><span class="src">summary.json battery_used_pct</span></div>
+    </div>
+  </div>
+
+  <figure class="mapcard" aria-labelledby="map-cap">
+    <header><span><b>Your real-time flight</b> · backpack, tent, jacket</span><span>grass · seed 6 · 160 × 160 m</span></header>
+    <div class="mapwrap">
+      <svg id="map" viewBox="0 0 600 600" role="img" aria-label="Top-down map of the owner's live search flight: seven sweep lanes at 40 metres over a 160 metre square, eight detours for a closer look, three alerts on the blue backpack, orange tent and red jacket, and the blue tarp decoy dismissed."></svg>
+    </div>
+    <svg id="profile" viewBox="0 0 600 112" role="img" aria-label="Height over time: the drone holds 40 metres and dips to 20 metres for each of its eight closer looks."></svg>
+    <div class="player">
+      <button type="button" id="play" aria-controls="map">▶ Replay</button>
+      <input type="range" id="scrub" min="0" max="684" step="0.5" value="684" aria-label="Flight time in seconds">
+      <span class="clock" id="clock">684 s</span>
+    </div>
+    <div class="readout" aria-live="polite">
+      <span class="st" id="ro-state">DONE · home</span>
+      <span class="ev" id="ro-event">Home after 683 s. 3 of 3 found, no false alerts. Press Replay to watch the flight at 20× speed, or drag the slider.</span>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--ink)" stroke-width="2"/></svg>sweep at 40 m</span>
+      <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--blaze)" stroke-width="2.4"/></svg>closer look at 20 m</span>
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="4.2" fill="none" stroke="var(--ink-3)" stroke-width="1.6"/></svg>dismissed</span>
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--blaze)" stroke="var(--paper-2)" stroke-width="1.5"/></svg>alert</span>
+      <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--trail)" stroke-width="1.6" stroke-dasharray="4 3"/></svg>trail</span>
+      <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--water)" stroke-width="2"/></svg>stream</span>
+      <span><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" fill="none" stroke="var(--qwen)" stroke-width="1.6" stroke-dasharray="3 2"/></svg>sectors qwen38 moved up</span>
+    </div>
+    <figcaption id="map-cap" style="padding: 0 14px 14px">Drawn from the flight's own log, every tick and decision. The grid is the planner's 28 sectors (A1 in the south-west, G4 in the north-east). The shaded band is ground the sweep camera has seen.<span class="src">runs/s5-live-owner/mission.jsonl · refreshed by explainer/build.py</span></figcaption>
+  </figure>
+</header>
+
+<!-- SECTIONS:BEGIN -->
+<section class="s" id="problem">
+  <div class="s-head">
+    <p class="eyebrow"><b>01</b> · The problem</p>
+    <h2>Searchers start with a description, not a photo</h2>
+  </div>
+  <div class="prose">
+    <p>When someone goes missing in the backcountry, the first useful facts usually come from family: what the person was wearing, what they carried, whether the dog was with them. Nobody has trained a detector on <em>this</em> person's blue backpack, so any computer that helps has to work from words. Out there it usually can't send video anywhere either, because there is no cell signal.</p>
+    <p>Patrol is a prototype of a drone that works from those words by itself. It flies the search, takes a closer look at whatever might match, and only asks for a person's attention when it has something worth checking: a ground position, a photo and one or two sentences.</p>
+  </div>
+  <h3 class="subhead">Why decide in the air, rather than review the photos after landing</h3>
+  <div class="trio">
+    <div><h3>The closer look</h3><p>From 40 m a backpack is a few pixels. In the air, the drone can drop down and settle a “maybe” while it is right there. After landing, every “maybe” costs another flight.</p></div>
+    <div><h3>Time</h3><p>A find during the flight beats a find an hour later at a laptop. Cold, injury and avalanches don't wait for a review.</p></div>
+    <div><h3>Bandwidth</h3><p>With no cell service, live video can't reach the base. A short alert with a position and a small photo fits a radio link.</p></div>
+  </div>
+  <div class="callout">
+    <h4>What it is, and what it isn't</h4>
+    <p>Patrol is decision support. A person reviews every alert. It would sit beside the tools search teams already use (thermal cameras and person detectors for spotting people, avalanche transceivers, RECCO and phone-finding for buried victims), not in place of them. Everything you see here happens in a simulator, which proves how the system behaves, not how well it would detect things on a real hillside.</p>
+  </div>
+</section>
+
+<!-- SECTION:flight -->
+
+<section class="s" id="cast">
+  <div class="s-head">
+    <p class="eyebrow"><b>03</b> · Who does what</p>
+    <h2>Four models fly the search. Three more built the world it searches.</h2>
+    <p class="lede">Each model does the one job it is good at, at the speed that job needs. Plain code ties them together and keeps the drone safe.</p>
+  </div>
+  <h3 class="subhead">During a flight</h3>
+  <div class="cast">
+    <article class="card" style="--c: var(--clef)">
+      <span class="role">The fast eyes · system one</span>
+      <h3>Clef-Flash</h3>
+      <p>A decision model from Cloudflare. You give it a picture and a few typed questions, and it returns a probability for every answer in one pass, without writing any text. Patrol asks it whether each odd-looking spot is one of the clues, whether a close-up confirms it, and whether something you said was a description or a command.</p>
+      <dl><dt>Size</dt><dd>9B, built on Qwen3.5-9B, 8-bit MLX</dd><dt>Speed</dt><dd>about 0.3 s per spot, 0.4 s per close-up</dd><dt>Calls</dt><dd>171 in your flight</dd><dt>Licence</dt><dd>Apache-2.0</dd></dl>
+    </article>
+    <article class="card" style="--c: var(--qwen)">
+      <span class="role">The slow thinker · system two</span>
+      <h3>qwen38</h3>
+      <p>Qwen3.8 Flash Next, a large language model that can also see images. It turns your description into what each thing looks like from above, writes the short radio note for each find, suggests where to search next, and gives a second opinion when Clef-Flash is unsure. It never sits in the control loop.</p>
+      <dl><dt>Size</dt><dd>about 70 GiB of 4-bit weights, served by ds4</dd><dt>Speed</dt><dd>2 to 5 s per job</dd><dt>Calls</dt><dd>6 in your flight (3 notes, 3 plans)</dd></dl>
+    </article>
+    <article class="card" style="--c: var(--voice)">
+      <span class="role">The ears</span>
+      <h3>Parakeet</h3>
+      <p>NVIDIA's speech recogniser. It turns what you say into text, both the description before take-off and commands during the flight.</p>
+      <dl><dt>Size</dt><dd>0.6B (TDT v3)</dd><dt>Speed</dt><dd>20 to 90 ms per command</dd><dt>Licence</dt><dd>CC-BY-4.0</dd></dl>
+    </article>
+    <article class="card" style="--c: var(--voice)">
+      <span class="role">The voice</span>
+      <h3>Kokoro</h3>
+      <p>A small text-to-speech model. It reads the clue list back to you, acknowledges commands and reads every alert aloud, so your eyes can stay on the drone.</p>
+      <dl><dt>Size</dt><dd>82M, voice am_michael</dd><dt>Speed</dt><dd>60 to 250 ms per sentence</dd><dt>Licence</dt><dd>Apache-2.0</dd></dl>
+    </article>
+    <article class="card" style="--c: var(--finder)">
+      <span class="role">The spotter · not a trained model</span>
+      <h3>Anomaly finder</h3>
+      <p>Classical computer vision on the CPU. It looks for colours that are rare in each photo and boxes the three oddest spots. That is what lets Clef-Flash look at three small crops instead of a whole 1280×960 frame, and it is the reason the drone can fly high.</p>
+      <dl><dt>Runs on</dt><dd>CPU, numpy</dd><dt>Sees</dt><dd>RGB pixels only</dd></dl>
+    </article>
+    <article class="card" style="--c: var(--ink)">
+      <span class="role">The pilot</span>
+      <h3>Code</h3>
+      <p>The planner lays out lanes and sectors. The gate decides whether a model's answer is strong enough to act on. Safety owns the height limits, the boundary, the battery reserve and the trip home. Models advise. Code flies, and no model can override it.</p>
+      <dl><dt>Lives in</dt><dd><code>patrol/search.py</code>, <code>planner.py</code>, <code>control.py</code></dd></dl>
+    </article>
+  </div>
+
+  <h3 class="subhead">Before the flight: the world and its props</h3>
+  <div class="cast">
+    <article class="card build" style="--c: var(--ink-3)">
+      <span class="role">The world</span>
+      <h3>MuJoCo</h3>
+      <p>A physics simulator standing in for the real hillside, the drone and its cameras. It renders each camera view in about 10 ms and keeps the answer key (where everything was planted), which is used only to score a flight afterwards.</p>
+      <dl><dt>Version</dt><dd>3.15, Apache-2.0</dd></dl>
+    </article>
+    <article class="card build" style="--c: var(--build)">
+      <span class="role">The prop department</span>
+      <h3>Z-Image Turbo, Apple Vision, Hunyuan3D</h3>
+      <p>The backpack, tent, dog and decoys were each made from one sentence by the Mac's 3D rig, <code>m3d</code>. Z-Image Turbo paints a concept picture, Apple Vision cuts the object out of the background, and Hunyuan3D builds a textured 3D model, which is scaled to its real size and dropped into the scene.</p>
+      <dl><dt>Time</dt><dd>about 3 minutes of GPU per item, 8 items</dd><dt>Licences</dt><dd>Apache-2.0; Tencent Hunyuan community licence</dd></dl>
+    </article>
+  </div>
+  <!-- FIG-SLOT:gallery -->
+</section>
+
+<section class="s" id="compose">
+  <div class="s-head">
+    <p class="eyebrow"><b>04</b> · How the models fit together</p>
+    <h2>A fast loop that never stops, a slow thinker beside it, and code holding the controls</h2>
+    <p class="lede">Clef-Flash makes every per-photo call because it answers in a third of a second. qwen38 does the few jobs that need real thought, in the background. Voice is how you talk to the drone, and code turns every answer into motion only after checking it.</p>
+  </div>
+  <figure class="wide">
+    <div class="diagram"><!-- FIG:arch --><svg viewBox="0 0 1120 600" role="img" aria-label="How Patrol's models connect: voice and qwen38 turn the description into clue cards before take-off; every 12 metres a photo goes through the CPU finder, Clef-Flash and a code gate, with a closer look and a Clef-Flash confirm for maybes; alerts go to the radio, and qwen38 writes the note, which Kokoro reads aloud, and a trail plan that code checks before the planner reorders the sectors. Code owns safety throughout."><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--blaze)"/></marker><marker id="ahq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--qwen)"/></marker></defs><text x="10.0" y="42.0" font-family="var(--font-mono)" font-size="10.5" font-weight="600" fill="var(--ink)" text-anchor="start" letter-spacing="1.2">BEFORE TAKE-OFF</text><text x="138.0" y="42.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">words become a search</text><text x="10.0" y="192.0" font-family="var(--font-mono)" font-size="10.5" font-weight="600" fill="var(--ink)" text-anchor="start" letter-spacing="1.2">EVERY 12 METRES OF FLIGHT</text><text x="214.0" y="192.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">the fast loop, about 0.3 s per look</text><text x="10.0" y="346.0" font-family="var(--font-mono)" font-size="10.5" font-weight="600" fill="var(--ink)" text-anchor="start" letter-spacing="1.2">A FEW TIMES A FLIGHT</text><text x="176.0" y="346.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">the slow loop, seconds, never holds up the flying</text><rect x="10" y="56" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--ink-2)" stroke-width="1.6"/><circle cx="24" cy="73" r="4" fill="var(--ink-2)"/><text x="34.0" y="77.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Operator</text><text x="22.0" y="95.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">hold to talk at</text><text x="22.0" y="109.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">the trailhead</text><rect x="170" y="56" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--voice)" stroke-width="1.6"/><circle cx="184" cy="73" r="4" fill="var(--voice)"/><text x="194.0" y="77.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Parakeet</text><text x="182.0" y="95.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">speech to text</text><text x="182.0" y="109.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">20 to 90 ms</text><rect x="330" y="56" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--clef)" stroke-width="1.6"/><circle cx="344" cy="73" r="4" fill="var(--clef)"/><text x="354.0" y="77.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Clef-Flash</text><text x="342.0" y="95.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">description or</text><text x="342.0" y="109.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">command?</text><rect x="490" y="56" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--qwen)" stroke-width="1.6"/><circle cx="504" cy="73" r="4" fill="var(--qwen)"/><text x="514.0" y="77.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">qwen38</text><text x="502.0" y="95.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">writes how each clue</text><text x="502.0" y="109.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">looks from above</text><rect x="650" y="56" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="4 3"/><text x="662.0" y="77.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Clue cards</text><text x="662.0" y="95.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">words and a size</text><text x="662.0" y="109.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">per clue</text><g><text x="814.0" y="76.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">“a bag with shoulder straps</text><text x="814.0" y="90.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">and pockets, about half a</text><text x="814.0" y="104.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-3)" text-anchor="start">metre long” · 0.55 m</text></g><path d="M146 89.0 H167" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M306 89.0 H327" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M466 89.0 H487" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M626 89.0 H647" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="158.0" y="82.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">voice</text><text x="318.0" y="82.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">text</text><text x="478.0" y="82.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">a description</text><text x="638.0" y="82.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">cards</text><path d="M736.0 122 V150" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round"/><path d="M736.0 150 H58.0 V203" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M568.0 150 V203" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M736.0 150 H1038.0 V203" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="232.0" y="146.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">smallest clue sets the sweep height</text><text x="893.0" y="146.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">clue words go into every question</text><path d="M388.0 122 V182 H694.0 V203" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" stroke-dasharray="5 3" marker-end="url(#ah)"/><text x="540.0" y="178.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">a command: go back, come home</text><rect x="10" y="206" width="136" height="66" rx="8" fill="var(--paper-3)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="24" cy="223" r="4" fill="var(--ink)"/><text x="34.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Planner</text><text x="22.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">lanes and sectors,</text><text x="22.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">code</text><rect x="170" y="206" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--ink-3)" stroke-width="1.6"/><circle cx="184" cy="223" r="4" fill="var(--ink-3)"/><text x="194.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Camera</text><text x="182.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">1280×960 photo,</text><text x="182.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">straight down</text><rect x="330" y="206" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--finder)" stroke-width="1.6"/><circle cx="344" cy="223" r="4" fill="var(--finder)"/><text x="354.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Finder</text><text x="342.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">rare colours, CPU,</text><text x="342.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">top 3 odd spots</text><rect x="490" y="206" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--clef)" stroke-width="1.6"/><circle cx="504" cy="223" r="4" fill="var(--clef)"/><text x="514.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Clef-Flash</text><text x="502.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">is this crop a clue?</text><text x="502.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">about 0.3 s each</text><rect x="650" y="206" width="136" height="66" rx="8" fill="var(--paper-3)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="664" cy="223" r="4" fill="var(--ink)"/><text x="674.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Gate</text><text x="662.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">act on the odds?</text><text x="662.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">code, with fallback</text><rect x="810" y="206" width="136" height="66" rx="8" fill="var(--paper-3)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="824" cy="223" r="4" fill="var(--ink)"/><text x="834.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Closer look</text><text x="822.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">fly over, 20 m, zoom;</text><text x="822.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">12 m if unsure</text><rect x="970" y="206" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--clef)" stroke-width="1.6"/><circle cx="984" cy="223" r="4" fill="var(--clef)"/><text x="994.0" y="227.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Clef-Flash</text><text x="982.0" y="245.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">confirm or dismiss</text><text x="982.0" y="259.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">the close-up</text><path d="M146 239.0 H167" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="158.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">lanes</text><path d="M306 239.0 H327" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="318.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">photo</text><path d="M466 239.0 H487" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="478.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">3 crops</text><path d="M626 239.0 H647" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="638.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">odds</text><path d="M786 239.0 H807" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="798.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">maybe</text><path d="M946 239.0 H967" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="958.0" y="232.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">close-up</text><path d="M718.0 272 V300 H238.0 V275" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M1008.0 272 V300 H718.0" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round"/><text x="478.0" y="314.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">continue: most spots, and every dismissed close-up, go back to the lane</text><path d="M1068.0 272 V357" fill="none" stroke="var(--blaze)" stroke-width="1.8" stroke-linejoin="round" marker-end="url(#ahb)"/><text x="1088.0" y="296.0" font-family="var(--font-display)" font-size="10" font-weight="700" fill="var(--blaze-ink)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">yes</text><rect x="970" y="360" width="136" height="66" rx="8" fill="var(--blaze-wash)" stroke="var(--blaze)" stroke-width="1.6"/><circle cx="984" cy="377" r="4" fill="var(--blaze)"/><text x="994.0" y="381.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">ALERT</text><text x="982.0" y="399.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">position, photo,</text><text x="982.0" y="413.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">confidence</text><rect x="490" y="360" width="456" height="66" rx="8" fill="var(--paper-2)" stroke="var(--qwen)" stroke-width="1.6"/><circle cx="504" cy="377" r="4" fill="var(--qwen)"/><text x="514.0" y="381.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">qwen38, the slow thinker</text><text x="502.0" y="399.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">writes the radio note, plans where to look next,</text><text x="502.0" y="413.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">gives a second opinion on a close call; 2 to 5 s a job</text><rect x="330" y="360" width="136" height="66" rx="8" fill="var(--paper-2)" stroke="var(--voice)" stroke-width="1.6"/><circle cx="344" cy="377" r="4" fill="var(--voice)"/><text x="354.0" y="381.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Kokoro</text><text x="342.0" y="399.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">reads each note</text><text x="342.0" y="413.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">aloud to you</text><rect x="170" y="360" width="136" height="66" rx="8" fill="var(--paper-3)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="184" cy="377" r="4" fill="var(--ink)"/><text x="194.0" y="381.5" font-family="var(--font-display)" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="start">Code check</text><text x="182.0" y="399.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">known sectors not</text><text x="182.0" y="413.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">yet searched</text><path d="M970 393.0 H949" fill="none" stroke="var(--qwen)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ahq)"/><path d="M490 382 H469" fill="none" stroke="var(--qwen)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ahq)"/><text x="478.0" y="376.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">note</text><path d="M520 426 V446 H238.0 V429" fill="none" stroke="var(--qwen)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ahq)"/><text x="379.0" y="442.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">trail plan</text><path d="M170 393.0 H78.0 V275" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="78.0" y="386.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">reorder</text><rect x="970" y="452" width="136" height="30" rx="15" fill="var(--paper-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="1038.0" y="471.0" font-family="var(--font-display)" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="middle">radio + console</text><path d="M1038.0 426 V449" fill="none" stroke="var(--blaze)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ahb)"/><rect x="10" y="522" width="1096" height="56" rx="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/><text x="24.0" y="544.0" font-family="var(--font-mono)" font-size="10.5" font-weight="600" fill="var(--ink)" text-anchor="start" letter-spacing="1.2">SAFETY · CODE, ALWAYS ON</text><text x="24.0" y="563.0" font-family="var(--font-display)" font-size="11" font-weight="400" fill="var(--ink-2)" text-anchor="start">Height 8 to 70 m · stays within 25 m of the search area · keeps 10% battery for the trip home · flies home when the area is done, the battery is low, or you say so · no model can override it.</text></svg><!-- /FIG:arch --></div>
+    <div class="keyrow" aria-hidden="true">
+      <span class="chip c-clef">Clef-Flash</span><span class="chip c-qwen">qwen38</span><span class="chip c-voice">Parakeet and Kokoro</span><span class="chip c-finder">finder (CPU)</span><span class="chip c-code">code</span><span class="chip c-alert">alert</span>
+    </div>
+    <figcaption>The same model can appear more than once: Clef-Flash answers three different kinds of question (route a spoken sentence, judge a crop, confirm a close-up), and qwen38 has four jobs. Arrows are labelled with what travels along them.<span class="src">from patrol/search.py, thinker.py, voice.py, clef.py</span></figcaption>
+  </figure>
+  <div class="trio">
+    <div><h3>Each model sees only what it must</h3><p>The finder sees every photo. Clef-Flash sees only three small crops per photo and the close-ups. qwen38 sees only the finds. In your flight that was 375 odd spots, 171 Clef-Flash looks and 6 qwen38 jobs.</p></div>
+    <div><h3>Every answer goes through code</h3><p>Clef-Flash's probabilities pass a gate with thresholds. qwen38's plans are kept only if they name real sectors that haven't been searched. A spoken command runs only if Clef-Flash is at least 45% sure what it was.</p></div>
+    <div><h3>When a model fails, the flight goes on</h3><p>If Clef-Flash is down or late, the spot stays unjudged, the console says FALLBACK, and the sweep carries on and comes home. Nothing is ever alerted on a fallback answer.</p></div>
+  </div>
+</section>
+
+<!-- SECTION:drone -->
+
+<section class="s" id="altitude">
+  <div class="s-head">
+    <p class="eyebrow"><b>06</b> · Fly high, look close</p>
+    <h2>Sweep from as high as the finder still works, then come down only where it matters</h2>
+    <p class="lede">Height is the battery lever. The higher the drone sweeps, the more ground each photo covers, the fewer lanes it flies, and the more area one battery searches. The catch is that small things turn into a few pixels. Patrol handles that by splitting the job: from up high, it only has to notice that a spot looks odd. Deciding what the spot is happens later, close up.</p>
+  </div>
+  <figure class="wide">
+    <div class="diagram"><!-- FIG:alt --><svg viewBox="0 0 1000 400" role="img" aria-label="Side view, to scale. Left: two sweep lanes at 40 metres, 22.9 metres apart; each photo sees 32.6 metres of ground across the lane, so neighbouring lanes overlap. Right: a closer look, with the drone 12 metres short of the spot at 20 metres and the zoom framed to about 4 metres of ground, and a second step at 12 metres only if the answer is unsure."><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/></marker></defs><line x1="0" y1="340" x2="1000" y2="340" stroke="var(--ink-3)" stroke-width="1.4"/><rect x="0" y="340" width="1000" height="60" fill="var(--paper-3)"/><line x1="34" y1="340.0" x2="42" y2="340.0" stroke="var(--ink-3)" stroke-width="1"/><text x="30.0" y="343.5" font-family="var(--font-mono)" font-size="9.5" font-weight="400" fill="var(--ink-3)" text-anchor="end">0 m</text><line x1="34" y1="268.0" x2="42" y2="268.0" stroke="var(--ink-3)" stroke-width="1"/><text x="30.0" y="271.5" font-family="var(--font-mono)" font-size="9.5" font-weight="400" fill="var(--ink-3)" text-anchor="end">12 m</text><line x1="34" y1="220.0" x2="42" y2="220.0" stroke="var(--ink-3)" stroke-width="1"/><text x="30.0" y="223.5" font-family="var(--font-mono)" font-size="9.5" font-weight="400" fill="var(--ink-3)" text-anchor="end">20 m</text><line x1="34" y1="100.0" x2="42" y2="100.0" stroke="var(--ink-3)" stroke-width="1"/><text x="30.0" y="103.5" font-family="var(--font-mono)" font-size="9.5" font-weight="400" fill="var(--ink-3)" text-anchor="end">40 m</text><line x1="42" y1="340" x2="42" y2="100.0" stroke="var(--ink-3)" stroke-width="1"/><path d="M217.8 106.0 L120.0 340 L315.6 340 Z" fill="var(--clef)" fill-opacity="0.10" stroke="var(--clef)" stroke-opacity="0.5" stroke-width="1"/><g><line x1="204.8" y1="100.0" x2="230.8" y2="100.0" stroke="var(--ink)" stroke-width="2.2"/><circle cx="204.8" cy="98.0" r="4.2" fill="none" stroke="var(--ink)" stroke-width="1.6"/><circle cx="230.8" cy="98.0" r="4.2" fill="none" stroke="var(--ink)" stroke-width="1.6"/><rect x="212.8" y="97.0" width="10" height="7" rx="2" fill="var(--ink)"/></g><path d="M354.96000000000004 106.0 L257.16 340 L452.76000000000005 340 Z" fill="var(--clef)" fill-opacity="0.07" stroke="var(--clef)" stroke-opacity="0.5" stroke-width="1"/><g><line x1="341.96000000000004" y1="100.0" x2="367.96000000000004" y2="100.0" stroke="var(--ink)" stroke-width="2.2"/><circle cx="341.96000000000004" cy="98.0" r="4.2" fill="none" stroke="var(--ink)" stroke-width="1.6"/><circle cx="367.96000000000004" cy="98.0" r="4.2" fill="none" stroke="var(--ink)" stroke-width="1.6"/><rect x="349.96000000000004" y="97.0" width="10" height="7" rx="2" fill="var(--ink)"/></g><text x="286.4" y="82.0" font-family="var(--font-display)" font-size="11.5" font-weight="700" fill="var(--ink)" text-anchor="middle">two neighbouring lanes, seen end-on</text><path d="M237.8 96.0 H334.96000000000004" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M334.96000000000004 96.0 H237.8" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="286.4" y="112.0" font-family="var(--font-display)" font-size="10" font-weight="400" fill="var(--ink-2)" text-anchor="middle" stroke="var(--paper-2)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">22.9 m between lanes</text><path d="M122.0 362 H313.6" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><path d="M313.6 362 H122.0" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#ah)"/><text x="217.8" y="378.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="middle">32.6 m of ground in each photo</text><text x="446.8" y="328.0" font-family="var(--font-display)" font-size="10" font-weight="400" fill="var(--ink-3)" text-anchor="end">overlap</text><rect x="828.35" y="338.4" width="3.3" height="1.6" fill="var(--blaze)"/><circle cx="830" cy="340" r="5" fill="none" stroke="var(--blaze)" stroke-width="1.6"/><path d="M758.0 225.0 L818.0 340 L842.0 340 Z" fill="var(--blaze)" fill-opacity="0.14" stroke="var(--blaze)" stroke-opacity="0.7" stroke-width="1"/><g><line x1="745.0" y1="220.0" x2="771.0" y2="220.0" stroke="var(--blaze)" stroke-width="2.2"/><circle cx="745.0" cy="218.0" r="4.2" fill="none" stroke="var(--blaze)" stroke-width="1.6"/><circle cx="771.0" cy="218.0" r="4.2" fill="none" stroke="var(--blaze)" stroke-width="1.6"/><rect x="753.0" y="217.0" width="10" height="7" rx="2" fill="var(--blaze)"/></g><text x="736.0" y="224.0" font-family="var(--font-display)" font-size="10.5" font-weight="600" fill="var(--ink-2)" text-anchor="end">first look at 20 m</text><path d="M786.8 273.0 L818.0 340 L842.0 340 Z" fill="var(--blaze)" fill-opacity="0.08" stroke="var(--ink-3)" stroke-opacity="0.7" stroke-width="1"/><g><line x1="773.8" y1="268.0" x2="799.8" y2="268.0" stroke="var(--ink-3)" stroke-width="2.2"/><circle cx="773.8" cy="266.0" r="4.2" fill="none" stroke="var(--ink-3)" stroke-width="1.6"/><circle cx="799.8" cy="266.0" r="4.2" fill="none" stroke="var(--ink-3)" stroke-width="1.6"/><rect x="781.8" y="265.0" width="10" height="7" rx="2" fill="var(--ink-3)"/></g><text x="764.8" y="272.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="end">second step at 12 m, only if unsure</text><text x="830.0" y="82.0" font-family="var(--font-display)" font-size="11.5" font-weight="700" fill="var(--ink)" text-anchor="middle">a closer look at one spot</text><text x="850.0" y="160.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">hover 0.6 × the height</text><text x="850.0" y="174.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">short of the spot, about</text><text x="850.0" y="188.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">31° off vertical; the zoom</text><text x="850.0" y="202.0" font-family="var(--font-display)" font-size="10.5" font-weight="400" fill="var(--ink-2)" text-anchor="start">frames about 4 m of ground</text><text x="830.0" y="362.0" font-family="var(--font-display)" font-size="10.5" font-weight="600" fill="var(--blaze-ink)" text-anchor="middle">backpack, 0.55 m</text><text x="830.0" y="376.0" font-family="var(--font-display)" font-size="9.5" font-weight="400" fill="var(--ink-3)" text-anchor="middle">(drawn to scale)</text></svg><!-- /FIG:alt --></div>
+    <figcaption>At 40 m the sweep camera (34° tall, 44° wide) sees about 24 × 33 m of ground, so 7 lanes cover the 160 m square. At 20 m the same square would need 13 lanes, nearly twice the flying. At 60 m the finder no longer picks out a half-metre backpack.<span class="src">camera geometry from patrol/sim.py; lanes from the flight's start event; 60 m result from runs/s0-altitude-1280/SUMMARY.md</span></figcaption>
+  </figure>
+  <!-- FIG-SLOT:ladder -->
+  <div class="two">
+    <div class="prose">
+      <h3>The smallest clue sets the height</h3>
+      <p>Each clue card carries a rough real size, which qwen38 writes along with the description. The planner sweeps at the highest height that works for the smallest thing on the list: 40 m for a 0.55 m backpack, and 21.8 m once a 0.3 m helmet is on the list. That second case exposed a bug today. Photos were still spaced for 40 m, which left gaps at the lower height. The fix landed at 14:53 and now scales the spacing with the height (12 m between photos at 40 m, 6.5 m at 21.8 m).</p>
+    </div>
+    <div class="prose">
+      <h3>Come down only as far as needed</h3>
+      <p>On a “maybe” the drone flies toward the spot, stops short of it at 20 m and takes an angled zoom close-up, framed to about four metres of ground (or three times the clue's size). If Clef-Flash is clearly yes or clearly no, that settles it. Only an unsure answer sends it down to 12 m for a second look. In your flight all eight closer looks were settled at 20 m, in 8 seconds each on average.</p>
+    </div>
+  </div>
+  <!-- FIG-SLOT:s0chart -->
+</section>
+
+<!-- SECTION:funnel -->
+<!-- SECTION:voice -->
+<!-- SECTION:console -->
+<!-- SECTION:laptop -->
+<!-- SECTION:evidence -->
+<!-- SECTION:gaps -->
+<!-- SECTION:history -->
+<!-- SECTION:next -->
+<!-- SECTION:appendix -->
+<!-- SECTIONS:END -->
+</main>
+</div>
+
+<script type="application/json" id="flight-data">{"run":"runs/s5-live-owner","seed":6,"terrain":"grass","area":[[-80.0,-80.0],[80.0,-80.0],[80.0,80.0],[-80.0,80.0]],"home":[0.0,-95.0,2.0],"lkp":[14.0,-98.0],"trail":[[14.0,-98.0],[13.4,-94.0],[13.0,-90.1],[12.6,-86.1],[12.0,-82.1],[11.2,-78.2],[10.1,-74.4],[9.1,-70.5],[7.9,-66.7],[6.8,-62.8],[5.8,-59.0],[5.2,-55.0],[4.7,-51.0],[4.0,-47.1],[3.7,-43.1],[3.4,-39.1],[3.2,-35.1],[3.2,-31.1],[3.6,-27.1],[4.2,-23.2],[4.7,-19.2],[5.2,-15.2],[5.8,-11.3],[6.4,-7.3],[6.6,-3.3],[6.5,0.7],[6.6,4.7],[6.9,8.7],[7.4,12.6],[7.8,16.6],[8.2,20.6],[8.8,24.5],[9.5,28.5],[10.2,32.4],[11.1,36.3],[12.2,40.1],[13.0,44.1],[13.7,48.0],[14.7,51.9],[15.8,55.7],[16.7,59.6],[17.3,63.6],[18.1,67.5],[19.0,71.4],[20.2,75.2],[21.2,79.1],[22.3,82.9],[23.6,86.7]],"stream":[[-98.0,24.3],[-94.0,24.5],[-90.0,24.6],[-86.0,24.6],[-82.0,24.9],[-78.0,25.2],[-74.0,25.6],[-70.1,26.1],[-66.1,26.5],[-62.1,26.7],[-58.1,26.5],[-54.1,26.1],[-50.1,25.9],[-46.1,26.1],[-42.1,26.4],[-38.1,26.5],[-34.1,26.4],[-30.1,26.2],[-26.1,25.9],[-22.1,25.7],[-18.2,25.1],[-14.3,24.2],[-10.4,23.2],[-6.6,22.0],[-2.7,21.1],[1.1,20.0],[5.0,18.8],[8.7,17.3],[12.2,15.5],[15.9,13.9],[19.7,12.7],[23.6,11.8],[27.6,11.2],[31.6,10.9],[35.6,10.7],[39.6,10.5],[43.6,10.6],[47.6,10.5],[51.6,10.4],[55.6,10.0],[59.5,9.6],[63.5,8.8],[67.4,8.3],[71.4,8.1],[75.4,8.1],[79.4,7.8],[83.4,7.7],[87.4,7.6],[91.4,7.2],[95.4,7.2],[99.4,7.3],[103.4,7.1],[107.4,6.9],[111.4,6.5],[115.4,6.3],[119.3,5.8]],"trees":[[39.2,-52.0,10.0],[34.5,-45.8,8.0],[69.2,-58.3,7.9],[-22.6,90.5,11.2],[70.1,-0.1,5.6],[31.4,-6.7,8.8],[22.1,-93.3,10.4],[-33.8,-95.0,8.0],[-80.6,13.9,11.1],[76.0,-23.0,6.7],[-80.3,-23.7,8.8],[-56.3,-74.9,6.6],[-87.5,-40.1,8.1],[98.4,75.4,10.6],[16.2,-78.7,5.8],[77.0,-27.4,7.7],[-69.1,-41.4,7.4],[77.9,39.2,7.8],[-97.8,-32.8,10.0],[-43.7,-38.2,5.8],[62.4,-96.7,10.9],[-67.6,34.2,11.4],[42.1,89.8,6.6],[93.6,86.2,11.5],[-60.2,-96.8,11.4],[97.6,-32.5,7.0],[26.2,-30.2,5.0],[62.4,86.7,8.9],[68.5,21.9,9.9],[42.3,68.8,6.6],[-21.7,76.2,6.5],[38.0,76.7,7.9],[-12.3,-35.9,8.3],[-93.6,-58.2,10.0],[-48.8,92.3,10.2],[-96.4,1.5,11.6],[53.3,-45.3,9.1],[-23.3,53.0,6.3]],"lanes":[{"i":0,"y":-68.57142857142857,"x0":-80.0,"x1":80.0},{"i":1,"y":-45.71428571428571,"x0":80.0,"x1":-80.0},{"i":2,"y":-22.857142857142854,"x0":-80.0,"x1":80.0},{"i":3,"y":0.0,"x0":80.0,"x1":-80.0},{"i":4,"y":22.85714285714286,"x0":-80.0,"x1":80.0},{"i":5,"y":45.71428571428572,"x0":80.0,"x1":-80.0},{"i":6,"y":68.57142857142857,"x0":-80.0,"x1":80.0}],"sectors":[{"id":"A1","lane":0,"y":-68.57,"x0":-80.0,"x1":-40.0,"h":22.86},{"id":"A2","lane":0,"y":-68.57,"x0":-40.0,"x1":0.0,"h":22.86},{"id":"A3","lane":0,"y":-68.57,"x0":0.0,"x1":40.0,"h":22.86},{"id":"A4","lane":0,"y":-68.57,"x0":40.0,"x1":80.0,"h":22.86},{"id":"B4","lane":1,"y":-45.71,"x0":80.0,"x1":40.0,"h":22.86},{"id":"B3","lane":1,"y":-45.71,"x0":40.0,"x1":0.0,"h":22.86},{"id":"B2","lane":1,"y":-45.71,"x0":0.0,"x1":-40.0,"h":22.86},{"id":"B1","lane":1,"y":-45.71,"x0":-40.0,"x1":-80.0,"h":22.86},{"id":"C1","lane":2,"y":-22.86,"x0":-80.0,"x1":-40.0,"h":22.86},{"id":"C2","lane":2,"y":-22.86,"x0":-40.0,"x1":0.0,"h":22.86},{"id":"C3","lane":2,"y":-22.86,"x0":0.0,"x1":40.0,"h":22.86},{"id":"C4","lane":2,"y":-22.86,"x0":40.0,"x1":80.0,"h":22.86},{"id":"D4","lane":3,"y":0.0,"x0":80.0,"x1":40.0,"h":22.86},{"id":"D3","lane":3,"y":0.0,"x0":40.0,"x1":0.0,"h":22.86},{"id":"D2","lane":3,"y":0.0,"x0":0.0,"x1":-40.0,"h":22.86},{"id":"D1","lane":3,"y":0.0,"x0":-40.0,"x1":-80.0,"h":22.86},{"id":"E1","lane":4,"y":22.86,"x0":-80.0,"x1":-40.0,"h":22.86},{"id":"E2","lane":4,"y":22.86,"x0":-40.0,"x1":0.0,"h":22.86},{"id":"E3","lane":4,"y":22.86,"x0":0.0,"x1":40.0,"h":22.86},{"id":"E4","lane":4,"y":22.86,"x0":40.0,"x1":80.0,"h":22.86},{"id":"F4","lane":5,"y":45.71,"x0":80.0,"x1":40.0,"h":22.86},{"id":"F3","lane":5,"y":45.71,"x0":40.0,"x1":0.0,"h":22.86},{"id":"F2","lane":5,"y":45.71,"x0":0.0,"x1":-40.0,"h":22.86},{"id":"F1","lane":5,"y":45.71,"x0":-40.0,"x1":-80.0,"h":22.86},{"id":"G1","lane":6,"y":68.57,"x0":-80.0,"x1":-40.0,"h":22.86},{"id":"G2","lane":6,"y":68.57,"x0":-40.0,"x1":0.0,"h":22.86},{"id":"G3","lane":6,"y":68.57,"x0":0.0,"x1":40.0,"h":22.86},{"id":"G4","lane":6,"y":68.57,"x0":40.0,"x1":80.0,"h":22.86}],"sweep_h":40.0,"clues":[{"name":"blue_backpack","family":"blue backpack","size_m":0.55,"words":"a blue hiking backpack lying on the ground: a bag with shoulder straps and pockets, about half a metre long"},{"name":"orange_tent","family":"orange tent","size_m":2.2,"words":"an orange camping tent: a dome of orange fabric about two metres across, pitched on the ground"},{"name":"red_jacket","family":"red jacket","size_m":0.8,"words":"a red jacket lying on the ground: a piece of clothing with a hood and two sleeves, under a metre long"}],"items":[{"name":"blue_backpack","role":"clue","xy":[1.87,-28.31]},{"name":"orange_tent","role":"clue","xy":[11.45,18.58]},{"name":"red_jacket","role":"clue","xy":[13.45,53.43]},{"name":"blue_tarp","role":"decoy","xy":[-25.38,33.31]}],"track":[[0.0,0.0,-95.0,2.0,"TAKEOFF",100.0,0.0],[1.5,0.0,-95.0,5.4,"TAKEOFF",99.9,0.0],[3.0,0.0,-95.0,11.4,"TAKEOFF",99.8,0.0],[4.5,0.0,-95.0,17.4,"TAKEOFF",99.6,0.0],[6.0,0.0,-95.0,23.4,"TAKEOFF",99.5,0.0],[7.5,0.0,-95.0,29.4,"TAKEOFF",99.4,0.0],[9.0,0.0,-95.0,35.4,"TAKEOFF",99.2,0.0],[10.0,0.0,-95.0,38.7,"SWEEP",99.2,0.0],[11.5,-1.3,-94.2,40.0,"SWEEP",99.0,0.0],[13.0,-7.5,-90.0,40.1,"SWEEP",98.9,0.0],[14.5,-15.0,-85.1,40.1,"SWEEP",98.8,0.0],[16.0,-22.5,-80.1,40.1,"SWEEP",98.7,0.0],[17.5,-30.1,-75.1,40.0,"SWEEP",98.5,0.0],[19.0,-36.8,-70.7,40.0,"SWEEP",98.4,0.0],[20.5,-39.1,-69.1,40.0,"SWEEP",98.3,0.0],[22.6,-39.9,-68.7,40.0,"SWEEP",98.1,0.026],[24.1,-43.6,-68.5,40.0,"SWEEP",98.0,0.026],[26.5,-57.8,-68.5,40.0,"SWEEP",97.8,0.039],[28.3,-68.7,-68.5,40.0,"SWEEP",97.6,0.057],[29.8,-76.4,-68.6,40.0,"SWEEP",97.5,0.057],[31.9,-79.5,-68.6,40.0,"SWEEP",97.3,0.057],[33.9,-78.5,-68.6,40.0,"SWEEP",97.2,0.057],[35.4,-71.0,-68.6,40.0,"SWEEP",97.0,0.057],[36.9,-62.0,-68.6,40.0,"SWEEP",96.9,0.057],[38.4,-53.0,-68.6,40.0,"SWEEP",96.8,0.057],[39.9,-44.4,-68.6,40.0,"SWEEP",96.7,0.057],[41.4,-41.0,-68.6,40.0,"SWEEP",96.5,0.057],[42.9,-39.9,-68.6,40.0,"SWEEP",96.4,0.057],[44.4,-33.6,-68.6,40.0,"SWEEP",96.3,0.057],[46.0,-24.0,-68.6,40.0,"SWEEP",96.2,0.07],[48.1,-11.4,-68.6,40.0,"SWEEP",96.0,0.085],[50.5,2.9,-68.6,40.0,"SWEEP",95.8,0.098],[52.9,17.3,-68.6,40.0,"SWEEP",95.6,0.114],[54.7,28.2,-68.6,40.0,"SWEEP",95.4,0.129],[56.2,37.2,-68.6,40.0,"SWEEP",95.3,0.129],[57.9,46.8,-68.6,40.0,"SWEEP",95.2,0.144],[59.5,56.4,-68.6,40.0,"SWEEP",95.0,0.16],[61.8,70.8,-68.6,40.0,"SWEEP",94.8,0.173],[63.7,79.0,-68.6,40.0,"SWEEP",94.7,0.175],[65.2,80.0,-68.6,40.0,"SWEEP",94.6,0.175],[66.7,80.0,-65.2,40.0,"SWEEP",94.4,0.175],[68.2,80.0,-56.5,40.0,"SWEEP",94.3,0.175],[69.7,80.0,-49.0,40.0,"SWEEP",94.2,0.175],[71.2,80.0,-46.6,40.0,"SWEEP",94.1,0.175],[73.0,79.6,-45.9,40.0,"SWEEP",93.9,0.185],[74.5,74.0,-45.6,40.0,"SWEEP",93.8,0.185],[76.2,64.0,-45.7,40.0,"SWEEP",93.7,0.196],[78.3,51.0,-45.7,40.0,"SWEEP",93.5,0.208],[80.7,36.6,-45.7,40.0,"SWEEP",93.3,0.218],[82.2,29.1,-45.7,40.0,"SWEEP",93.1,0.218],[83.7,28.0,-45.7,40.0,"SWEEP",93.0,0.218],[85.2,33.6,-45.7,40.0,"SWEEP",92.9,0.218],[86.7,38.4,-45.7,40.0,"SWEEP",92.8,0.218],[88.2,39.5,-45.7,40.0,"SWEEP",92.6,0.218],[89.7,38.4,-45.7,40.0,"SWEEP",92.5,0.22],[91.2,31.2,-45.7,40.0,"SWEEP",92.4,0.22],[94.3,12.8,-45.7,40.0,"INVESTIGATE",92.1,0.233],[95.8,5.1,-45.5,39.2,"INVESTIGATE",92.0,0.233],[97.3,3.0,-44.3,35.5,"INVESTIGATE",91.9,0.233],[98.8,7.2,-42.5,30.0,"INVESTIGATE",91.8,0.233],[100.3,13.6,-40.7,24.2,"INVESTIGATE",91.6,0.233],[101.8,17.2,-39.6,21.0,"INVESTIGATE",91.5,0.233],[103.7,18.0,-39.4,20.2,"RESUME",91.4,0.233],[105.2,17.9,-39.8,21.3,"RESUME",91.2,0.233],[106.7,16.1,-41.9,28.0,"RESUME",91.1,0.233],[108.2,13.9,-44.4,36.0,"RESUME",91.0,0.233],[109.7,13.1,-45.4,39.1,"RESUME",90.9,0.233],[110.2,13.0,-45.5,39.4,"SWEEP",90.8,0.233],[111.7,11.3,-45.7,39.9,"SWEEP",90.7,0.233],[113.2,3.7,-45.7,40.0,"SWEEP",90.6,0.233],[116.4,-15.2,-45.7,39.9,"SWEEP",90.3,0.254],[117.9,-22.6,-45.7,39.9,"SWEEP",90.2,0.254],[119.4,-23.7,-45.7,39.9,"SWEEP",90.1,0.254],[120.9,-18.0,-45.7,39.9,"SWEEP",89.9,0.254],[122.4,-9.0,-45.7,40.0,"SWEEP",89.8,0.254],[123.9,-2.4,-45.7,40.0,"SWEEP",89.7,0.254],[125.4,-0.7,-45.7,40.0,"SWEEP",89.6,0.254],[127.3,-0.5,-45.7,40.0,"SWEEP",89.4,0.254],[128.8,-5.7,-45.7,40.0,"SWEEP",89.3,0.254],[131.5,-21.9,-45.7,40.0,"SWEEP",89.0,0.268],[133.1,-31.8,-45.7,40.0,"SWEEP",88.9,0.278],[135.7,-47.4,-45.7,40.0,"SWEEP",88.7,0.29],[137.2,-56.4,-45.7,40.0,"SWEEP",88.6,0.3],[138.7,-65.4,-45.7,40.0,"SWEEP",88.4,0.3],[140.6,-76.1,-45.7,40.0,"SWEEP",88.3,0.312],[142.4,-79.7,-45.7,40.0,"SWEEP",88.1,0.312],[143.9,-80.1,-44.2,40.0,"SWEEP",88.0,0.312],[145.4,-80.1,-36.7,40.0,"SWEEP",87.9,0.312],[146.9,-80.0,-28.1,40.0,"SWEEP",87.8,0.312],[148.4,-80.0,-24.2,40.0,"SWEEP",87.6,0.312],[150.9,-80.0,-22.9,40.0,"SWEEP",87.4,0.323],[152.4,-76.6,-22.5,40.0,"SWEEP",87.3,0.323],[153.9,-68.0,-22.6,40.0,"SWEEP",87.2,0.335],[155.4,-59.0,-22.7,40.0,"SWEEP",87.0,0.335],[156.9,-50.0,-22.8,40.0,"SWEEP",86.9,0.346],[158.4,-41.0,-22.9,40.0,"SWEEP",86.8,0.361],[159.9,-31.9,-22.9,40.0,"SWEEP",86.7,0.361],[162.1,-19.2,-22.9,40.0,"SWEEP",86.5,0.374],[163.6,-9.8,-22.9,40.0,"SWEEP",86.4,0.388],[165.7,2.7,-22.9,40.0,"SWEEP",86.2,0.399],[167.6,13.7,-22.9,40.0,"INVESTIGATE",86.0,0.41],[169.1,21.5,-22.9,39.0,"INVESTIGATE",85.9,0.41],[170.6,23.9,-23.0,34.7,"INVESTIGATE",85.8,0.41],[172.1,20.1,-23.1,28.3,"INVESTIGATE",85.7,0.41],[173.6,15.0,-23.2,22.6,"INVESTIGATE",85.5,0.41],[175.1,13.3,-23.3,20.7,"INVESTIGATE",85.4,0.41],[176.2,12.9,-23.3,20.2,"RESUME",85.3,0.41],[177.7,12.6,-23.3,21.3,"RESUME",85.2,0.41],[179.2,13.0,-23.1,28.5,"RESUME",85.1,0.41],[180.7,13.5,-22.9,36.3,"RESUME",84.9,0.41],[182.2,13.6,-22.9,39.0,"RESUME",84.8,0.41],[182.7,13.7,-22.9,39.3,"SWEEP",84.8,0.41],[184.2,15.2,-22.9,39.9,"SWEEP",84.6,0.41],[185.7,22.8,-22.9,40.0,"SWEEP",84.5,0.41],[187.6,34.2,-22.9,40.0,"SWEEP",84.4,0.423],[189.4,40.1,-22.9,40.0,"SWEEP",84.2,0.436],[190.9,40.1,-22.5,40.0,"SWEEP",84.1,0.436],[192.4,40.0,-16.8,40.0,"SWEEP",84.0,0.436],[193.9,40.0,-7.8,40.0,"SWEEP",83.8,0.436],[195.4,40.0,-2.0,40.0,"SWEEP",83.7,0.436],[196.9,40.0,-0.6,40.0,"SWEEP",83.6,0.436],[198.6,39.6,-0.0,40.0,"SWEEP",83.5,0.457],[200.1,34.0,0.2,40.0,"SWEEP",83.3,0.457],[201.6,24.9,0.1,40.0,"SWEEP",83.2,0.467],[203.7,12.3,0.1,40.0,"SWEEP",83.0,0.477],[205.2,4.1,0.0,40.0,"SWEEP",82.9,0.477],[206.7,1.0,0.0,40.0,"SWEEP",82.8,0.489],[208.0,0.3,0.0,40.0,"INVESTIGATE",82.7,0.491],[209.5,0.2,0.4,38.5,"INVESTIGATE",82.5,0.491],[211.0,1.5,2.2,31.4,"INVESTIGATE",82.4,0.491],[212.5,3.0,4.1,23.7,"INVESTIGATE",82.3,0.491],[214.0,3.5,4.8,21.0,"INVESTIGATE",82.2,0.491],[215.4,3.6,4.9,20.3,"RESUME",82.1,0.491],[216.9,3.5,4.7,21.4,"RESUME",81.9,0.491],[218.4,2.3,2.9,28.3,"RESUME",81.8,0.491],[219.9,1.0,1.0,36.1,"RESUME",81.7,0.491],[221.4,0.5,0.2,39.0,"RESUME",81.6,0.491],[222.4,0.4,0.1,39.5,"SWEEP",81.5,0.491],[223.9,0.2,0.4,39.9,"SWEEP",81.3,0.491],[225.4,0.0,6.0,40.0,"SWEEP",81.2,0.491],[226.9,0.0,15.0,40.0,"SWEEP",81.1,0.491],[228.4,0.0,20.8,40.0,"SWEEP",81.0,0.491],[229.9,0.0,22.2,40.0,"SWEEP",80.8,0.491],[231.3,0.0,22.8,40.0,"INVESTIGATE",80.7,0.512],[232.8,1.5,23.1,38.5,"INVESTIGATE",80.6,0.512],[234.3,1.3,23.1,31.3,"INVESTIGATE",80.5,0.512],[235.8,0.4,22.9,23.6,"INVESTIGATE",80.4,0.512],[237.3,0.1,22.8,21.0,"INVESTIGATE",80.2,0.512],[238.2,0.0,22.8,20.4,"RESUME",80.1,0.512],[239.7,-0.0,22.8,21.4,"RESUME",80.0,0.512],[241.2,-0.0,22.8,28.4,"RESUME",79.9,0.512],[242.7,-0.0,22.8,36.3,"RESUME",79.8,0.512],[244.2,-0.0,22.9,39.0,"RESUME",79.6,0.512],[244.7,-0.0,22.9,39.3,"SWEEP",79.6,0.512],[246.2,1.5,22.9,39.9,"SWEEP",79.5,0.512],[247.7,9.1,22.9,40.0,"SWEEP",79.4,0.512],[248.8,15.7,22.9,40.0,"INVESTIGATE",79.3,0.524],[250.3,23.6,23.0,39.0,"INVESTIGATE",79.1,0.524],[251.8,26.2,23.9,34.5,"INVESTIGATE",79.0,0.524],[253.3,22.7,25.1,27.7,"INVESTIGATE",78.9,0.524],[254.8,18.1,26.1,22.0,"INVESTIGATE",78.8,0.524],[256.7,16.8,26.4,20.3,"RESUME",78.6,0.524],[258.2,16.5,26.2,21.4,"RESUME",78.5,0.524],[259.7,16.1,24.9,28.5,"RESUME",78.4,0.524],[261.2,15.9,23.5,36.3,"RESUME",78.2,0.524],[262.7,15.8,23.0,39.0,"RESUME",78.1,0.524],[263.7,15.8,22.9,39.5,"SWEEP",78.0,0.524],[265.2,17.3,22.9,39.9,"SWEEP",77.9,0.524],[266.7,24.8,22.9,40.0,"SWEEP",77.8,0.524],[268.3,34.4,22.9,40.0,"SWEEP",77.6,0.539],[270.2,40.3,22.9,40.0,"SWEEP",77.5,0.55],[271.7,40.2,23.2,40.0,"SWEEP",77.4,0.55],[273.2,40.0,28.9,40.0,"SWEEP",77.2,0.55],[274.7,40.0,37.9,40.0,"SWEEP",77.1,0.55],[276.2,40.0,43.7,40.0,"SWEEP",77.0,0.55],[277.7,40.0,45.1,40.0,"SWEEP",76.9,0.55],[279.6,39.6,45.8,40.0,"SWEEP",76.7,0.571],[281.1,34.0,46.0,40.0,"SWEEP",76.6,0.571],[282.6,24.3,45.9,40.0,"SWEEP",76.4,0.581],[285.0,10.0,45.8,40.0,"INVESTIGATE",76.2,0.593],[286.5,2.1,45.6,39.0,"INVESTIGATE",76.1,0.593],[288.0,-0.5,44.8,34.4,"INVESTIGATE",76.0,0.593],[289.5,2.9,43.7,27.5,"INVESTIGATE",75.9,0.593],[291.0,7.1,42.9,21.9,"INVESTIGATE",75.7,0.593],[293.0,8.3,42.6,20.3,"RESUME",75.6,0.593],[294.5,8.7,42.8,21.4,"RESUME",75.5,0.593],[296.0,9.3,43.9,28.4,"RESUME",75.3,0.593],[297.5,9.8,45.1,36.3,"RESUME",75.2,0.593],[299.0,9.9,45.6,39.0,"RESUME",75.1,0.593],[300.0,10.0,45.6,39.5,"SWEEP",75.0,0.593],[301.5,8.5,45.7,39.9,"SWEEP",74.9,0.593],[303.0,3.0,45.7,40.0,"SWEEP",74.8,0.593],[304.5,0.9,45.7,40.0,"SWEEP",74.6,0.593],[306.4,-0.1,45.7,40.0,"SWEEP",74.5,0.606],[307.9,-0.4,49.1,40.0,"SWEEP",74.3,0.606],[309.4,-0.2,57.8,40.0,"SWEEP",74.2,0.606],[310.9,-0.1,65.3,40.0,"SWEEP",74.1,0.606],[312.4,-0.0,67.7,40.0,"SWEEP",74.0,0.606],[314.0,-0.0,68.4,40.0,"SWEEP",73.8,0.623],[315.5,3.4,68.7,40.0,"SWEEP",73.7,0.623],[317.6,15.7,68.7,40.0,"SWEEP",73.5,0.632],[319.4,26.6,68.6,40.0,"SWEEP",73.4,0.641],[320.9,35.2,68.6,40.0,"SWEEP",73.3,0.641],[322.5,39.9,68.6,40.0,"SWEEP",73.1,0.65],[324.0,39.8,68.6,40.0,"SWEEP",73.0,0.651],[325.5,33.8,68.6,40.0,"SWEEP",72.9,0.651],[327.0,24.8,68.6,40.0,"SWEEP",72.7,0.651],[328.5,15.8,68.6,40.0,"SWEEP",72.6,0.651],[330.0,6.8,68.6,40.0,"SWEEP",72.5,0.651],[331.5,1.5,68.6,40.0,"SWEEP",72.4,0.651],[333.0,0.5,68.6,40.0,"SWEEP",72.2,0.651],[334.5,-3.6,68.6,40.0,"SWEEP",72.1,0.651],[336.6,-16.0,68.6,40.0,"SWEEP",71.9,0.664],[338.1,-25.0,68.6,40.0,"SWEEP",71.8,0.68],[339.6,-33.8,68.6,40.0,"SWEEP",71.7,0.68],[341.2,-39.1,68.6,40.0,"SWEEP",71.6,0.693],[342.9,-40.3,68.6,40.0,"SWEEP",71.4,0.695],[344.4,-40.1,67.0,40.0,"SWEEP",71.3,0.695],[345.9,-40.0,59.5,40.0,"SWEEP",71.2,0.695],[347.4,-40.0,50.9,40.0,"SWEEP",71.1,0.695],[348.9,-40.0,47.0,40.0,"SWEEP",70.9,0.695],[350.9,-40.0,45.9,40.0,"SWEEP",70.8,0.716],[352.4,-36.6,45.6,40.0,"SWEEP",70.6,0.716],[354.6,-24.3,45.6,40.0,"INVESTIGATE",70.5,0.726],[356.1,-16.5,45.6,39.0,"INVESTIGATE",70.3,0.726],[357.6,-14.0,45.5,34.6,"INVESTIGATE",70.2,0.726],[359.1,-17.7,45.4,27.9,"INVESTIGATE",70.1,0.726],[360.6,-22.5,45.3,22.2,"INVESTIGATE",70.0,0.726],[362.1,-23.9,45.3,20.6,"INVESTIGATE",69.8,0.726],[363.0,-24.1,45.3,20.3,"RESUME",69.8,0.726],[364.5,-24.4,45.3,21.4,"RESUME",69.6,0.726],[366.0,-24.4,45.5,28.7,"RESUME",69.5,0.726],[367.5,-24.4,45.6,36.4,"RESUME",69.4,0.726],[369.0,-24.4,45.7,39.0,"RESUME",69.3,0.726],[369.5,-24.4,45.7,39.3,"SWEEP",69.2,0.726],[371.0,-22.8,45.7,39.9,"SWEEP",69.1,0.726],[372.5,-15.3,45.7,40.0,"SWEEP",69.0,0.726],[374.3,-4.7,45.7,40.0,"SWEEP",68.8,0.729],[375.8,-1.1,45.7,40.0,"SWEEP",68.7,0.729],[377.6,-0.2,45.7,40.0,"SWEEP",68.5,0.729],[379.1,0.1,42.3,40.0,"SWEEP",68.4,0.729],[380.6,0.1,33.7,40.0,"SWEEP",68.3,0.729],[382.1,0.0,26.1,40.0,"SWEEP",68.2,0.729],[383.6,0.0,23.8,40.0,"SWEEP",68.0,0.729],[385.1,-0.4,23.1,40.0,"SWEEP",67.9,0.729],[386.6,-6.0,22.9,40.0,"SWEEP",67.8,0.729],[388.4,-17.0,22.9,40.0,"SWEEP",67.6,0.741],[390.3,-27.9,22.9,40.0,"SWEEP",67.5,0.754],[391.8,-36.0,22.9,40.0,"SWEEP",67.4,0.754],[393.4,-39.4,22.9,40.0,"SWEEP",67.2,0.767],[395.0,-40.0,22.9,40.0,"SWEEP",67.1,0.767],[396.5,-40.0,21.3,40.0,"SWEEP",67.0,0.767],[398.0,-40.0,13.8,40.0,"SWEEP",66.8,0.767],[399.5,-40.0,5.2,40.0,"SWEEP",66.7,0.767],[401.0,-40.0,1.3,40.0,"SWEEP",66.6,0.767],[403.4,-40.0,0.1,40.0,"SWEEP",66.4,0.778],[404.9,-36.6,-0.3,40.0,"SWEEP",66.3,0.778],[406.7,-26.0,-0.2,40.0,"SWEEP",66.1,0.784],[408.2,-17.0,-0.1,40.0,"SWEEP",66.0,0.784],[410.1,-5.7,-0.0,40.0,"SWEEP",65.8,0.786],[411.9,0.2,0.0,40.0,"SWEEP",65.7,0.786],[413.4,-0.3,0.0,40.0,"SWEEP",65.5,0.786],[414.9,-6.2,0.0,40.0,"SWEEP",65.4,0.786],[416.4,-15.2,0.0,40.0,"SWEEP",65.3,0.786],[417.9,-24.2,0.0,40.0,"SWEEP",65.2,0.786],[419.4,-33.1,0.0,40.0,"SWEEP",65.0,0.786],[420.9,-38.5,0.0,40.0,"SWEEP",64.9,0.786],[422.4,-39.5,0.0,40.0,"SWEEP",64.8,0.786],[423.9,-43.6,0.0,40.0,"SWEEP",64.7,0.786],[425.7,-54.3,0.0,40.0,"SWEEP",64.5,0.796],[427.2,-63.3,0.0,40.0,"SWEEP",64.4,0.796],[428.9,-72.9,0.0,40.0,"SWEEP",64.3,0.808],[430.7,-79.0,0.0,40.0,"SWEEP",64.1,0.81],[432.2,-79.8,0.0,40.0,"SWEEP",64.0,0.81],[433.7,-76.7,0.6,40.0,"SWEEP",63.9,0.81],[435.2,-68.3,2.2,40.0,"SWEEP",63.7,0.81],[436.7,-59.4,3.9,40.0,"SWEEP",63.6,0.81],[438.2,-50.6,5.6,40.0,"SWEEP",63.5,0.81],[439.7,-41.8,7.3,40.0,"SWEEP",63.4,0.81],[441.2,-32.9,9.0,40.0,"SWEEP",63.2,0.81],[442.7,-24.1,10.7,40.0,"SWEEP",63.1,0.81],[444.2,-15.2,12.3,40.0,"SWEEP",63.0,0.81],[445.7,-6.4,14.0,40.0,"SWEEP",62.9,0.81],[447.2,2.4,15.7,40.0,"SWEEP",62.7,0.81],[448.7,11.3,17.4,40.0,"SWEEP",62.6,0.81],[450.2,20.1,19.1,40.0,"SWEEP",62.5,0.81],[451.7,29.0,20.8,40.0,"SWEEP",62.4,0.81],[453.2,36.6,22.2,40.0,"SWEEP",62.2,0.81],[454.7,39.0,22.7,40.0,"SWEEP",62.1,0.81],[456.2,40.1,22.8,40.0,"SWEEP",62.0,0.81],[457.7,46.4,22.9,40.0,"SWEEP",61.9,0.81],[459.3,56.0,22.9,40.0,"SWEEP",61.7,0.826],[461.4,68.7,22.9,40.0,"SWEEP",61.6,0.844],[462.9,76.4,22.9,40.0,"SWEEP",61.4,0.844],[464.8,80.5,22.9,40.0,"SWEEP",61.3,0.847],[466.3,80.3,23.2,40.0,"SWEEP",61.1,0.847],[467.8,80.0,28.9,40.0,"SWEEP",61.0,0.847],[469.3,80.0,37.9,40.0,"SWEEP",60.9,0.847],[470.8,80.0,43.7,40.0,"SWEEP",60.8,0.847],[472.3,80.0,45.1,40.0,"SWEEP",60.6,0.847],[474.1,78.5,45.7,40.0,"SWEEP",60.5,0.857],[475.6,71.0,45.8,40.0,"SWEEP",60.4,0.857],[477.1,62.0,45.8,40.0,"SWEEP",60.2,0.868],[478.7,52.3,45.7,40.0,"SWEEP",60.1,0.871],[480.2,44.1,45.7,40.0,"SWEEP",60.0,0.871],[481.7,41.0,45.7,40.0,"SWEEP",59.9,0.871],[483.5,40.2,45.7,40.0,"SWEEP",59.7,0.871],[485.0,39.9,49.1,40.0,"SWEEP",59.6,0.871],[486.5,39.9,57.8,40.0,"SWEEP",59.5,0.871],[488.0,40.0,65.3,40.0,"SWEEP",59.3,0.871],[489.5,40.0,67.7,40.0,"SWEEP",59.2,0.871],[491.0,40.4,68.3,40.0,"SWEEP",59.1,0.871],[492.5,46.0,68.5,40.0,"SWEEP",59.0,0.871],[494.1,55.7,68.5,40.0,"SWEEP",58.8,0.879],[496.5,70.0,68.6,40.0,"SWEEP",58.6,0.889],[498.3,78.3,68.6,40.0,"SWEEP",58.5,0.891],[500.2,80.1,68.6,40.0,"SWEEP",58.3,0.891],[501.7,80.3,67.0,40.0,"SWEEP",58.2,0.891],[503.2,80.3,59.5,40.0,"SWEEP",58.1,0.891],[504.7,80.3,50.5,40.0,"SWEEP",57.9,0.891],[506.2,80.2,41.5,40.0,"SWEEP",57.8,0.891],[507.7,80.2,32.5,40.0,"SWEEP",57.7,0.891],[509.2,80.1,23.5,40.0,"SWEEP",57.6,0.891],[510.7,80.1,14.5,40.0,"SWEEP",57.4,0.891],[512.2,80.0,5.8,40.0,"SWEEP",57.3,0.891],[513.7,80.0,1.5,40.0,"SWEEP",57.2,0.891],[515.8,80.0,0.2,40.0,"SWEEP",57.0,0.901],[517.3,76.6,-0.2,40.0,"SWEEP",56.9,0.901],[519.1,66.0,-0.1,40.0,"SWEEP",56.7,0.911],[520.6,57.0,-0.1,40.0,"SWEEP",56.6,0.911],[522.5,46.3,-0.0,40.0,"SWEEP",56.5,0.915],[524.0,41.5,-0.0,40.0,"SWEEP",56.3,0.915],[525.5,40.5,-0.0,40.0,"SWEEP",56.2,0.915],[527.0,40.1,-1.5,40.0,"SWEEP",56.1,0.915],[528.5,40.0,-9.1,40.0,"SWEEP",56.0,0.915],[530.0,40.0,-17.7,40.0,"SWEEP",55.8,0.915],[531.5,40.0,-21.5,40.0,"SWEEP",55.7,0.915],[533.0,40.0,-22.4,40.0,"SWEEP",55.6,0.915],[534.5,43.4,-22.8,40.0,"SWEEP",55.5,0.915],[538.0,64.2,-22.8,40.0,"SWEEP",55.2,0.921],[540.3,78.2,-22.9,40.0,"SWEEP",55.0,0.93],[541.8,85.7,-22.9,40.0,"SWEEP",54.8,0.93],[543.3,86.7,-22.9,40.0,"SWEEP",54.7,0.93],[544.8,82.6,-22.9,40.0,"SWEEP",54.6,0.93],[546.3,80.8,-22.9,40.0,"SWEEP",54.5,0.93],[547.8,79.9,-22.7,40.0,"SWEEP",54.3,0.93],[549.3,74.1,-20.6,40.0,"SWEEP",54.2,0.93],[550.8,65.7,-17.4,40.0,"SWEEP",54.1,0.93],[552.3,57.3,-14.2,40.0,"SWEEP",54.0,0.93],[553.8,48.9,-11.0,40.0,"SWEEP",53.8,0.93],[555.3,40.5,-7.8,40.0,"SWEEP",53.7,0.93],[556.8,32.1,-4.6,40.0,"SWEEP",53.6,0.93],[558.3,23.6,-1.4,40.0,"SWEEP",53.5,0.93],[559.8,15.2,1.8,40.0,"SWEEP",53.3,0.93],[561.3,6.8,5.0,40.0,"SWEEP",53.2,0.93],[562.8,-1.6,8.2,40.0,"SWEEP",53.1,0.93],[564.3,-10.0,11.4,40.0,"SWEEP",53.0,0.93],[565.8,-18.4,14.6,40.0,"SWEEP",52.8,0.93],[567.3,-26.8,17.8,40.0,"SWEEP",52.7,0.93],[568.8,-34.9,20.9,40.0,"SWEEP",52.6,0.93],[570.3,-38.7,22.4,40.0,"SWEEP",52.5,0.93],[571.8,-39.6,22.7,40.0,"SWEEP",52.3,0.93],[573.3,-43.5,22.8,40.0,"SWEEP",52.2,0.93],[576.6,-63.2,22.9,40.0,"SWEEP",51.9,0.941],[578.1,-72.2,22.9,40.0,"SWEEP",51.8,0.954],[579.6,-78.0,22.9,40.0,"SWEEP",51.7,0.954],[581.8,-80.7,22.9,40.0,"INVESTIGATE",51.5,0.956],[583.3,-81.4,23.1,38.6,"INVESTIGATE",51.4,0.956],[584.8,-79.8,24.3,31.6,"INVESTIGATE",51.3,0.956],[586.3,-77.8,25.6,23.8,"INVESTIGATE",51.1,0.956],[587.8,-77.0,26.1,21.0,"INVESTIGATE",51.0,0.956],[589.2,-76.8,26.2,20.3,"RESUME",50.9,0.956],[590.7,-77.0,26.0,21.3,"RESUME",50.8,0.956],[592.2,-78.4,24.8,28.3,"RESUME",50.6,0.956],[593.7,-79.9,23.5,36.2,"RESUME",50.5,0.956],[595.2,-80.5,23.0,39.0,"RESUME",50.4,0.956],[596.2,-80.6,22.9,39.5,"SWEEP",50.3,0.956],[598.1,-80.3,23.2,40.0,"SWEEP",50.2,0.956],[599.6,-80.0,28.9,40.1,"SWEEP",50.0,0.956],[601.1,-80.0,37.9,40.0,"SWEEP",49.9,0.956],[602.6,-80.0,43.7,40.0,"SWEEP",49.8,0.956],[604.1,-80.0,45.1,40.0,"SWEEP",49.7,0.956],[605.7,-79.6,45.7,40.0,"SWEEP",49.5,0.967],[607.2,-74.0,45.9,40.0,"SWEEP",49.4,0.967],[609.1,-62.4,45.8,40.0,"SWEEP",49.2,0.977],[610.6,-53.4,45.8,40.0,"SWEEP",49.1,0.98],[612.1,-44.8,45.7,40.0,"SWEEP",49.0,0.98],[613.6,-41.2,45.7,40.0,"SWEEP",48.9,0.98],[615.1,-40.4,45.7,40.0,"SWEEP",48.7,0.98],[616.6,-40.0,49.1,40.0,"SWEEP",48.6,0.98],[618.1,-40.0,57.8,40.0,"SWEEP",48.5,0.98],[619.6,-40.0,65.3,40.0,"SWEEP",48.4,0.98],[621.1,-40.0,67.7,40.0,"SWEEP",48.2,0.98],[622.7,-40.0,68.3,40.0,"SWEEP",48.1,0.98],[624.2,-43.4,68.7,40.0,"SWEEP",48.0,0.98],[626.1,-54.9,68.7,40.0,"SWEEP",47.8,0.989],[627.6,-63.9,68.6,40.0,"SWEEP",47.7,0.989],[629.5,-74.8,68.6,40.0,"SWEEP",47.5,1.0],[631.0,-78.7,68.6,40.0,"SWEEP",47.4,1.0],[634.1,-81.2,68.6,40.0,"SWEEP",47.2,1.0],[635.6,-80.9,68.6,40.0,"SWEEP",47.0,1.0],[636.1,-80.7,68.6,40.0,"RETURN",47.0,1.0],[637.6,-79.5,67.2,40.0,"RETURN",46.9,1.0],[639.1,-76.0,60.3,40.0,"RETURN",46.7,1.0],[640.6,-72.1,52.2,40.0,"RETURN",46.6,1.0],[642.1,-68.1,44.1,40.0,"RETURN",46.5,1.0],[643.6,-64.2,36.0,40.0,"RETURN",46.4,1.0],[645.1,-60.2,28.0,40.0,"RETURN",46.2,1.0],[646.6,-56.2,19.9,40.0,"RETURN",46.1,1.0],[648.1,-52.3,11.8,40.0,"RETURN",46.0,1.0],[649.6,-48.3,3.7,40.0,"RETURN",45.9,1.0],[651.1,-44.4,-4.4,40.0,"RETURN",45.7,1.0],[652.6,-40.4,-12.5,40.0,"RETURN",45.6,1.0],[654.1,-36.5,-20.5,40.0,"RETURN",45.5,1.0],[655.6,-32.5,-28.6,40.0,"RETURN",45.4,1.0],[657.1,-28.5,-36.7,40.0,"RETURN",45.2,1.0],[658.6,-24.6,-44.8,40.0,"RETURN",45.1,1.0],[660.1,-20.6,-52.9,40.0,"RETURN",45.0,1.0],[661.6,-16.7,-61.0,40.0,"RETURN",44.9,1.0],[663.1,-12.7,-69.0,40.0,"RETURN",44.7,1.0],[664.6,-8.8,-77.1,40.0,"RETURN",44.6,1.0],[666.1,-4.8,-85.2,40.0,"RETURN",44.5,1.0],[667.6,-1.4,-92.0,40.0,"RETURN",44.4,1.0],[669.1,-0.4,-94.2,39.6,"RETURN",44.2,1.0],[670.6,-0.3,-94.5,35.6,"RETURN",44.1,1.0],[672.1,-0.2,-94.5,31.1,"RETURN",44.0,1.0],[673.6,-0.2,-94.6,26.6,"RETURN",43.9,1.0],[675.1,-0.2,-94.7,22.1,"RETURN",43.7,1.0],[676.6,-0.1,-94.8,17.6,"RETURN",43.6,1.0],[678.1,-0.1,-94.8,13.1,"RETURN",43.5,1.0],[679.6,-0.1,-94.9,8.6,"RETURN",43.4,1.0],[681.1,-0.0,-95.0,4.4,"RETURN",43.2,1.0],[682.6,-0.0,-95.0,2.8,"RETURN",43.1,1.0],[683.1,-0.0,-95.0,2.5,"DONE",43.1,1.0]],"events":[{"type":"state","t":10.0,"state":"SWEEP","reason":"sector A1 of 28 at 40 m"},{"type":"state","t":94.29,"state":"INVESTIGATE","reason":"S1: maybe red_jacket at (26, -30); crop noul 0.13, p(investigate) 0.47"},{"type":"investigate","t":94.29,"spot":{"id":"S1","g":[26.05101511244688,-30.201998309612016],"clue":"red_jacket","p_inv":0.472,"noul":0.126,"frame":"media/frames/f0021.jpg","crop":"media/crops/f0021_c2.jpg","box":[1233,498,1268,551],"sweep_h":40.0,"t_seen":94.29},"id":"S1","g":[26.05,-30.2],"clue":"red_jacket","noul":0.126,"p_inv":0.472},{"type":"confirm","t":103.72,"id":"S1","h":20.0,"verdict":"dismiss","clue":"orange_tent","noul":0.005},{"type":"dismiss","t":103.72,"id":"S1","g":[26.05101511244688,-30.201998309612016],"verdict":"dismiss","h":20.0,"reason":"nothing; best clue noul 0.01"},{"type":"state","t":103.72,"state":"RESUME","reason":"back to lane 2"},{"type":"state","t":110.22,"state":"SWEEP","reason":"resumed sector B3 at x=13"},{"type":"state","t":167.56,"state":"INVESTIGATE","reason":"S2: maybe blue_backpack at (2, -28); crop noul 0.61, p(investigate) 0.86"},{"type":"investigate","t":167.56,"spot":{"id":"S2","g":[1.8126814890705845,-28.32115463355413],"clue":"blue_backpack","p_inv":0.864,"noul":0.61,"frame":"media/frames/f0037.jpg","crop":"media/crops/f0037_c2.jpg","box":[839,863,872,897],"sweep_h":40.0,"t_seen":167.56},"id":"S2","g":[1.81,-28.32],"clue":"blue_backpack","noul":0.61,"p_inv":0.864},{"type":"confirm","t":176.23,"id":"S2","h":20.0,"verdict":"confirm","clue":"blue_backpack","noul":0.945},{"type":"alert","t":176.23,"id":"A1","clue":"blue_backpack","g":[1.81,-28.32],"conf":0.945,"h":20.0,"spot":"S2"},{"type":"state","t":176.23,"state":"RESUME","reason":"back to lane 3"},{"type":"note","t":181.23,"id":"A1","alert":"Blue backpack spotted 2 meters east and 28 meters north of center, 71 meters from trailhead.","check":"Ground team should proceed to the coordinates to visually confirm the object."},{"type":"state","t":182.73,"state":"SWEEP","reason":"resumed sector C3 at x=14"},{"type":"plan","t":184.73,"applied":false,"proposed":["D3","E3","F3","G3","D4","E4"],"reason":"Prioritize trail path north of backpack; stream intersection in E3 is high priority."},{"type":"plan","t":189.94,"applied":true,"reason":"Prioritize trail path north of backpack; stream intersection in E3 is high priority."},{"type":"state","t":207.99,"state":"INVESTIGATE","reason":"S3: maybe blue_backpack at (10, 15); crop noul 0.11, p(investigate) 0.49"},{"type":"investigate","t":207.99,"spot":{"id":"S3","g":[10.366515473075909,14.993782805554536],"clue":"blue_backpack","p_inv":0.492,"noul":0.108,"frame":"media/frames/f0045.jpg","crop":"media/crops/f0045_c2.jpg","box":[1178,799,1280,960],"sweep_h":40.0,"t_seen":207.99},"id":"S3","g":[10.37,14.99],"clue":"blue_backpack","noul":0.108,"p_inv":0.492},{"type":"confirm","t":215.39,"id":"S3","h":20.0,"verdict":"dismiss","clue":"blue_backpack","noul":0.016},{"type":"dismiss","t":215.39,"id":"S3","g":[10.366515473075909,14.993782805554536],"verdict":"dismiss","h":20.0,"reason":"nothing; best clue noul 0.02"},{"type":"state","t":215.39,"state":"RESUME","reason":"back to lane 4"},{"type":"state","t":222.39,"state":"SWEEP","reason":"resumed sector D3 at x=0"},{"type":"state","t":231.29,"state":"INVESTIGATE","reason":"S4: maybe orange_tent at (11, 19); crop noul 0.39, p(investigate) 0.82"},{"type":"investigate","t":231.29,"spot":{"id":"S4","g":[11.212199542230351,18.572742708160217],"clue":"orange_tent","p_inv":0.816,"noul":0.386,"frame":"media/frames/f0047.jpg","crop":"media/crops/f0047_c0.jpg","box":[726,0,856,107],"sweep_h":40.0,"t_seen":230.71},"id":"S4","g":[11.21,18.57],"clue":"orange_tent","noul":0.386,"p_inv":0.816},{"type":"confirm","t":238.21,"id":"S4","h":20.0,"verdict":"confirm","clue":"orange_tent","noul":0.82},{"type":"alert","t":238.21,"id":"A2","clue":"orange_tent","g":[11.21,18.57],"conf":0.82,"h":20.0,"spot":"S4"},{"type":"state","t":238.21,"state":"RESUME","reason":"back to lane 5"},{"type":"note","t":240.21,"id":"A2","alert":"Possible orange tent spotted 117 meters from trailhead, 11 meters east and 19 meters north of search center.","check":"Ground team should verify object identity and search for hiker or other belongings nearby."},{"type":"plan","t":242.21,"applied":false,"proposed":["F3","G3","E4","F4","G4","D4"],"reason":"Hikers likely continued north along the trail; recent finds confirm this path, so prioritize northern trail sectors."},{"type":"state","t":244.71,"state":"SWEEP","reason":"resumed sector E3 at x=0"},{"type":"state","t":248.83,"state":"INVESTIGATE","reason":"S5: maybe blue_backpack at (14, 15); crop noul 0.15, p(investigate) 0.68"},{"type":"investigate","t":248.83,"spot":{"id":"S5","g":[13.847404850243455,14.790692338811965],"clue":"blue_backpack","p_inv":0.681,"noul":0.149,"frame":"media/frames/f0048.jpg","crop":"media/crops/f0048_c1.jpg","box":[906,389,1009,453],"sweep_h":40.0,"t_seen":248.54},"id":"S5","g":[13.85,14.79],"clue":"blue_backpack","noul":0.149,"p_inv":0.681},{"type":"confirm","t":256.74,"id":"S5","h":20.0,"verdict":"dismiss","clue":"blue_backpack","noul":0.049},{"type":"dismiss","t":256.74,"id":"S5","g":[13.847404850243455,14.790692338811965],"verdict":"dismiss","h":20.0,"reason":"other; best clue noul 0.05"},{"type":"state","t":256.74,"state":"RESUME","reason":"back to lane 5"},{"type":"state","t":263.74,"state":"SWEEP","reason":"resumed sector E3 at x=16"},{"type":"plan","t":270.66,"applied":true,"reason":"Hikers likely continued north along the trail; recent finds confirm this path, so prioritize northern trail sectors."},{"type":"state","t":285.04,"state":"INVESTIGATE","reason":"S6: maybe red_jacket at (13, 53); crop noul 0.71, p(investigate) 0.89"},{"type":"investigate","t":285.04,"spot":{"id":"S6","g":[13.478708774374404,53.486923447866914],"clue":"red_jacket","p_inv":0.893,"noul":0.706,"frame":"media/frames/f0054.jpg","crop":"media/crops/f0054_c0.jpg","box":[921,404,961,434],"sweep_h":40.0,"t_seen":284.47},"id":"S6","g":[13.48,53.49],"clue":"red_jacket","noul":0.706,"p_inv":0.893},{"type":"confirm","t":292.96,"id":"S6","h":20.0,"verdict":"confirm","clue":"red_jacket","noul":0.783},{"type":"alert","t":292.96,"id":"A3","clue":"red_jacket","g":[13.48,53.49],"conf":0.783,"h":20.0,"spot":"S6"},{"type":"state","t":292.96,"state":"RESUME","reason":"back to lane 6"},{"type":"note","t":294.96,"id":"A3","alert":"Possible red jacket located 13 meters east and 53 meters north of search center, 151 meters from trailhead.","check":"Ground team should visually confirm the object is a hooded red jacket."},{"type":"plan","t":296.46,"applied":false,"proposed":["G3","G2","F2","E2","D2","D1"],"reason":"Hikers follow the trail north; G3 is the immediate next trail segment, followed by adjacent sectors near the stream junction."},{"type":"state","t":299.96,"state":"SWEEP","reason":"resumed sector F3 at x=10"},{"type":"plan","t":305.85,"applied":true,"reason":"Hikers follow the trail north; G3 is the immediate next trail segment, followed by adjacent sectors near the stream junction."},{"type":"state","t":354.55,"state":"INVESTIGATE","reason":"S7: maybe blue_backpack at (-25, 33); crop noul 0.17, p(investigate) 0.77"},{"type":"investigate","t":354.55,"spot":{"id":"S7","g":[-25.375786179381418,33.30447602502396],"clue":"blue_backpack","p_inv":0.771,"noul":0.174,"frame":"media/frames/f0067.jpg","crop":"media/crops/f0067_c0.jpg","box":[1062,331,1183,450],"sweep_h":40.0,"t_seen":354.27},"id":"S7","g":[-25.38,33.3],"clue":"blue_backpack","noul":0.174,"p_inv":0.771},{"type":"confirm","t":362.96,"id":"S7","h":20.0,"verdict":"dismiss","clue":"blue_backpack","noul":0.036},{"type":"dismiss","t":362.96,"id":"S7","g":[-25.375786179381418,33.30447602502396],"verdict":"dismiss","h":20.0,"reason":"other; best clue noul 0.04"},{"type":"state","t":362.96,"state":"RESUME","reason":"back to lane 6"},{"type":"state","t":369.46,"state":"SWEEP","reason":"resumed sector F2 at x=-24"},{"type":"state","t":581.79,"state":"INVESTIGATE","reason":"S8: maybe red_jacket at (-68, 34); crop noul 0.21, p(investigate) 0.62"},{"type":"investigate","t":581.79,"spot":{"id":"S8","g":[-67.66846463867213,34.09115010950479],"clue":"red_jacket","p_inv":0.623,"noul":0.211,"frame":"media/frames/f0113.jpg","crop":"media/crops/f0113_c1.jpg","box":[1071,912,1095,939],"sweep_h":40.0,"t_seen":581.13},"id":"S8","g":[-67.67,34.09],"clue":"red_jacket","noul":0.211,"p_inv":0.623},{"type":"confirm","t":589.24,"id":"S8","h":20.0,"verdict":"dismiss","clue":"orange_tent","noul":0.005},{"type":"dismiss","t":589.24,"id":"S8","g":[-67.66846463867213,34.09115010950479],"verdict":"dismiss","h":20.0,"reason":"other; best clue noul 0.01"},{"type":"state","t":589.24,"state":"RESUME","reason":"back to lane 5"},{"type":"state","t":596.24,"state":"SWEEP","reason":"resumed sector E1 at x=-81"},{"type":"state","t":636.11,"state":"RETURN","reason":"area covered"},{"type":"state","t":683.11,"state":"DONE","reason":"home (area covered)"},{"type":"state","t":683.61,"state":"DONE","reason":"waiting for qwen38 notes"}],"summary":{"sim_s":683.6,"wall_s":683.6,"battery_used_pct":56.9,"sweep_h":40.0,"lanes":7,"coverage":1.0,"area_m2_covered":25600,"frames":125,"candidates":375,"clef_sweep":{"n":163,"ok":163,"median_ms":321,"p90_ms":649},"clef_confirm":{"n":8,"ok":8,"median_ms":421,"p90_ms":450},"fallback":0,"investigations":8,"dismissed":5,"mean_investigate_s":8.0,"llm_calls":6,"llm_by_role":{"note":3,"trail":3},"time_to_first_alert":176.23,"return_reason":"area covered"},"score":{"recall":"3/3","found":3,"clues":3,"false_alerts":[],"decoys_investigated":1,"loc_err_m":[0.06,0.24,0.07],"time_to_first_find":176.23}}</script>
+
+<script>
+/* Flight map: drawn from the JSON block above (written by explainer/build.py from a run's mission.jsonl). */
+(() => {
+  const D = JSON.parse(document.getElementById('flight-data').textContent || '{}');
+  const map = document.getElementById('map'), prof = document.getElementById('profile');
+  if (!D.track || !map) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const S = 3, X0 = -100, YTOP = 92;                  /* view: x -100..100 m, y -108..92 m, 3 px per metre */
+  const X = x => (x - X0) * S, Y = y => (YTOP - y) * S;
+  const el = (tag, a, parent, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in a) n.setAttribute(k, a[k]);
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const pts = arr => arr.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ');
+  const nice = s => String(s || '').replace(/_/g, ' ');
+  const pct = p => (p >= 0.995 ? '99%' : p < 0.01 ? (p * 100).toFixed(1) + '%' : Math.round(p * 100) + '%');
+  const TR = D.track;
+  const EV0 = D.events || [], T = Math.max(TR[TR.length - 1][0], ...EV0.map(e => e.t));
+  const EV = D.events || [];
+  const items = Object.fromEntries((D.items || []).map(i => [i.name, i]));
+
+  /* static layers */
+  const gStatic = el('g', {}, map);
+  el('rect', { x: 0, y: 0, width: 600, height: 600, fill: 'var(--paper-2)' }, gStatic);
+  const [ax0, ay0] = D.area[0], [ax1, ay1] = D.area[2];
+  const gGrid = el('g', { stroke: 'var(--grid)', 'stroke-width': 1 }, gStatic);
+  for (let x = ax0; x <= ax1; x += 10) el('line', { x1: X(x), y1: Y(ay0), x2: X(x), y2: Y(ay1) }, gGrid);
+  for (let y = ay0; y <= ay1; y += 10) el('line', { x1: X(ax0), y1: Y(y), x2: X(ax1), y2: Y(y) }, gGrid);
+  const gTrees = el('g', { fill: 'var(--tree)' }, gStatic);
+  (D.trees || []).forEach(([x, y, h]) => el('circle', { cx: X(x), cy: Y(y), r: Math.max(1.8, h * 0.28) * S }, gTrees));
+  el('polyline', { points: pts(D.stream), fill: 'none', stroke: 'var(--water)', 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, gStatic);
+  el('polyline', { points: pts(D.trail), fill: 'none', stroke: 'var(--trail)', 'stroke-width': 1.7, 'stroke-dasharray': '5 3.5', 'stroke-linejoin': 'round' }, gStatic);
+
+  const swath = el('g', { opacity: 0.07 }, map);            /* ground seen by the sweep camera */
+  const gSect = el('g', {}, map);
+  const secRect = {};
+  (D.sectors || []).forEach(s => {
+    const x0 = Math.min(s.x0, s.x1), y0 = s.y - s.h / 2;
+    secRect[s.id] = el('rect', { x: X(x0), y: Y(y0 + s.h), width: 40 * S, height: s.h * S, fill: 'none', stroke: 'var(--rule)', 'stroke-width': 1 }, gSect);
+    el('text', { x: X(x0) + 4, y: Y(y0 + s.h) + 11, 'font-family': 'var(--font-mono)', 'font-size': 9, fill: 'var(--ink-3)' }, gSect, s.id);
+  });
+  el('rect', { x: X(ax0), y: Y(ay1), width: (ax1 - ax0) * S, height: (ay1 - ay0) * S, fill: 'none', stroke: 'var(--ink-3)', 'stroke-width': 1.3 }, map);
+  const gPlan = el('g', { fill: 'var(--qwen)', 'fill-opacity': 0.06, stroke: 'var(--qwen)', 'stroke-width': 1.8, 'stroke-dasharray': '6 4' }, map);
+
+  /* trailhead (last known point) and home */
+  const [lx, ly] = D.lkp, [hx, hy] = D.home;
+  const gHome = el('g', {}, map);
+  el('path', { d: `M${X(lx)} ${Y(ly)} v-16 l11 4 -11 4`, fill: 'var(--blaze)', stroke: 'var(--ink)', 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, gHome);
+  el('rect', { x: X(hx) - 5, y: Y(hy) - 5, width: 10, height: 10, fill: 'var(--paper-2)', stroke: 'var(--ink)', 'stroke-width': 1.5 }, gHome);
+  const lab = (x, y, t, a = {}, parent = map) => el('text', Object.assign({ x, y, 'font-family': 'var(--font-display)', 'font-size': 11, fill: 'var(--ink-2)', stroke: 'var(--paper-2)', 'stroke-width': 3, 'paint-order': 'stroke', 'stroke-linejoin': 'round' }, a), parent, t);
+  lab(X(lx) + 14, Y(ly) - 6, 'Trailhead · last known point');
+  lab(X(hx) - 9, Y(hy) + 4, 'Launch', { 'text-anchor': 'end' });
+  lab(X(-60), Y(-80) + 14, 'search area boundary', { 'font-size': 9.5, fill: 'var(--ink-3)' });
+
+  /* dynamic layers */
+  const gTrack = el('g', { fill: 'none', 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, map);
+  const gEv = el('g', {}, map);
+  const drone = el('g', {}, map);
+  el('circle', { r: 9, fill: 'var(--blaze)', 'fill-opacity': 0.18 }, drone);
+  el('circle', { r: 4.6, fill: 'var(--blaze)', stroke: 'var(--paper-2)', 'stroke-width': 2 }, drone);
+
+  const cls = st => (st === 'SWEEP' ? 'sweep' : st === 'INVESTIGATE' || st === 'CONFIRM' ? 'inv' : st === 'RESUME' ? 'res' : 'transit');
+  const style = {
+    sweep: { stroke: 'var(--ink)', 'stroke-width': 1.7 },
+    inv: { stroke: 'var(--blaze)', 'stroke-width': 2.6 },
+    res: { stroke: 'var(--blaze)', 'stroke-width': 1.6, 'stroke-dasharray': '3 3', 'stroke-opacity': 0.8 },
+    transit: { stroke: 'var(--ink-3)', 'stroke-width': 1.4, 'stroke-dasharray': '4 4' },
+  };
+  const at = t => {                                       /* interpolated position at time t */
+    let i = TR.findIndex(p => p[0] > t);
+    if (i <= 0) i = i === 0 ? 1 : TR.length - 1;
+    const a = TR[i - 1], b = TR[i], f = b[0] > a[0] ? Math.min(1, Math.max(0, (t - a[0]) / (b[0] - a[0]))) : 0;
+    return { x: a[1] + (b[1] - a[1]) * f, y: a[2] + (b[2] - a[2]) * f, z: a[3] + (b[3] - a[3]) * f, st: a[4], bat: a[5], cov: a[6] };
+  };
+
+  /* profile: height over time */
+  const PX = t => 34 + (t / T) * 556, PZ = z => 96 - (z / 45) * 82;
+  const pStatic = el('g', {}, prof);
+  el('rect', { x: 0, y: 0, width: 600, height: 112, fill: 'var(--paper-2)' }, pStatic);
+  [0, 20, 40].forEach(z => {
+    el('line', { x1: 34, x2: 590, y1: PZ(z), y2: PZ(z), stroke: z ? 'var(--grid)' : 'var(--rule)', 'stroke-width': 1 }, pStatic);
+    el('text', { x: 28, y: PZ(z) + 3.5, 'text-anchor': 'end', 'font-family': 'var(--font-mono)', 'font-size': 9, fill: 'var(--ink-3)' }, pStatic, z + ' m');
+  });
+  [0, 120, 240, 360, 480, 600].filter(t => t <= T).forEach(t =>
+    el('text', { x: PX(t), y: 109, 'text-anchor': 'middle', 'font-family': 'var(--font-mono)', 'font-size': 8.5, fill: 'var(--ink-3)' }, pStatic, t + ' s'));
+  el('text', { x: 590, y: 12, 'text-anchor': 'end', 'font-family': 'var(--font-display)', 'font-size': 10, fill: 'var(--ink-3)' }, pStatic, 'height above ground');
+  const pLine = el('polyline', { fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.6, 'stroke-linejoin': 'round' }, prof);
+  const pEv = el('g', {}, prof);
+  const pCur = el('line', { y1: 16, y2: 98, stroke: 'var(--blaze)', 'stroke-width': 1.2 }, prof);
+
+  const latest = (t, types) => { let e = null; for (const x of EV) { if (x.t > t) break; if (types.includes(x.type)) e = x; } return e; };
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+  function describe(e) {
+    if (!e) return '';
+    switch (e.type) {
+      case 'investigate': return `Closer look at ${e.id}. From ${D.sweep_h} m, Clef-Flash gave this spot ${pct(e.noul)} for “${nice(e.clue)}”, enough to leave the lane and drop to 20 m.`;
+      case 'confirm': return e.verdict === 'confirm'
+        ? `${e.id} at ${e.h} m: Clef-Flash confirms a ${nice(e.clue)} (${pct(e.noul)}) on the zoom close-up.`
+        : `${e.id} at ${e.h} m: dismissed. On the close-up, no clue scored above ${pct(e.noul)}. Back to the lane.`;
+      case 'dismiss': return `${e.id} dismissed. Back to the lane.`;
+      case 'alert': {
+        const it = items[e.clue], err = it ? dist(e.g, it.xy) : null;
+        return `ALERT ${e.id}: ${nice(e.clue)} at (${e.g[0].toFixed(1)}, ${e.g[1].toFixed(1)}) m${err != null ? `, ${err.toFixed(2)} m from where it was planted` : ''}. Position and photo go to the radio and the console.`;
+      }
+      case 'note': return `qwen38's radio note, read aloud: “${e.alert}”`;
+      case 'plan': return e.applied
+        ? 'Code checks the plan (known sectors, not yet searched) and moves them up the queue.'
+        : `qwen38's trail plan: search ${(e.proposed || []).slice(0, 4).join(', ')} next. “${e.reason}”`;
+      case 'state': return e.state === 'RETURN' ? 'Area covered. Flying home.' : e.state === 'DONE'
+        ? `Home. ${D.score.found} of ${D.score.clues} found, ${D.score.false_alerts.length} false alerts.` : `${nice(e.state)}: ${e.reason}`;
+    }
+    return '';
+  }
+
+  const ro1 = document.getElementById('ro-state'), ro2 = document.getElementById('ro-event');
+  const clock = document.getElementById('clock'), scrub = document.getElementById('scrub'), play = document.getElementById('play');
+  scrub.max = Math.ceil(T);
+
+  function draw(t) {
+    /* track segments up to t */
+    gTrack.textContent = ''; swath.textContent = '';
+    let seg = [], c = null;
+    const flush = () => { if (seg.length > 1) { el('polyline', Object.assign({ points: pts(seg) }, style[c]), gTrack); if (c === 'sweep') el('polyline', { points: pts(seg), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 32.6 * S, 'stroke-linecap': 'butt', 'stroke-linejoin': 'round' }, swath); } };
+    for (const p of TR) {
+      if (p[0] > t) break;
+      const k = cls(p[4]);
+      if (k !== c) { if (seg.length) { const last = seg[seg.length - 1]; flush(); seg = [last]; } else seg = []; c = k; }
+      seg.push([p[1], p[2]]);
+    }
+    const now = at(t); seg.push([now.x, now.y]); flush();
+    drone.setAttribute('transform', `translate(${X(now.x).toFixed(1)},${Y(now.y).toFixed(1)})`);
+
+    /* spots and alerts */
+    gEv.textContent = '';
+    const spots = {};
+    for (const e of EV) {
+      if (e.t > t) break;
+      if (e.type === 'investigate') spots[e.id] = { g: e.g, v: 'open' };
+      if (e.type === 'confirm' && spots[e.id]) spots[e.id].v = e.verdict === 'confirm' ? 'alert' : 'dismissed';
+      if (e.type === 'alert' && spots[e.spot]) spots[e.spot].label = `${e.id} ${nice(e.clue)}`;
+    }
+    const tarp = Object.values(items).find(i => i.role === 'decoy');
+    for (const [id, s] of Object.entries(spots)) {
+      const cx = X(s.g[0]), cy = Y(s.g[1]);
+      if (s.v === 'alert') {
+        el('circle', { cx, cy, r: 6.5, fill: 'var(--blaze)', stroke: 'var(--paper-2)', 'stroke-width': 2 }, gEv);
+        lab(cx + 10, cy + 4, s.label || id, { 'font-weight': 700, fill: 'var(--ink)', 'font-size': 11.5 }, gEv);
+      } else {
+        el('circle', { cx, cy, r: 5.2, fill: 'var(--paper-2)', stroke: s.v === 'open' ? 'var(--blaze)' : 'var(--ink-3)', 'stroke-width': 1.7 }, gEv);
+        if (tarp && s.v === 'dismissed' && dist(s.g, tarp.xy) < 4) lab(cx + 9, cy + 4, `${nice(tarp.name)} (decoy): dismissed`, { 'font-size': 10.5 }, gEv);
+      }
+    }
+    /* sectors from the latest trail plan */
+    gPlan.textContent = '';
+    const plan = latest(t, ['plan']);
+    const prop = plan && (plan.proposed || (EV.filter(e => e.type === 'plan' && !e.applied && e.t <= plan.t).pop() || {}).proposed);
+    (prop || []).forEach(id => { const r = secRect[id]; if (r) el('rect', { x: r.getAttribute('x'), y: r.getAttribute('y'), width: r.getAttribute('width'), height: r.getAttribute('height') }, gPlan); });
+
+    /* profile */
+    pLine.setAttribute('points', TR.filter(p => p[0] <= t).map(p => PX(p[0]).toFixed(1) + ',' + PZ(p[3]).toFixed(1)).concat([PX(t).toFixed(1) + ',' + PZ(now.z).toFixed(1)]).join(' '));
+    pEv.textContent = '';
+    for (const e of EV) {
+      if (e.t > t) break;
+      if (e.type === 'confirm') el('circle', { cx: PX(e.t), cy: PZ(e.h), r: e.verdict === 'confirm' ? 4.2 : 3.2, fill: e.verdict === 'confirm' ? 'var(--blaze)' : 'var(--paper-2)', stroke: e.verdict === 'confirm' ? 'var(--paper-2)' : 'var(--ink-3)', 'stroke-width': 1.5 }, pEv);
+    }
+    pCur.setAttribute('x1', PX(t)); pCur.setAttribute('x2', PX(t));
+
+    /* readout */
+    const st = latest(t, ['state']);
+    ro1.innerHTML = `<b>${st ? st.state : 'TAKEOFF'}</b> · ${Math.round(now.z)} m up · battery ${Math.round(now.bat)}% · area seen ${Math.round(now.cov * 100)}%`;
+    const ev = latest(t, ['investigate', 'confirm', 'alert', 'note', 'plan', 'state']);
+    ro2.textContent = ev && (t - ev.t < 30 || ev.type === 'state') ? describe(ev) : (st ? describe(st) : 'Taking off from the trailhead.');
+    clock.textContent = `${Math.round(t)} s`;
+    scrub.value = t;
+  }
+
+  let raf = 0, t0 = 0, tStart = 0;
+  const SPEED = 20;
+  function tick(ts) {
+    const t = Math.min(T, tStart + ((ts - t0) / 1000) * SPEED);
+    draw(t);
+    if (t < T) raf = requestAnimationFrame(tick); else stop();
+  }
+  function stop() { cancelAnimationFrame(raf); raf = 0; play.textContent = '▶ Replay'; }
+  play.addEventListener('click', () => {
+    if (raf) return stop();
+    tStart = +scrub.value >= T - 1 ? 0 : +scrub.value; t0 = performance.now();
+    play.textContent = '❚❚ Pause'; raf = requestAnimationFrame(tick);
+  });
+  scrub.addEventListener('input', () => { if (raf) stop(); draw(+scrub.value); });
+  draw(T);
+})();
+
+/* contents: mirror the rail into the phone menu, and mark the section in view */
+(() => {
+  const rail = document.getElementById('toc'), m = document.getElementById('toc-m');
+  if (rail && m) m.innerHTML = rail.innerHTML;
+  const links = [...document.querySelectorAll('#toc a')];
+  const byId = Object.fromEntries(links.map(a => [a.getAttribute('href').slice(1), a]));
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { links.forEach(a => a.classList.remove('on')); const a = byId[e.target.id]; if (a) a.classList.add('on'); }
+  }), { rootMargin: '-35% 0px -60% 0px' });
+  Object.keys(byId).forEach(id => { const s = document.getElementById(id); if (s) io.observe(s); });
+})();
+</script>
