@@ -1,0 +1,10 @@
+{
+ "items": [],
+ "recall": "0/0",
+ "found": 0,
+ "clues": 0,
+ "false_alerts": [],
+ "decoys_investigated": 0,
+ "loc_err_m": [],
+ "time_to_first_find": null
+}
