@@ -325,6 +325,7 @@ td code { font-size: 0.8em; }
 .vid video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
 .bigplay { position: absolute; inset: 0; width: 100%; border: 0; padding: 0; cursor: pointer; display: grid; place-content: center; justify-items: center; gap: 14px; background: rgba(8, 12, 16, 0.38); color: #fff; font-family: var(--font-display); transition: background .2s; }
 .bigplay:hover { background: rgba(8, 12, 16, 0.22); }
+.bigplay[hidden] { display: none; }
 .bigplay .tri { width: clamp(84px, 14vw, 132px); height: clamp(84px, 14vw, 132px); border-radius: 50%; background: var(--blaze); box-shadow: 0 0 0 6px rgba(255,255,255,.9), 0 10px 30px rgba(0,0,0,.45); display: grid; place-items: center; transition: transform .2s; }
 .bigplay .tri::after { content: ""; margin-left: 9%; border-style: solid; border-width: clamp(18px, 3vw, 28px) 0 clamp(18px, 3vw, 28px) clamp(30px, 5vw, 46px); border-color: transparent transparent transparent #fff; }
 .bigplay:hover .tri { transform: scale(1.06); }
@@ -1077,6 +1078,7 @@ footer.end { padding-block: 40px 64px; border-top: 1px solid var(--rule); font-f
   const v = document.getElementById('demo-video'), b = document.getElementById('bigplay');
   if (!v || !b) return;
   b.addEventListener('click', () => { b.hidden = true; v.controls = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+  v.addEventListener('play', () => { b.hidden = true; v.controls = true; });
   v.addEventListener('ended', () => { v.controls = false; b.hidden = false; });
 })();
 </script>
