@@ -20,7 +20,9 @@ CONFIRM_WEIGHTS = {"continue": 1.0, "flag_damage": 3.0}       # flag when p(flag
 # Confirm-photo component questions that also justify a flag (Clef's own nouls, thresholded by code). Measured on
 # runs/m2-probe (seed 0, 24-degree zoom): clean photos reach vegetation 0.58 (perspective: a background tree looks
 # close to a wire) and at most 0.06 on the others; defects aimed within 2 m reach 0.43-0.84 on their own noul.
-NOUL_FLAG = {"insulator_damaged": 0.35, "conductor_frayed": 0.35, "foreign_object": 0.35, "vegetation_close": 0.65}
+NOUL_FLAG = {"insulator_damaged": 0.25, "conductor_frayed": 0.25, "foreign_object": 0.25, "vegetation_close": 0.65}
+# 0.35 -> 0.25 after runs/m2-seed0-c: debris photo read foreign_object 0.27, while no clean photo in seeds 0-1 exceeded
+# 0.065 on these three. Tuned on seed 0; on held-out seed 1 it changes nothing (no clean photo crosses it).
 
 GATE = {
     "deadline_ms": 2500.0,    # a cruise answer later than this is dropped (the drone has moved on)

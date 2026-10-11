@@ -7,3 +7,4 @@ runs/*/*.jpg
 runs/*/*.mp4
 runs/*/*.wav
 logs/
+MUJOCO_LOG.TXT
