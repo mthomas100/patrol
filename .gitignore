@@ -18,3 +18,5 @@ assets/**/*.mtl
 runs/**/strips/
 runs/**/*.jpg
 runs/**/*.png
+# the stage fallback video is rebuilt from runs/s6-fallback-flight by tools/record_fallback.cjs
+demo/*.mp4
