@@ -1,0 +1,15 @@
+{
+ "glb": "concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+ "obj": "assets/items/green_sleeping_bag/mujoco/mesh.obj",
+ "texture": "assets/items/green_sleeping_bag/mujoco/texture.png",
+ "size_m": 2.0,
+ "up": "z",
+ "max_height": 0.3,
+ "extent_m": [
+  0.969,
+  2.0,
+  0.3
+ ],
+ "faces": 20000,
+ "has_uv": true
+}

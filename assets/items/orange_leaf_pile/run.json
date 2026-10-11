@@ -1,0 +1,70 @@
+{
+  "input": "a small low pile of orange autumn leaves",
+  "status": "SUCCEEDED",
+  "plan": [
+    "text\u2192image (zimage-turbo\u00d71)",
+    "cutout",
+    "image\u2192mesh (hy3d, full)",
+    "post (game)"
+  ],
+  "dir": "assets/items/orange_leaf_pile",
+  "raw_glb": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full.glb",
+  "glb": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+  "usdz": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+  "all_usdz": [
+    "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+    "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+    "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz"
+  ],
+  "wall_seconds": 322.4,
+  "hold": {
+    "id": "h283629",
+    "nested": false
+  },
+  "steps": [
+    {
+      "stage": "concept",
+      "model": "zimage-turbo",
+      "seconds": 20.0,
+      "peak_gb": 22.0,
+      "output": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7.png"
+    },
+    {
+      "stage": "cutout",
+      "method": "vision",
+      "png_path": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-rgba.png",
+      "opaque_pct": 10.4,
+      "partial_pct": 2.16,
+      "output": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-rgba.png"
+    },
+    {
+      "stage": "mesh-full",
+      "model": "hy3d",
+      "seconds": 290.3,
+      "peak_gb": 32.2,
+      "output": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full.glb",
+      "normals": true
+    },
+    {
+      "stage": "post-game",
+      "model": "blender-cpu",
+      "seconds": 10.0,
+      "peak_gb": 1.7,
+      "output": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+      "usdz": [
+        {
+          "usdz": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD0.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD1.usdz",
+          "usdchecker": true
+        },
+        {
+          "usdz": "assets/items/orange_leaf_pile/concept-zimage-turbo-s7-hy3d-full-game/concept-zimage-turbo-s7-hy3d-full_LOD2.usdz",
+          "usdchecker": true
+        }
+      ]
+    }
+  ]
+}

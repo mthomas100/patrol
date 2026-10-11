@@ -1,0 +1,13 @@
+{
+ "glb": "concept-zimage-turbo-s7-hy3d-full_LOD0.glb",
+ "obj": "assets/items/orange_leaf_pile/mujoco/mesh.obj",
+ "texture": "assets/items/orange_leaf_pile/mujoco/texture.png",
+ "size_m": 1.4,
+ "extent_m": [
+  1.4,
+  1.386,
+  0.417
+ ],
+ "faces": 19998,
+ "has_uv": true
+}

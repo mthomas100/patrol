@@ -18,6 +18,8 @@ ITEMS=(
   "green_sleeping_bag|2.0|a green mummy sleeping bag unrolled and lying flat"
   "orange_leaf_pile|1.4|a small low pile of orange autumn leaves"
 )
+# converter flags per item: hy3d stood the top-down sleeping bag up 2 m tall (DECISIONS 2026-10-11 13:05)
+typeset -A CONVERT=(green_sleeping_bag "--up z --max-height 0.3")
 want=("$@")
 for row in $ITEMS; do
   name=${row%%|*}; rest=${row#*|}; size=${rest%%|*}; prompt=${rest#*|}
@@ -30,7 +32,7 @@ for row in $ITEMS; do
   rc=$?
   echo "$(date +%T) $name: m3d exit $rc after $(( SECONDS - t0 )) s"
   (( rc == 0 )) || continue
-  $PY -m patrol.items convert $dir --size $size > $ROOT/logs/convert-$name.json 2>&1 \
+  $PY -m patrol.items convert $dir --size $size ${=CONVERT[$name]:-} > $ROOT/logs/convert-$name.json 2>&1 \
     && echo "$(date +%T) $name: converted $(cat $ROOT/logs/convert-$name.json | tail -c 200)" \
     || echo "$(date +%T) $name: convert FAILED (logs/convert-$name.json)"
 done
