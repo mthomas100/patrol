@@ -1,0 +1,115 @@
+{
+ "llm_calls": 0,
+ "llm_by_role": {},
+ "clef_qwen_idle": {
+  "n": 455,
+  "ok": 455,
+  "median_ms": 342,
+  "p90_ms": 358
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 48,
+ "sectors_done": 48,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 723.0,
+ "wall_s": 174.6,
+ "flight_s": 722.5,
+ "battery_used_pct": 60.2,
+ "state_s": {
+  "TAKEOFF": 5.5,
+  "SWEEP": 579.0,
+  "INVESTIGATE": 66.5,
+  "CONFIRM": 4.5,
+  "RESUME": 23.5,
+  "RETURN": 43.5
+ },
+ "sweep_h": 21.82,
+ "lanes": 12,
+ "lane_spacing_m": 14.23,
+ "frame_every_m": 6.54,
+ "coverage": 0.9836,
+ "area_m2_covered": 25180,
+ "frames": 275,
+ "candidates": 825,
+ "clef_sweep": {
+  "n": 445,
+  "ok": 445,
+  "median_ms": 342,
+  "p90_ms": 356
+ },
+ "clef_confirm": {
+  "n": 10,
+  "ok": 10,
+  "median_ms": 447,
+  "p90_ms": 460
+ },
+ "fallback": 0,
+ "investigations": 10,
+ "dismissed": 7,
+ "mean_investigate_s": 7.1,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    40.79,
+    -54.5
+   ],
+   "conf": 0.89,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0027_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S1",
+   "t": 76.44,
+   "seen": 1,
+   "by": "Clef"
+  },
+  {
+   "id": "A2",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    -3.93,
+    -11.12
+   ],
+   "conf": 0.851,
+   "h": 20.0,
+   "photo": "media/photos/S3_20m.jpg",
+   "sweep_crop": "media/crops/f0100_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S3",
+   "t": 245.94,
+   "seen": 1,
+   "by": "Clef"
+  },
+  {
+   "id": "A3",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    67.83,
+    44.71
+   ],
+   "conf": 0.815,
+   "h": 20.0,
+   "photo": "media/photos/S10_20m.jpg",
+   "sweep_crop": "media/crops/f0212_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S10",
+   "t": 566.61,
+   "seen": 1,
+   "by": "Clef"
+  }
+ ],
+ "time_to_first_alert": 76.44
+}

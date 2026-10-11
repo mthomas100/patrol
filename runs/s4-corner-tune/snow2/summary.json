@@ -1,0 +1,97 @@
+{
+ "llm_calls": 0,
+ "llm_by_role": {},
+ "clef_qwen_idle": {
+  "n": 422,
+  "ok": 422,
+  "median_ms": 344,
+  "p90_ms": 360
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 48,
+ "sectors_done": 48,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 625.5,
+ "wall_s": 164.1,
+ "flight_s": 625.0,
+ "battery_used_pct": 52.1,
+ "state_s": {
+  "TAKEOFF": 5.5,
+  "SWEEP": 524.8,
+  "INVESTIGATE": 32.5,
+  "CONFIRM": 3.8,
+  "RESUME": 14.5,
+  "RETURN": 44.0
+ },
+ "sweep_h": 21.82,
+ "lanes": 12,
+ "lane_spacing_m": 14.23,
+ "frame_every_m": 6.54,
+ "coverage": 0.9902,
+ "area_m2_covered": 25348,
+ "frames": 269,
+ "candidates": 807,
+ "clef_sweep": {
+  "n": 417,
+  "ok": 417,
+  "median_ms": 344,
+  "p90_ms": 359
+ },
+ "clef_confirm": {
+  "n": 5,
+  "ok": 5,
+  "median_ms": 453,
+  "p90_ms": 453
+ },
+ "fallback": 0,
+ "investigations": 5,
+ "dismissed": 3,
+ "mean_investigate_s": 7.3,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    10.37,
+    -66.18
+   ],
+   "conf": 0.959,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0012_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S1",
+   "t": 54.4,
+   "seen": 1,
+   "by": "Clef"
+  },
+  {
+   "id": "A2",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    -35.36,
+    60.14
+   ],
+   "conf": 0.813,
+   "h": 20.0,
+   "photo": "media/photos/S4_20m.jpg",
+   "sweep_crop": "media/crops/f0228_c0.jpg",
+   "sweep_h": 21.8,
+   "spot": "S4",
+   "t": 484.26,
+   "seen": 1,
+   "by": "Clef"
+  }
+ ],
+ "time_to_first_alert": 54.4
+}
