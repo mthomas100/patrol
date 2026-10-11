@@ -1,0 +1,26 @@
+{
+ "items": [
+  {
+   "name": "blue_backpack",
+   "role": "clue",
+   "xy": [
+    31.64,
+    -6.55
+   ],
+   "frames_in_view": 2,
+   "noticed": 2,
+   "investigated": 0,
+   "alerts": [],
+   "right_clue": false,
+   "loc_err_m": null,
+   "t_alert": null
+  }
+ ],
+ "recall": "0/1",
+ "found": 0,
+ "clues": 1,
+ "false_alerts": [],
+ "decoys_investigated": 0,
+ "loc_err_m": [],
+ "time_to_first_find": null
+}

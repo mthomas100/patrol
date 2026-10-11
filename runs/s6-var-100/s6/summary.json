@@ -1,0 +1,126 @@
+{
+ "llm_calls": 5,
+ "llm_by_role": {
+  "second_opinion": 2,
+  "note": 2,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 171,
+  "ok": 171,
+  "median_ms": 357,
+  "p90_ms": 367
+ },
+ "clef_qwen_active": {
+  "n": 8,
+  "ok": 8,
+  "median_ms": 646,
+  "p90_ms": 919
+ },
+ "sectors": 28,
+ "sectors_done": 27,
+ "plans": [
+  {
+   "first": [
+    "G1",
+    "G2"
+   ],
+   "reason": "Backpack at (-58, 46) suggests hikers continued north along the trail into G1 and G2.",
+   "raw_ok": true,
+   "wall_s": 3.3,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 514.1,
+ "wall_s": 87.3,
+ "flight_s": 513.6,
+ "battery_used_pct": 42.8,
+ "state_s": {
+  "TAKEOFF": 9.0,
+  "SWEEP": 339.9,
+  "INVESTIGATE": 66.8,
+  "CONFIRM": 6.4,
+  "RESUME": 45.0,
+  "RETURN": 46.5
+ },
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "lane_spacing_m": 23.72,
+ "frame_every_m": 10.9,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 109,
+ "candidates": 327,
+ "clef_sweep": {
+  "n": 170,
+  "ok": 170,
+  "median_ms": 357,
+  "p90_ms": 367
+ },
+ "clef_confirm": {
+  "n": 9,
+  "ok": 9,
+  "median_ms": 466,
+  "p90_ms": 726
+ },
+ "fallback": 0,
+ "investigations": 7,
+ "dismissed": 4,
+ "mean_investigate_s": 10.5,
+ "mean_decision_h": 17.7,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    -58.14,
+    46.36
+   ],
+   "conf": 0.932,
+   "h": 20.0,
+   "photo": "media/photos/S5_20m.jpg",
+   "sweep_crop": "media/crops/f0091_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S5",
+   "t": 381.06,
+   "seen": 2,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a blue backpack 58 meters west and 46 meters north of the search center.",
+    "check": "Ground team should visually confirm the object and check for other hiker belongings.",
+    "agree": true,
+    "wall_s": 2.5,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    63.87,
+    62.54
+   ],
+   "conf": 0.894,
+   "h": 20.0,
+   "photo": "media/photos/S7_20m.jpg",
+   "sweep_crop": "media/crops/f0107_c0.jpg",
+   "sweep_h": 36.4,
+   "spot": "S7",
+   "t": 455.59,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a possible orange tent 64 meters east and 63 meters north of the search center.",
+    "check": "Ground team should visually confirm the object and inspect the immediate area for the hiker.",
+    "agree": true,
+    "wall_s": 2.9,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 381.06
+}
