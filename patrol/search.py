@@ -355,7 +355,7 @@ class SearchMission:
                 row["rejudge"] = {"was": near["verdict"], "area_was": near["area"]}
                 near = None               # a much better view of a spot judged from a poor one: ask again
             # A box cut by the frame edge is judged now, not left for a neighbouring frame: on 20 tuning flights 558 of
-            # 960 deferred edge boxes were never judged from any frame (DECISIONS 13:50). A later, much larger view of
+            # 960 deferred edge boxes were never judged from any frame (DECISIONS 13:29). A later, much larger view of
             # the same spot is asked again (rejudge_gain), so a cut first view does not hide the whole object.
             if min(c["x0"], c["y0"], cfg.W - c["x1"], cfg.H - c["y1"]) <= cfg.edge_px:
                 row["edge"] = True

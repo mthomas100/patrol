@@ -33,7 +33,7 @@ SCENARIOS = {   # held out: grey_dog, green_sleeping_bag, yellow_helmet, sos_roc
     3: {"name": "empty", "terrain": "grass", "seed": 23, "items": "", "clues": "blue_backpack,orange_tent,grey_dog"},
     4: {"name": "Clef off", "terrain": "snow", "seed": 24, "items": "blue_backpack", "clues": "blue_backpack",
         "extra": ["--clef-url", DEAD, "--half", "50"]},
-    5: {"name": "several", "terrain": "snow", "seed": 35,      # seed 25 was diagnosed after s4-e2e-1 (DECISIONS 13:50)
+    5: {"name": "several", "terrain": "snow", "seed": 35,      # seed 25 was diagnosed after s4-e2e-1 (DECISIONS 13:29)
         "items": "grey_dog,green_sleeping_bag,yellow_helmet,sos_rocks,grey_boulder,orange_leaf_pile",
         "clues": "grey_dog,green_sleeping_bag,yellow_helmet,sos_rocks"},
     6: {"name": "voice", "terrain": "grass", "seed": 26, "items": "blue_backpack,orange_tent,grey_dog,blue_tarp",
