@@ -1,0 +1,165 @@
+{
+ "kind": "corridor",
+ "seed": 2,
+ "length": 300.0,
+ "spacing": 50.0,
+ "pylons": [
+  {
+   "i": 0,
+   "x": 0.0
+  },
+  {
+   "i": 1,
+   "x": 50.0
+  },
+  {
+   "i": 2,
+   "x": 100.0
+  },
+  {
+   "i": 3,
+   "x": 150.0
+  },
+  {
+   "i": 4,
+   "x": 200.0
+  },
+  {
+   "i": 5,
+   "x": 250.0
+  },
+  {
+   "i": 6,
+   "x": 300.0
+  }
+ ],
+ "defects": [
+  {
+   "type": "vegetation",
+   "at": 0,
+   "phase": "near",
+   "frac": 0.637,
+   "id": "D1",
+   "x": 31.84,
+   "y": -4.5,
+   "z": 10.72,
+   "description": "tree crown grown up into or within a metre of a conductor"
+  },
+  {
+   "type": "broken_insulator",
+   "at": 2,
+   "phase": "near",
+   "id": "D2",
+   "x": 100.0,
+   "y": -4.5,
+   "z": 13.1,
+   "description": "insulator string with missing and cracked discs (sheds), one disc hanging askew"
+  },
+  {
+   "type": "frayed_conductor",
+   "at": 2,
+   "phase": "near",
+   "frac": 0.634,
+   "id": "D3",
+   "x": 131.72,
+   "y": -4.5,
+   "z": 10.72,
+   "description": "conductor with broken strands splayed out from the line"
+  },
+  {
+   "type": "foreign_object",
+   "at": 4,
+   "where": "arm",
+   "phase": "near",
+   "id": "D4",
+   "x": 200.0,
+   "y": -4.5,
+   "z": 14.4,
+   "description": "bird nest or debris lodged on a crossarm or tangled on a conductor"
+  },
+  {
+   "type": "foreign_object",
+   "at": 4,
+   "where": "span",
+   "phase": "near",
+   "frac": 0.367,
+   "id": "D5",
+   "x": 218.35,
+   "y": -4.5,
+   "z": 10.71,
+   "description": "bird nest or debris lodged on a crossarm or tangled on a conductor"
+  },
+  {
+   "type": "broken_insulator",
+   "at": 5,
+   "phase": "near",
+   "id": "D6",
+   "x": 250.0,
+   "y": -4.5,
+   "z": 13.1,
+   "description": "insulator string with missing and cracked discs (sheds), one disc hanging askew"
+  }
+ ],
+ "trees": [
+  {
+   "x": 8.39,
+   "y": -19.62,
+   "h": 7.68
+  },
+  {
+   "x": 17.33,
+   "y": -18.46,
+   "h": 7.32
+  },
+  {
+   "x": 61.34,
+   "y": 18.75,
+   "h": 8.21
+  },
+  {
+   "x": 89.41,
+   "y": 17.9,
+   "h": 6.78
+  },
+  {
+   "x": 115.73,
+   "y": -20.84,
+   "h": 6.46
+  },
+  {
+   "x": 142.27,
+   "y": 16.81,
+   "h": 8.54
+  },
+  {
+   "x": 161.58,
+   "y": -15.13,
+   "h": 5.1
+  },
+  {
+   "x": 168.01,
+   "y": -17.59,
+   "h": 6.44
+  },
+  {
+   "x": 225.55,
+   "y": -21.96,
+   "h": 6.78
+  },
+  {
+   "x": 221.59,
+   "y": 20.11,
+   "h": 6.42
+  },
+  {
+   "x": 294.24,
+   "y": 14.45,
+   "h": 8.02
+  },
+  {
+   "x": 283.61,
+   "y": 18.89,
+   "h": 6.0
+  }
+ ]
+}

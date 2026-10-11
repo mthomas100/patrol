@@ -1,0 +1,8 @@
+{
+ "clef_ok": true,
+ "clef_wait_s": 0.0,
+ "hold_status": "open: model calls pass; qwen38 (ready) loaded",
+ "memory_free": "System-wide memory free percentage: 25%",
+ "qwen38": "ok: OK",
+ "qwen38_s": 0.3
+}

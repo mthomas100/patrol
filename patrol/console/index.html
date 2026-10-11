@@ -16,10 +16,10 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
 button,select{font:inherit;color:inherit}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-#app{display:grid;grid-template-rows:auto minmax(0,1fr) minmax(0,.46fr) minmax(0,.5fr);height:100vh;gap:.5rem;padding:.5rem}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr) minmax(0,.55fr) minmax(0,.47fr);height:100vh;gap:.5rem;padding:.5rem}
 
 /* header */
-header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1px solid var(--line);border-radius:.5rem;padding:.45rem .8rem;flex-wrap:wrap}
+header{display:flex;align-items:center;gap:.8rem;background:var(--panel);border:1px solid var(--line);border-radius:.5rem;padding:.45rem .8rem;flex-wrap:wrap}
 .title{font-weight:800;letter-spacing:.28em;font-size:1.35rem}
 .title small{font-weight:500;letter-spacing:.05em;color:var(--dim);font-size:.75rem;margin-left:.6rem}
 .badge{padding:.2rem .7rem;border-radius:.3rem;font-weight:700;letter-spacing:.08em;font-size:.95rem;background:#27313e;color:#cfd8e3}
@@ -45,8 +45,15 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
 .conn{font-size:.7rem;padding:.15rem .5rem;border-radius:1rem;border:1px solid var(--line);color:var(--dim)}
 .conn.live{color:#8df0c4;border-color:#1c7a57}
 .conn.bad{color:#ff9f9f;border-color:#8a2a35}
-#vstatus{font-size:.8rem;color:var(--dim);max-width:22rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vstatus{font-size:.75rem;color:var(--operator);max-width:16rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+@media (max-width:1700px){
+  header{gap:.5rem;padding:.4rem .6rem}
+  .btn{padding:.35rem .55rem}
+  .seg button{padding:.35rem .5rem}.seg label{padding:0 .35rem}
+  .stat{min-width:0}
+  .title{letter-spacing:.2em}
+}
 /* panels */
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:.5rem;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
 .panel>h2{margin:0;padding:.3rem .7rem;font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.8rem;flex:0 0 auto}
@@ -74,9 +81,9 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
 .corner.bl{left:.4rem;bottom:.4rem;border-right:0;border-top:0}.corner.br{right:.4rem;bottom:.4rem;border-left:0;border-top:0}
 
 /* decision */
-#dec{padding:.5rem .8rem;display:flex;flex-direction:column;gap:.35rem;min-height:0;flex:1}
-.bar{display:grid;grid-template-columns:8.5rem 1fr 3.4rem;gap:.5rem;align-items:center;font-size:.95rem}
-.bar .lab{color:#b6c2d0;display:flex;align-items:center;gap:.3rem}
+#dec{padding:.4rem .8rem;display:flex;flex-direction:column;gap:.3rem;min-height:0;flex:1;overflow:hidden}
+.bar{display:grid;grid-template-columns:11rem 1fr 3.2rem;gap:.5rem;align-items:center;font-size:.95rem}
+.bar .lab{white-space:nowrap;color:#b6c2d0;display:flex;align-items:center;gap:.3rem}
 .bar .trk{height:1.15rem;background:#18202b;border-radius:.25rem;position:relative;overflow:hidden}
 .bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:.25rem;transition:width .12s}
 .bar .pct{text-align:right;font-variant-numeric:tabular-nums;color:#d9e2ec}
@@ -86,8 +93,8 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
 .bar:not(.chosen) .lab::before{content:"";width:.6rem}
 #decmeta{display:flex;gap:1rem;flex-wrap:wrap;font-size:.85rem;color:var(--dim)}
 #decmeta b{color:var(--text);font-weight:600}
-#decnote{font-size:.8rem;color:var(--fallback);min-height:1.1em;line-height:1.25}
-#strip{width:100%;height:4.4rem;display:block;background:#0b1016;border-radius:.3rem}
+#decnote{font-size:.78rem;color:var(--fallback);line-height:1.25;max-height:2.5em;overflow:hidden;flex:0 0 auto}
+#strip{width:100%;flex:1;min-height:2.5rem;display:block;background:#0b1016;border-radius:.3rem}
 .legend{display:flex;gap:.8rem;flex-wrap:wrap;font-size:.7rem;color:var(--dim)}
 .legend i{display:inline-block;width:.65rem;height:.65rem;border-radius:.15rem;margin-right:.3rem;vertical-align:-1px}
 
@@ -108,14 +115,15 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
 .tog input{accent-color:#4d8dff}
 
 /* photos */
-#photos{flex:1;min-height:0;display:flex;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.5rem}
+#photos{flex:1;min-height:0;container-type:size;display:flex;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.5rem}
 #photos .none{color:var(--dim2);margin:auto;font-size:.9rem}
-.card{flex:0 0 auto;display:flex;gap:.55rem;background:var(--panel2);border:1px solid var(--line);border-radius:.4rem;padding:.4rem;height:100%;min-width:0;position:relative}
+.card{--ih:calc(100cqh - 1.2rem);flex:0 0 auto;display:flex;gap:.55rem;background:var(--panel2);border:1px solid var(--line);border-radius:.4rem;padding:.4rem;height:100%;min-width:0;position:relative;overflow:hidden}
 .card.flagged{border:2px solid var(--red);background:#1a1014;box-shadow:0 0 .8rem rgba(255,77,94,.25)}
-.card .imgs{display:flex;flex-direction:column;gap:.3rem;height:100%;min-height:0}
-.card .imgs .main{flex:1;min-height:0;aspect-ratio:4/3;background:#000;border-radius:.25rem;overflow:hidden;cursor:zoom-in}
+.card .imgs{display:flex;flex-direction:column;gap:.3rem;height:var(--ih);min-height:0;flex:0 0 auto}
+.card .imgs .main{flex:1 1 auto;min-height:0;aspect-ratio:4/3;align-self:flex-start;background:#000;border-radius:.25rem;overflow:hidden;cursor:zoom-in}
 .card .imgs .main img{width:100%;height:100%;object-fit:cover;display:block}
-.card .imgs .more{display:flex;gap:.25rem;height:22%;flex:0 0 22%}
+.card .imgs.two .main{flex:0 0 auto;height:calc(var(--ih) * .76)}
+.card .imgs .more{display:flex;gap:.25rem;height:calc(var(--ih) * .22);flex:0 0 auto}
 .card .imgs .more img{height:100%;aspect-ratio:4/3;object-fit:cover;border-radius:.2rem;cursor:zoom-in;border:1px solid #2b3a4d}
 .card .meta{display:flex;flex-direction:column;gap:.2rem;width:15rem;min-width:0;overflow:hidden;font-size:.8rem;line-height:1.3}
 .card.flagged.hasnote .meta{width:21rem}
@@ -160,7 +168,7 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
 <body>
 <div id="app">
   <header>
-    <div class="title">PATROL<small>power-line inspection drone</small></div>
+    <div class="title">PATROL</div>
     <span id="stateBadge" class="badge">IDLE</span>
     <div class="stat"><b id="hBatt" class="mono">--</b><div class="batt"><i id="hBattBar"></i></div></div>
     <div class="stat"><b id="hSpeed" class="mono">--</b><span>speed m/s</span></div>
@@ -169,14 +177,12 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
     <div class="stat"><b id="hRun" class="mono" style="font-size:.9rem;font-weight:500">--</b><span id="hMode">run</span></div>
     <span id="conn" class="conn">connecting</span>
     <div class="spacer"></div>
-    <span id="vstatus"></span>
-    <button class="btn go" id="bStart">Start</button>
+        <button class="btn go" id="bStart">Start</button>
     <button class="btn" id="bHome">Return home</button>
     <button class="btn" id="bRevisit">Revisit last flag</button>
     <div class="seg" id="phaseSeg"><label>Target</label><button data-p="near">near</button><button data-p="middle">middle</button><button data-p="far">far</button></div>
     <button class="btn rec" id="bPtt" title="Hold to talk (or hold the space bar)">Hold to talk</button>
     <button class="btn" id="bSound">Enable sound</button>
-    <button class="btn" id="bSummary" style="display:none">Summary</button>
   </header>
 
   <div class="row1">
@@ -194,7 +200,7 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
     </div>
 
     <div class="col">
-      <div class="panel" style="flex:0 0 42%">
+      <div class="panel" style="flex:0 0 36%">
         <h2>Chase camera</h2>
         <div class="cam"><img id="imgChase" alt="chase camera"><div class="empty" id="chaseEmpty">waiting</div></div>
       </div>
@@ -211,7 +217,7 @@ header{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1
     </div>
 
     <div class="panel">
-      <h2>Event log</h2>
+      <h2>Event log <span class="r"><span id="vstatus"></span><button class="btn" id="bSummary" style="display:none;padding:.1rem .6rem">Summary</button></span></h2>
       <div id="log"></div>
     </div>
   </div>
@@ -401,6 +407,7 @@ function findCard(photos){
 }
 function ingestPhoto(ev){
   const photos = photoList(ev);
+  if (!photos.length) return;
   let c = findCard(photos);
   if (c){ photos.forEach(p => { if (!c.photos.includes(p)) c.photos.push(p); }); }
   else {
@@ -416,6 +423,7 @@ function ingestPhoto(ev){
   logEv(ev.t, 'PHOTO', '#6aa8ff', esc(ev.what || 'photo') + ' <em>' + esc(ev.trigger || '') + '</em>');
 }
 function ingestFlag(ev){
+  if (!ev.id) return;
   const photos = photoList(ev);
   const prev = S.flags[ev.id];
   const f = prev || {id: ev.id, photos: []};
@@ -434,6 +442,7 @@ function ingestFlag(ev){
     ' <em>via ' + esc(ev.source || ev.trigger || '?') + (ev.revisit ? ', re-inspected' : '') + '</em>');
 }
 function ingestNote(ev){
+  if (!ev.id && !ev.photo) return;
   let c = null;
   if (ev.photo) c = findCard([ev.photo]);
   if (!c){ for (let i = S.cards.length - 1; i >= 0; i--) if (S.cards[i].flag === ev.id){ c = S.cards[i]; break; } }
@@ -452,6 +461,7 @@ let soundOn = false, catchup = true, audioEl = null, speaking = false;
 const speechQueue = [];
 let capTimer = null;
 function ingestSpeech(ev){
+  if (!ev.text && !ev.audio) return;
   logEv(ev.t, 'SPEECH', '#27d3e6', '&ldquo;' + esc(ev.text || '') + '&rdquo;' + (ev.error ? ' <em>' + esc(ev.error) + '</em>' : ''));
   if (catchup) return;
   if (soundOn && ev.audio) { speechQueue.push({text: ev.text, url: runUrl(ev.audio)}); nextSpeech(); }
@@ -600,7 +610,7 @@ function cardHtml(c){
   } else if (c.flag){
     body += '<div class="pending">inspection note pending</div>';
   }
-  return {html: '<div class="imgs">' + main + more + '</div><div class="meta"><div class="top">' + top + '</div>' + body + '</div>',
+  return {html: '<div class="imgs' + (imgs.length > 1 ? ' two' : '') + '">' + main + more + '</div><div class="meta"><div class="top">' + top + '</div>' + body + '</div>',
           cls: 'card' + (c.flag ? ' flagged' : '') + (c.note ? ' hasnote' : '')};
 }
 function renderCards(){
@@ -676,8 +686,8 @@ function drawMap(){
     g.strokeStyle = '#ffd24a'; g.lineWidth = 1.6 * dpr;
     g.beginPath(); g.arc(X(d.x), Y(d.y), r, 0, 7); g.stroke();
     g.fillStyle = '#ffd24a'; g.font = font(9.5); g.textAlign = 'center';
-    const up = i % 2 === 0;
-    g.fillText(d.id + ' ' + String(d.type||'').replace(/_/g,' '), X(d.x), Y(d.y) + (up ? -r - 4*dpr : r + 11*dpr));
+    const lbl = d.id + ' ' + String(d.type||'').replace(/_/g,' '), ly = Y(d.y) - r - 4*dpr - (i % 2) * 11 * dpr;
+    g.lineWidth = 3 * dpr; g.strokeStyle = '#0d1820'; g.strokeText(lbl, X(d.x), ly); g.fillText(lbl, X(d.x), ly);
     g.textAlign = 'left';
   });
   // path
@@ -753,7 +763,7 @@ function renderSummary(){
     (s.return_reason ? ' <span class="dim">(' + esc(s.return_reason) + ')</span>' : '') + '</div>');
   h.push('<div class="big">' +
     '<div><span>Defects found</span><b class="' + (rec != null && rec >= 0.8 ? 'found' : 'missed') + '">' + found.length + ' / ' + total + '</b><small>recall ' + (rec == null ? '--' : Math.round(rec * 100) + '%') + '</small></div>' +
-    '<div><span>False alarms</span><b style="color:' + (fa ? '#ff6a78' : '#2ee59d') + '">' + fa + '</b><small>' + (Array.isArray(s.flags) ? s.flags.length : '--') + ' flags raised</small></div>' +
+    '<div><span>False alarms</span><b style="color:' + (fa ? '#ff6a78' : '#2ee59d') + '">' + fa + '</b><small>' + (Array.isArray(s.flags) ? s.flags.length : '--') + (Array.isArray(s.flags) && s.flags.length === 1 ? ' flag' : ' flags') + ' raised</small></div>' +
     '<div><span>Decisions that reached the LLM</span><b style="color:' + (lf ? '#2ee59d' : '#ff9f1a') + '">' + (lf == null ? '--' : (lf * 100).toFixed(lf < 0.1 ? 1 : 0) + '%') + '</b><small>' + (s.llm_calls != null ? s.llm_calls + ' LLM calls' : '') + (s.decisions_ok != null ? ' &middot; ' + s.decisions_ok + ' of ' + (s.decisions||'?') + ' model decisions ok' : '') + '</small></div>' +
     '<div><span>Decision latency</span><b class="mono" style="font-size:2rem;padding:.3rem 0">' + (lat.median == null ? '--' : num(lat.median,0)) + ' / ' + (lat.p90 == null ? '--' : num(lat.p90,0)) + '</b><small>median / p90 ms' + (lat.median == null ? ' (no model decisions)' : '') + '</small></div></div>');
   h.push('<div class="small4">' +
