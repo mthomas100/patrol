@@ -1,0 +1,4 @@
+seeded build_scene: working tree vs HEAD (git show HEAD:projects/patrol/patrol/search.py)
+snow 0  identical [('blue_backpack', -32.77, 25.2, 246.3), ('blue_tarp', 47.51, -42.74, 83.0)]
+grass 45 on_trail identical [('red_jacket', 27.27, -34.14, 78.8), ('grey_dog', 62.36, 42.14, 101.0)]
+snow 7  identical [('sos_rocks', -15.34, -24.25, 71.5), ('grey_boulder', 32.19, -24.03, 69.7)]

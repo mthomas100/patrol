@@ -1,0 +1,13 @@
+{
+ "name": "example",
+ "terrain": "snow",
+ "seed": 3,
+ "half": 80,
+ "items": [
+  {"name": "red_jacket", "x": -35.0, "y": 22.0, "yaw": 40, "role": "hiker"},
+  {"name": "blue_backpack", "x": 28.0, "y": 51.5, "yaw": 300, "role": "hiker"},
+  {"name": "blue_tarp", "x": 45.0, "y": -30.0, "yaw": 15, "role": "decoy"},
+  {"name": "orange_leaf_pile", "x": -50.0, "y": -40.0, "yaw": 0, "role": "decoy"},
+  {"name": "grey_boulder", "x": 5.0, "y": 0.0, "role": "decoy"}
+ ]
+}

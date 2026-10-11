@@ -687,10 +687,16 @@ def item_info(name: str) -> dict:
 
 
 def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str], area=SQUARE,
-                home=(0.0, -95.0), min_sep: float = 30.0, on_trail: bool = False) -> dict:
+                home=(0.0, -95.0), min_sep: float = 30.0, on_trail: bool = False,
+                placements: list[dict] | None = None) -> dict:
     """Place the named items at seeded positions inside the area (inset 12 m, apart, away from home). on_trail: the
     clue items lie along the map's trail in the order a hiker walking from the trailhead would drop them (a path
-    seed, for the trail-reasoning test); decoys stay random."""
+    seed, for the trail-reasoning test); decoys stay random. placements: a scene file's items (patrol.scenes), each
+    {"name", "x", "y", "yaw", "role": "hiker" or "decoy"}, placed exactly where they say; names, clue_names and
+    on_trail are then ignored and the seed only sets the clutter and the map."""
+    if placements is not None:
+        names = [p["name"] for p in placements]
+        on_trail = False
     rng = random.Random(seed * 977 + 13)
     xs, ys = [p[0] for p in area], [p[1] for p in area]
     size = 2 * (max(max(map(abs, xs)), max(map(abs, ys))) + 20)
@@ -701,9 +707,9 @@ def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str]
         n_clues = sum(n in clue_names for n in names)
         path = [pts[int(len(pts) * (0.3 + 0.6 * k / max(1, n_clues - 1 or 1)))] for k in range(n_clues)] if pts else []
     placed = []
-    for name in names:
+    for k, name in enumerate(names):
         info = item_info(name)
-        for _ in range(500):
+        for _ in range(0 if placements is not None else 500):
             if path and name in clue_names:
                 px, py = path.pop(0)
                 side = rng.choice((-1, 1)) * rng.uniform(2.0, 5.0)
@@ -712,10 +718,15 @@ def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str]
             x, y = rng.uniform(min(xs) + 12, max(xs) - 12), rng.uniform(min(ys) + 12, max(ys) - 12)
             if all(math.dist((x, y), (q["x"], q["y"])) >= min_sep for q in placed) and math.dist((x, y), home) > 30:
                 break
-        placed.append({"name": name, "role": "clue" if name in clue_names else "decoy", "prim": info.get("prim"),
+        if placements is not None:
+            p = placements[k]
+            x, y, yaw, role = p["x"], p["y"], p.get("yaw", 0.0), "clue" if p["role"] in ("hiker", "clue") else "decoy"
+        else:
+            yaw, role = rng.uniform(0, 360), "clue" if name in clue_names else "decoy"
+        placed.append({"name": name, "role": role, "prim": info.get("prim"),
                        "obj": info["obj"],
                        "texture": info["texture"], "x": round(x, 2), "y": round(y, 2),
-                       "yaw": round(rng.uniform(0, 360), 1), "h": info["extent_m"][2], "size_m": info["size_m"]})
+                       "yaw": round(yaw, 1), "h": info["extent_m"][2], "size_m": info["size_m"]})
     return world.search_spec(seed, terrain, placed, size=size)
 
 
@@ -778,6 +789,8 @@ def add_args(ap: argparse.ArgumentParser):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--items", default="blue_backpack,blue_tarp", help="items placed in the scene")
     ap.add_argument("--clues", default="blue_backpack", help="what the family described (catalogue names)")
+    ap.add_argument("--scene", help="a scene file (patrol/scenes.py; a path, or a name in fixtures/scenes/): its "
+                    "terrain, seed, area and placed items replace --terrain, --seed, --half, --items and --clues")
     ap.add_argument("--out")
     ap.add_argument("--sweep-h", type=float)
     ap.add_argument("--frame-every", type=float, help="along-track frame spacing, m (default: planner.frame_spacing; the fixed 12 m before 14:55 is the A/B control)")
@@ -802,14 +815,27 @@ def add_args(ap: argparse.ArgumentParser):
 
 def make_mission(a, out: Path, sinks=(), clue_list: list[dict] | None = None) -> SearchMission:
     """The scene and mission for parsed add_args() options (the CLI and the console both use this). clue_list:
-    clues written by qwen38 from the family's description (thinker.describe); default, the catalogue's."""
+    clues written by qwen38 from the family's description (thinker.describe); default, the catalogue's.
+    With --scene, the scene file sets a.terrain, a.seed, a.half, a.items and a.clues (so callers report the scene)."""
+    sc = None
+    if getattr(a, "scene", None):
+        from . import scenes
+        sc = scenes.load(a.scene)
+        a.terrain, a.seed, a.half = sc["terrain"], sc["seed"], sc["half"]
+        a.items = ",".join(it["name"] for it in sc["items"])
+        a.clues = ",".join(scenes.hiker_items(sc))
+        missing = [n for n in scenes.hiker_items(sc) if n not in cluelib.CATALOGUE]
+        if clue_list is None and (missing or not scenes.hiker_items(sc)):
+            raise SystemExit(f"scene {sc['name']}: no catalogue wording for the hiker's items {missing or '(none marked)'}"
+                             "; describe what to look for (--describe)")
     names = [n for n in a.items.split(",") if n]
     cnames = [n for n in a.clues.split(",") if n]
     h = a.half
     cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h,
                        frame_every_m=getattr(a, "frame_every", None), thinker=a.think, trail=not a.no_trail,
                        second=not a.no_second)
-    spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2], on_trail=a.on_trail)
+    spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2], on_trail=a.on_trail,
+                       placements=sc["items"] if sc else None)
     return SearchMission(spec, out, clue_list or cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
                          seed=a.seed, sinks=sinks, realtime=not a.lockstep, chase=a.chase)
 

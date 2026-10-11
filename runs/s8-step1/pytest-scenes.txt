@@ -1,0 +1,49 @@
+...........F..                                                           [100%]
+=================================== FAILURES ===================================
+_____ test_scene_hiker_items_without_catalogue_wording_need_a_description ______
+
+tmp_path = PosixPath('/tmp/pytest-of-user/pytest-60/test_scene_hiker_items_without0')
+
+    def test_scene_hiker_items_without_catalogue_wording_need_a_description(tmp_path):
+        p = scenes.save(scene(items=[{"name": "blue_tarp", "x": 0, "y": 0, "role": "hiker"}]), tmp_path / "s.json")
+        with pytest.raises(SystemExit, match="describe"):
+            search.make_mission(parsed("--scene", str(p)), tmp_path)
+        described = [{"name": "tarp", "family": "tarp", "words": "a blue plastic tarp"}]
+>       m = search.make_mission(parsed("--scene", str(p)), tmp_path, clue_list=described)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_scenes.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+patrol/search.py:839: in make_mission
+    return SearchMission(spec, out, clue_list or cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <patrol.search.SearchMission object at 0x10cd1d610>
+spec = {'kind': 'search', 'seed': 1, 'terrain': 'snow', 'size': 120.0, ...}
+out = PosixPath('/tmp/pytest-of-user/pytest-60/test_scene_hiker_items_without0')
+clue_list = [{'name': 'tarp', 'family': 'tarp', 'words': 'a blue plastic tarp'}]
+cfg = SearchConfig(area=[(-40.0, -40.0), (40.0, -40.0), (40.0, 40.0), (-40.0, 40.0)], home=(0.0, -55.0, 2.0), sweep_h=None, ...ector_len=40.0, oblique=0.6, zoom_foot_min=4.0, zoom_frame=3.0, thinker=False, trail=True, second=True, second_min=0.6)
+clef_url = 'http://127.0.0.1:8097/v1/systemone', fault_rate = 0.0, seed = 1
+sinks = (), save_frames = True, realtime = True, chase = False, ask = None
+
+    def __init__(self, spec: dict, out: Path, clue_list: list[dict], cfg: SearchConfig | None = None,
+                 clef_url: str = clef.URL, fault_rate: float = 0.0, seed: int = 0, sinks=(), save_frames: bool = True,
+                 realtime: bool = True, chase: bool = False, ask=None):
+        self.out = Path(out)
+        for d in ("frames", "crops", "photos") + (("chase",) if chase else ()):
+            (self.out / "media" / d).mkdir(parents=True, exist_ok=True)
+        (self.out / "scene.json").write_text(json.dumps(spec))      # ground truth: scoring and console only
+        self.cfg = cfg or SearchConfig()
+        self.sim = Sim(spec, start=self.cfg.home)
+        self.sim.CHASE_OFFSET, self.sim.CHASE_LOOK = (-12.0, -16.0, 9.0), (5.0, 8.0, -14.0)   # 3/4 view from above
+        self.spec = {k: v for k, v in spec.items() if k not in TRUTH_KEYS}
+        self.sim.spec = self.spec                                    # cut the simulator's copy of the truth too
+        self.clues = clue_list
+>       self.sweep_h = self.cfg.sweep_h or planner.sweep_height([c["size_m"] for c in clue_list])
+                                                                 ^^^^^^^^^^^
+E       KeyError: 'size_m'
+
+patrol/search.py:118: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_scenes.py::test_scene_hiker_items_without_catalogue_wording_need_a_description
+1 failed, 13 passed in 0.99s
