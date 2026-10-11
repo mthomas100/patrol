@@ -1,0 +1,128 @@
+{
+ "llm_calls": 3,
+ "llm_by_role": {
+  "note": 3
+ },
+ "clef_qwen_idle": {
+  "n": 93,
+  "ok": 93,
+  "median_ms": 318,
+  "p90_ms": 354
+ },
+ "clef_qwen_active": {
+  "n": 34,
+  "ok": 34,
+  "median_ms": 388,
+  "p90_ms": 477
+ },
+ "sectors": 28,
+ "sectors_done": 28,
+ "plans": [],
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 486.4,
+ "wall_s": 51.3,
+ "flight_s": 485.9,
+ "battery_used_pct": 40.5,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 96,
+ "candidates": 288,
+ "clef_sweep": {
+  "n": 121,
+  "ok": 121,
+  "median_ms": 322,
+  "p90_ms": 407
+ },
+ "clef_confirm": {
+  "n": 6,
+  "ok": 6,
+  "median_ms": 444,
+  "p90_ms": 528
+ },
+ "fallback": 0,
+ "investigations": 6,
+ "dismissed": 3,
+ "mean_investigate_s": 8.2,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "blue_backpack",
+   "family": "blue backpack",
+   "g": [
+    1.87,
+    -28.33
+   ],
+   "conf": 0.963,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0036_c2.jpg",
+   "sweep_h": 40.0,
+   "spot": "S1",
+   "t": 150.14,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Blue backpack spotted on grass 2 meters east and 28 meters north of search center.",
+    "check": "Ground team should proceed to the coordinates and visually confirm the object.",
+    "agree": true,
+    "wall_s": 4.9,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A2",
+   "clue": "orange_tent",
+   "family": "orange tent",
+   "g": [
+    11.44,
+    18.57
+   ],
+   "conf": 0.91,
+   "h": 20.0,
+   "photo": "media/photos/S5_20m.jpg",
+   "sweep_crop": "media/crops/f0062_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S5",
+   "t": 298.22,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted an orange dome tent 117 meters from the trailhead, 11 meters east and 19 meters north of the search center.",
+    "check": "Ground team should inspect the orange tent for signs of the missing hiker.",
+    "agree": true,
+    "wall_s": 5.6,
+    "held_wait_s": 0.0
+   }
+  },
+  {
+   "id": "A3",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    13.42,
+    53.48
+   ],
+   "conf": 0.881,
+   "h": 20.0,
+   "photo": "media/photos/S6_20m.jpg",
+   "sweep_crop": "media/crops/f0073_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S6",
+   "t": 349.82,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a red jacket 13 meters east and 53 meters north of the search center.",
+    "check": "Ground team should proceed to the coordinates to confirm the item and search for the hiker.",
+    "agree": true,
+    "wall_s": 5.0,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 150.14
+}

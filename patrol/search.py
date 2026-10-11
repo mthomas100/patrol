@@ -53,6 +53,8 @@ class SearchConfig:
     t_dismiss: float = 0.2           # every clue noul below this at a step: dismiss without descending further
     inv_noul: float = 0.1            # sweep gate: investigate when any clue's noul on the crop reaches this
     inv_p: float = 0.9               # ... or when p(investigate) does (background crops: noul <= 0.052, p up to 0.81)
+    inv_noul_weak: float = 0.05      # ... or when both agree weakly: a tent crop at noul 0.094, p 0.755 was missed;
+    inv_p_weak: float = 0.7          #     on 1384 tuning background crops this adds none (DECISIONS 13:15)
     judged_r: float = 3.0            # a candidate this close to an already judged spot is not asked again ...
     rejudge_gain: float = 2.0        # ... unless its box is this many times larger (a far-edge glimpse judged first
     max_asks: int = 3                #     must not hide the clear view a lane later; runs/s3-trail-ab-rt grass6)
@@ -387,7 +389,8 @@ class SearchMission:
         p_inv = dec.probs.get("investigate", 0.0)
         best = max(self.clues, key=lambda c: dec.nouls.get(c["name"], 0.0))["name"]
         nb = dec.nouls.get(best, 0.0)
-        inv = nb >= self.cfg.inv_noul or p_inv >= self.cfg.inv_p
+        inv = nb >= self.cfg.inv_noul or p_inv >= self.cfg.inv_p or \
+            (nb >= self.cfg.inv_noul_weak and p_inv >= self.cfg.inv_p_weak)
         return {"action": "investigate" if inv else "continue", "source": "CLEF", "clue": best,
                 "noul": round(nb, 3), "p_inv": round(p_inv, 3)}
 

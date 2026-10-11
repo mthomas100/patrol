@@ -1,0 +1,24 @@
+## sweep crops: max clue noul and p(investigate) by what was there
+background       noul  n=1384 min=0.005 p50=0.007 p90=0.019 max=0.588
+                 p_inv n=1384 min=0.079 p50=0.287 p90=0.373 max=0.819
+blue_backpack    noul  n=12 min=0.016 p50=0.869 p90=0.888 max=0.907
+                 p_inv n=12 min=0.520 p50=0.906 p90=0.909 max=0.921
+blue_tarp        noul  n=12 min=0.138 p50=0.535 p90=0.583 max=0.651
+                 p_inv n=12 min=0.627 p50=0.801 p90=0.810 max=0.821
+orange_tent      noul  n=12 min=0.094 p50=0.405 p90=0.513 max=0.575
+                 p_inv n=12 min=0.751 p50=0.828 p90=0.858 max=0.871
+red_jacket       noul  n=12 min=0.510 p50=0.749 p90=0.785 max=0.808
+                 p_inv n=12 min=0.839 p50=0.886 p90=0.896 max=0.900
+## confirm close-ups: verdicts by what was there and height
+background         20 m  {'dismiss': 16}  noul n=16 min=0.005 p50=0.019 p90=0.034 max=0.045
+blue_backpack      20 m  {'confirm': 11}  noul n=11 min=0.886 p50=0.942 p90=0.961 max=0.963
+blue_tarp          20 m  {'dismiss': 12}  noul n=12 min=0.031 p50=0.040 p90=0.042 max=0.045
+orange_tent        20 m  {'confirm': 11}  noul n=11 min=0.768 p50=0.892 p90=0.927 max=0.941
+red_jacket         20 m  {'confirm': 12}  noul n=12 min=0.726 p50=0.830 p90=0.859 max=0.881
+
+## joint rule check (13:13, inline script in the patrol-5d transcript; same 12 runs)
+current gate (noul >= 0.1 or p >= 0.9): 16 of 1384 background crops pass; clue crops missed: blue_backpack 0.016 (a
+60 px far-edge glimpse, handled by the re-ask rule) and orange_tent 0.094 (p 0.755, lockstep grass6-notrail v1).
+adding (noul >= 0.05 and p >= 0.7): background still 16 of 1384 (also at 0.04/0.7, 0.05/0.65, 0.06/0.7); the tent
+crop passes; tarp crops pass 12/12 either way (the tarp is meant to reach investigation and be dismissed there).
+runs: s2-tune-snow2c, s2-tune-grass3c, s3-think-grass5-{trail,notrail}, s3-trail-ab-{rt,lock}-v1/grass{5,6}-{trail,notrail}
