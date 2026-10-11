@@ -63,6 +63,18 @@ def corridor_spec(seed: int = 0, length: float = 300.0, spacing: float = 50.0,
             "pylons": pylons, "defects": out, "trees": trees}
 
 
+def m2_spec(seed: int = 0, length: float = 300.0) -> dict:
+    """M2 corridor: one defect of each type plus a second insulator, spread along 300 m, on the near phase."""
+    return corridor_spec(seed, length=length, defects=[
+        {"type": "vegetation", "at": 0},                       # mid span 0
+        {"type": "broken_insulator", "at": 2},                 # tower 2 (x=100)
+        {"type": "frayed_conductor", "at": 2},                 # mid span 2
+        {"type": "foreign_object", "at": 4, "where": "arm"},   # bird nest on tower 4 crossarm (x=200)
+        {"type": "foreign_object", "at": 4, "where": "span"},  # debris hanging on span 4
+        {"type": "broken_insulator", "at": 5},                 # tower 5 (x=250)
+    ])
+
+
 def conductor_z(frac: float, spacing: float) -> float:
     """Height of a conductor at fraction `frac` along a span (parabolic sag)."""
     return ARM_Z - INS_LEN - SAG * 4 * frac * (1 - frac)
@@ -200,7 +212,7 @@ def build_mjcf(spec: dict) -> str:
         if d["type"] == "frayed_conductor":
             world += _frayed(d, rng)
         elif d["type"] == "vegetation":
-            world += _tree(d["x"], d["y"] - 2.6, 0, rng, touching_z=d["z"] + 0.8)
+            world += _tree(d["x"], d["y"] + 2.4, 0, rng, touching_z=d["z"] + 0.8)   # behind the near conductor
         elif d["type"] == "foreign_object":
             world += _foreign(d)
     L = spec["length"]
@@ -256,3 +268,12 @@ def look_target(spec: dict, x: float, ahead: float = 9.0, phase: str = "near") -
     xt = min(max(x + ahead, 0.0), spec["length"])
     frac = (xt % sp) / sp
     return (xt, y, conductor_z(frac, sp))
+
+
+def describe_target(spec: dict, target, phase: str = "near") -> str:
+    """Words for what the gimbal is aimed at, from the map (for the LLM prompt and the report)."""
+    for p in spec["pylons"]:
+        if abs(p["x"] - target[0]) < 0.5:
+            return f"{phase}-phase insulator string and crossarm of tower {p['i']}"
+    i = int(target[0] // spec["spacing"])
+    return f"{phase}-phase conductor between towers {i} and {i + 1}"

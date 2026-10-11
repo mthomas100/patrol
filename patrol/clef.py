@@ -58,6 +58,29 @@ def schema(defect_types=True) -> dict:
     return q
 
 
+COMPONENT_NOULS = {
+    "insulator_damaged": "Is any glass insulator string (the stack of discs hanging under the crossarm) missing "
+                         "discs, with a gap in the stack, or with a disc tilted, cracked or blackened?",
+    "conductor_frayed": "Does any conductor wire have broken strands sticking out or a blackened burnt patch?",
+    "vegetation_close": "Is a tree crown touching a wire or within a metre of one?",
+    "foreign_object": "Is a bird nest, sticks, a plastic sheet, a kite or other debris on a crossarm or a wire?",
+}
+
+
+def confirm_schema() -> dict:
+    """Asked of the zoomed hover photo. Only flag_damage and continue are legal here (code owns legality)."""
+    return {
+        "action": {"type": "choice", "instructions": "This is a zoomed close-up of the nearest line equipment. "
+                   "Decide whether to flag damage or continue the patrol.",
+                   "criteria": {"flag_damage": ACTIONS["flag_damage"],
+                                "continue": "the equipment in the close-up looks intact and normal; resume the "
+                                            "patrol"}},
+        **{k: {"type": "noul", "instructions": v} for k, v in COMPONENT_NOULS.items()},
+        "sure": {"type": "score", "instructions": "How sure are you about what the close-up shows?",
+                 "criteria": SURE},
+    }
+
+
 def state_text(tel: dict, context: dict | None = None) -> str:
     """Symbolic state beside the image: what code knows that pixels do not show."""
     c = context or {}
@@ -88,6 +111,7 @@ class Decision:
     sure: float = 0.0           # expected level 0..2
     defect: str = "none"
     defect_probs: dict = field(default_factory=dict)
+    nouls: dict = field(default_factory=dict)
     latency_ms: float = 0.0
     input_tokens: int = 0
     error: str = ""
@@ -115,8 +139,11 @@ def ask(jpeg: bytes, state: str, questions: dict | None = None, timeout: float =
     d = Decision(ok=True, action=act["choice"], probs=act.get("probabilities", {}),
                  confidence=float(act.get("confidence", 0.0)), latency_ms=ms,
                  input_tokens=int((body.get("usage") or {}).get("input_tokens", 0)))
+    d.nouls = {k: float(v["noul"]) for k, v in a.items() if v.get("type") == "noul"}
     if "damage" in a:
         d.damage = float(a["damage"]["noul"])
+    elif d.nouls:
+        d.damage = max(d.nouls.values())
     if "sure" in a:
         d.sure = float(a["sure"]["score"])
     if "defect" in a:

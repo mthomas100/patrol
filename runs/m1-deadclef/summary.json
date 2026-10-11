@@ -1,0 +1,28 @@
+{
+ "ticks": 380,
+ "sim_time_s": 190.0,
+ "wall_time_s": 11.2,
+ "realtime_factor": 16.96,
+ "corridor_complete": true,
+ "returned_home": true,
+ "return_reason": "corridor complete",
+ "battery_end": 76.9,
+ "distance_m": 661.0,
+ "decisions": 231,
+ "decisions_ok": 0,
+ "decision_sources": {
+  "FALLBACK": 231,
+  "SAFETY": 1
+ },
+ "latency_ms": {
+  "median": null,
+  "p90": null,
+  "max": null
+ },
+ "photos": 7,
+ "flags": [],
+ "defects": 1,
+ "defects_found": [],
+ "recall": 0.0,
+ "false_alarms": []
+}
