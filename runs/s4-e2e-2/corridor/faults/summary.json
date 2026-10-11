@@ -1,0 +1,65 @@
+{
+ "ticks": 317,
+ "sim_time_s": 207.9,
+ "wall_time_s": 54.1,
+ "realtime_factor": 3.84,
+ "corridor_complete": true,
+ "returned_home": true,
+ "return_reason": "corridor complete",
+ "battery_end": 80.5,
+ "distance_m": 661.2,
+ "decisions": 159,
+ "decisions_ok": 115,
+ "decision_sources": {
+  "FALLBACK": 45,
+  "CLEF": 114,
+  "RANGEFINDER": 1,
+  "SAFETY": 1
+ },
+ "latency_ms": {
+  "median": 411.3,
+  "p90": 423.7,
+  "max": 2580.2
+ },
+ "llm_calls": 0,
+ "llm_frame_fraction": 0.0,
+ "notes_ok": 0,
+ "photos": 11,
+ "flags": [
+  {
+   "id": "F1",
+   "x": 19.2,
+   "y": -4.5,
+   "guess": "vegetation_close",
+   "source": "CLEF",
+   "trigger": "RANGEFINDER",
+   "note": false
+  },
+  {
+   "id": "F2",
+   "x": 100.0,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": false
+  },
+  {
+   "id": "F3",
+   "x": 126.11489000864798,
+   "y": -4.5,
+   "guess": "foreign_object",
+   "source": "CLEF",
+   "trigger": "CLEF",
+   "note": false
+  }
+ ],
+ "defects": 6,
+ "defects_found": [
+  "D1",
+  "D2",
+  "D3"
+ ],
+ "recall": 0.5,
+ "false_alarms": []
+}
