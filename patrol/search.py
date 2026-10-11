@@ -19,7 +19,7 @@ import math
 import random
 import statistics
 import time
-from collections import deque
+from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -40,7 +40,9 @@ class SearchConfig:
     home: tuple = (0.0, -95.0, 2.0)
     sweep_h: float | None = None     # None: the highest S0-backed height for the smallest clue (planner.sweep_height)
     overlap: float = 0.2             # cross-track overlap between lanes
-    frame_every_m: float = 12.0      # along-track frame spacing (about half the 40 m footprint: every spot twice)
+    frame_every_m: float | None = None   # along-track frame spacing; None: planner.frame_spacing (12 m at 40 m, half
+    #                                     the frame below it, every spot about twice; DECISIONS 14:55)
+    clue_margin: float = 1.2         # lane overlap and frame spacing leave room for the largest clue times this
     speed: float = 6.0
     dt: float = 0.5
     W: int = 1280                    # sweep frame, the finder's input (S0: 1280x960 at 40 m)
@@ -113,7 +115,10 @@ class SearchMission:
         self.sim.spec = self.spec                                    # cut the simulator's copy of the truth too
         self.clues = clue_list
         self.sweep_h = self.cfg.sweep_h or planner.sweep_height([c["size_m"] for c in clue_list])
-        self.lanes = planner.lanes(self.cfg.area, planner.lane_spacing(self.sweep_h, overlap=self.cfg.overlap))
+        big = self.cfg.clue_margin * max((c["size_m"] for c in clue_list), default=0.0)
+        self.lane_spacing = planner.lane_spacing(self.sweep_h, overlap=self.cfg.overlap, min_overlap_m=big)
+        self.frame_every = self.cfg.frame_every_m or planner.frame_spacing(self.sweep_h, clue_m=big)
+        self.lanes = planner.lanes(self.cfg.area, self.lane_spacing)
         self.sectors = planner.sectors(self.lanes, self.cfg.sector_len)
         self.queue = list(range(len(self.sectors)))     # sector indices still to sweep, in order
         self.done_sectors: list[str] = []
@@ -142,6 +147,8 @@ class SearchMission:
         self.decisions: list[dict] = []
         self.frames = self.ticks = self.n_cands = 0
         self.flight_s = 0.0
+        self.state_s: dict = defaultdict(float)          # flight seconds and metres per state (the plan guard's rates)
+        self.state_m: dict = defaultdict(float)
         self.v_prev = (0.0, 0.0, 0.0)
         self.return_reason = ""
         self.started = False
@@ -186,9 +193,12 @@ class SearchMission:
         return dec, d
 
     def _advance(self, v, dt: float):
+        o = self.sim.odometer
         self.sim.step(v, dt)
         if self.state not in ("DONE",):
             self.flight_s += dt
+            self.state_s[self.state] += dt
+            self.state_m[self.state] += self.sim.odometer - o
 
     def battery(self) -> float:
         return max(0.0, 100.0 * (1 - self.flight_s / self.cfg.battery_s))
@@ -216,11 +226,15 @@ class SearchMission:
             return f"height {z:.1f} m outside the {lo:.0f}-{hi:.0f} m band"
         if outside_by(self.cfg.area, x, y) > self.cfg.area_margin:
             return f"more than {self.cfg.area_margin:.0f} m outside the search area"
-        hx, hy, _ = self.cfg.home
-        cost = 100.0 * (math.hypot(x - hx, y - hy) / self.cfg.speed + z / 2.0 + 20.0) / self.cfg.battery_s
+        cost = 100.0 * self._return_s((x, y), z) / self.cfg.battery_s
         if self.battery() - cost < self.cfg.reserve:
             return f"battery {self.battery():.0f}% leaves only the return reserve"
         return None
+
+    def _return_s(self, xy, z: float) -> float:
+        """Flight seconds to get home and land from (x, y) at height z."""
+        hx, hy, _ = self.cfg.home
+        return math.hypot(xy[0] - hx, xy[1] - hy) / self.cfg.speed + z / 2.0 + 20.0
 
     def _begin_return(self, why: str):
         self.return_reason = why
@@ -255,7 +269,7 @@ class SearchMission:
                 cont = self._continues()
                 v, arrived = self._goto((sec["x1"], sec["y"], self.sweep_h), stop=not cont)
                 xy = (float(self.sim.pos[0]), float(self.sim.pos[1]))
-                if self.last_frame_xy is None or math.dist(xy, self.last_frame_xy) >= cfg.frame_every_m or \
+                if self.last_frame_xy is None or math.dist(xy, self.last_frame_xy) >= self.frame_every or \
                         (arrived and not cont):
                     frame = self._sweep_frame(sec)
                 if self.state == "SWEEP" and arrived:
@@ -323,9 +337,34 @@ class SearchMission:
         p, self.plan_next = self.plan_next, None
         ids = {self.sectors[i]["id"]: i for i in self.queue}
         first = [ids[x] for x in p["first"] if x in ids]
-        if first:
-            self.queue = first + [i for i in self.queue if i not in first]
-        self.emit("plan", applied=True, first=[self.sectors[i]["id"] for i in first], reason=p.get("reason", ""))
+        refused = ""
+        if first:      # the plan's sectors in its order, then the rest nearest first from where they end
+            rest = [i for i in self.queue if i not in first]
+            end = planner.route_m([self.sectors[i] for i in first], self.sim.pos[:2])[1]
+            new = first + [rest[j] for j in planner.nearest_first([self.sectors[i] for i in rest], end)]
+            refused = self._unaffordable(new)
+            if not refused:
+                self.queue = new
+        self.emit("plan", applied=not refused, first=[self.sectors[i]["id"] for i in first], reason=p.get("reason", ""),
+                  **({"refused": refused} if refused else {}))
+
+    def _unaffordable(self, new: list[int]) -> str:
+        """Code owns the route: a trail plan may reorder the sweep but not cost the area. Refuse it when the battery
+        can fly the current order to the end and not the new one; when neither fits, the likelier sectors go first.
+        Time per metre of sweep and the detours per sweep second are this flight's own so far (DECISIONS 14:55)."""
+        sweep_s = self.state_s["SWEEP"]
+        v = self.state_m["SWEEP"] / sweep_s if sweep_s > 30 else 0.6 * self.cfg.speed
+        detour = (self.state_s["INVESTIGATE"] + self.state_s["RESUME"]) / sweep_s if sweep_s > 30 else 0.0
+        left = (self.battery() - self.cfg.reserve) / 100.0 * self.cfg.battery_s
+
+        def need(order):
+            m, end = planner.route_m([self.sectors[i] for i in order], self.sim.pos[:2])
+            return m / max(v, 0.5) * (1 + detour) + self._return_s(end, self.sweep_h)
+        t_new, t_old = need(new), need(self.queue)
+        if t_new > left >= t_old:
+            return (f"battery: the reordered sweep needs about {t_new:.0f} s and {left:.0f} s are left; the current "
+                    f"order needs {t_old:.0f} s")
+        return ""
 
     # ------------------------------------------------------------ sweep: finder -> Clef per new crop -> gate
     def _sweep_frame(self, lane: dict) -> str | None:
@@ -606,7 +645,9 @@ class SearchMission:
                 "sectors": len(self.sectors), "sectors_done": len(self.done_sectors), "plans": self.plans,
                 "state": self.state, "return_reason": self.return_reason, "sim_s": round(self.sim.t, 1),
                 "wall_s": round(wall, 1), "flight_s": round(self.flight_s, 1), "battery_used_pct": round(used, 1),
-                "sweep_h": self.sweep_h, "lanes": len(self.lanes),
+                "state_s": {k: round(v, 1) for k, v in self.state_s.items()},
+                "sweep_h": self.sweep_h, "lanes": len(self.lanes), "lane_spacing_m": round(self.lane_spacing, 2),
+                "frame_every_m": round(self.frame_every, 2),
                 "coverage": round(self.coverage.fraction(), 4), "area_m2_covered": area_m2,
                 "frames": self.frames, "candidates": self.n_cands, "clef_sweep": stats(sweep), "clef_confirm": stats(conf),
                 "fallback": sum(not d["ok"] for d in self.decisions),
@@ -722,6 +763,7 @@ def add_args(ap: argparse.ArgumentParser):
     ap.add_argument("--clues", default="blue_backpack", help="what the family described (catalogue names)")
     ap.add_argument("--out")
     ap.add_argument("--sweep-h", type=float)
+    ap.add_argument("--frame-every", type=float, help="along-track frame spacing, m (default: planner.frame_spacing; the fixed 12 m before 14:55 is the A/B control)")
     ap.add_argument("--half", type=float, default=80.0, help="half-width of the square search area, m")
     ap.add_argument("--clef-url", default=clef.URL)
     ap.add_argument("--fault-rate", type=float, default=0.0)
@@ -748,7 +790,8 @@ def make_mission(a, out: Path, sinks=(), clue_list: list[dict] | None = None) ->
     cnames = [n for n in a.clues.split(",") if n]
     h = a.half
     cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h,
-                       thinker=a.think, trail=not a.no_trail, second=not a.no_second)
+                       frame_every_m=getattr(a, "frame_every", None), thinker=a.think, trail=not a.no_trail,
+                       second=not a.no_second)
     spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2], on_trail=a.on_trail)
     return SearchMission(spec, out, clue_list or cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
                          seed=a.seed, sinks=sinks, realtime=not a.lockstep, chase=a.chase)

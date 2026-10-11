@@ -163,3 +163,59 @@ def test_dropping_a_lane_leaves_a_gap_the_coverage_shows():
     for poly in frames(lns[:2] + lns[3:]):
         cov.mark(poly)
     assert 0.7 < cov.fraction() < 1.0
+
+
+# ------------------------------------------------------------------ frame spacing, lane overlap, sector order (14:55)
+def shots(lns, step, h):
+    """One nadir footprint every `step` metres along each lane (both ends included)."""
+    along, cross = planner.footprint(h)
+    for ln in lns:
+        x0, x1 = sorted((ln["x0"], ln["x1"]))
+        n = max(1, int((x1 - x0) // step))
+        for k in range(n + 1):
+            x = x0 + k * step
+            yield [(x - along / 2, ln["y"] - cross / 2), (x + along / 2, ln["y"] - cross / 2),
+                   (x + along / 2, ln["y"] + cross / 2), (x - along / 2, ln["y"] + cross / 2)]
+
+
+def test_frame_spacing_is_the_old_12_m_at_40_m_and_scales_below():
+    assert planner.frame_spacing(40.0) == pytest.approx(12.0, abs=0.05)
+    assert planner.frame_spacing(21.82) == pytest.approx(0.49 * planner.footprint(21.82)[0])
+    along = planner.footprint(20.0)[0]
+    assert planner.frame_spacing(20.0, clue_m=9.0) <= along - 9.0 + 1e-9    # a long clue still fits whole in a frame
+    assert planner.frame_spacing(20.0, clue_m=50.0) == pytest.approx(along / 4)   # never collapses to nothing
+
+
+def test_fixed_12_m_frames_leave_gaps_at_21_8_m_and_the_scaled_ones_do_not():
+    h = 21.82
+    lns = planner.lanes(SQUARE, planner.lane_spacing(h))
+    old, new = planner.Coverage(SQUARE), planner.Coverage(SQUARE)
+    for poly in shots(lns, 14.6, h):          # the p90 spacing measured on runs/s4-e2e-2/s5 with the fixed 12 m
+        old.mark(poly)
+    for poly in shots(lns, planner.frame_spacing(h) + 3.0, h):   # plus a whole tick of travel at 6 m/s
+        new.mark(poly)
+    assert old.fraction() < 0.95 and new.fraction() == 1.0
+
+
+def test_lane_overlap_holds_the_largest_clue_and_is_unchanged_for_small_ones():
+    assert planner.lane_spacing(40.0, min_overlap_m=2.64) == planner.lane_spacing(40.0)
+    assert planner.lane_spacing(21.82, min_overlap_m=2.64) == planner.lane_spacing(21.82)
+    cross = planner.footprint(21.82)[1]
+    assert planner.lane_spacing(21.82, min_overlap_m=6.0) == pytest.approx(cross - 6.0)
+    assert planner.lane_spacing(21.82, min_overlap_m=99.0) == pytest.approx(cross / 4)
+    lns = planner.lanes(SQUARE, planner.lane_spacing(21.82, min_overlap_m=6.0))
+    gaps = [b["y"] - a["y"] for a, b in zip(lns, lns[1:])]
+    assert len(lns) == 14 and max(gaps) <= cross - 6.0 + 1e-9
+
+
+def test_nearest_first_order_and_route_length():
+    secs = planner.sectors(planner.lanes(SQUARE, planner.lane_spacing(40.0)), 40.0)
+    order = planner.nearest_first(secs, (0.0, -95.0))
+    assert sorted(order) == list(range(len(secs)))
+    stale = [s for s in secs if s["lane"] != 3] + [s for s in secs if s["lane"] == 3]   # a band left for last
+    m_stale, _ = planner.route_m(stale, (0.0, 0.0))
+    m_nn, end = planner.route_m([stale[i] for i in planner.nearest_first(stale, (0.0, 0.0))], (0.0, 0.0))
+    assert m_nn < m_stale
+    one = secs[0]
+    m, end = planner.route_m([one], (one["x1"] + 5.0, one["y"]))       # flown from the nearer end
+    assert m == pytest.approx(5.0 + abs(one["x1"] - one["x0"])) and end == (one["x0"], one["y"])

@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+import re
 import textwrap
 
 import pytest
@@ -200,3 +201,49 @@ def test_a_flown_spot_blocks_only_the_ground_its_close_up_covered(tmp_path, monk
 def test_where_words_name_the_direction():
     assert search.where_words((-66.45, -62.98)) == "66 m west and 63 m south of the search-area centre"
     assert search.where_words((34.3, 25.8)) == "34 m east and 26 m north of the search-area centre"
+
+
+def plan_mission(tmp_path):
+    """A 160 m square at 40 m (7 lanes, 28 sectors), Clef never called: for the route rules only."""
+    cfg = search.SearchConfig(W=320, H=240)
+    spec = world.search_spec(3, "snow", [], size=200.0, n_rocks=10, n_trees=4)
+    m = search.SearchMission(spec, tmp_path, clues.clues(["blue_backpack"]), cfg, realtime=False,
+                             save_frames=False, ask=lambda *a, **k: None)
+    m.queue = m.queue[8:]                     # two lanes done; the drone is at the west end of lane C
+    m.sim.pos[:2] = (m.sectors[m.queue[0]]["x0"], m.sectors[m.queue[0]]["y"])
+    m.state_s.update(SWEEP=200.0, INVESTIGATE=20.0, RESUME=10.0)
+    m.state_m.update(SWEEP=800.0)             # 4 m/s of sweep, 15% detours: the flight's own rates
+    far = [s["id"] for s in m.sectors if s["lane"] == 6][:2]
+    return m, far
+
+
+def test_a_plan_goes_first_and_the_rest_nearest_first(tmp_path):
+    m, far = plan_mission(tmp_path)
+    rest = [i for i in m.queue if m.sectors[i]["id"] not in far]
+    m.plan_next = {"first": far, "reason": "test"}
+    m._apply_plan()
+    assert [m.sectors[i]["id"] for i in m.queue[:2]] == far and len(m.queue) == 20
+    end = planner.route_m([m.sectors[i] for i in m.queue[:2]], m.sim.pos[:2])[1]
+    assert m.queue[2:] == [rest[j] for j in planner.nearest_first([m.sectors[i] for i in rest], end)]
+    assert m.queue[2:] != rest                # the stale lane order is not kept
+
+
+def test_a_plan_the_battery_cannot_fly_to_the_end_is_refused(tmp_path):
+    m, far = plan_mission(tmp_path)
+    before = list(m.queue)
+    t_old = planner.route_m([m.sectors[i] for i in before], m.sim.pos[:2])[0] / 4.0 * 1.15
+    # battery left: enough for the current order and its return, not for flying out to lane G first and back
+    m.flight_s = m.cfg.battery_s * (1 - m.cfg.reserve / 100) - (t_old + m._return_s((0, 80), m.sweep_h) + 15)
+    m.plan_next = {"first": far, "reason": "test"}
+    events = []
+    m.sinks.append(events.append)
+    m._apply_plan()
+    assert m.queue == before
+    ev = [e for e in events if e["type"] == "plan"][-1]
+    assert ev["applied"] is False and ev["refused"].startswith("battery")
+    t_new, left, t_old = (float(x) for x in re.findall(r"(\d+) s", ev["refused"]))
+    assert t_new > left >= t_old
+    m.flight_s = 0.0                          # a full battery takes the same plan
+    m.plan_next = {"first": far, "reason": "test"}
+    m._apply_plan()
+    assert [m.sectors[i]["id"] for i in m.queue[:2]] == far

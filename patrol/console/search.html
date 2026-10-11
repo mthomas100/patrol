@@ -553,6 +553,11 @@ function onPlan(ev){
     return;
   }
   S.nThink++;
+  if (ev.refused){      // code owns the route: a reorder the battery cannot fly to the end is refused
+    S.plan = null;
+    logEv(ev.t, 'PLAN', COL.orange, '<b>trail plan refused</b> (' + esc((ev.first || []).join(', ')) + ') <em>' + esc(ev.refused) + '</em>', 'dim');
+    return;
+  }
   const ids = (ev.applied ? ev.first : ev.proposed) || [];
   S.plan = {ids, applied: !!ev.applied};
   logEv(ev.t, 'PLAN', COL.violet, ev.applied

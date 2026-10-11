@@ -22,8 +22,49 @@ def footprint(h: float, vfov_deg: float = 34.0, aspect: float = 4 / 3) -> tuple[
     return along, along * aspect
 
 
-def lane_spacing(h: float, vfov_deg: float = 34.0, aspect: float = 4 / 3, overlap: float = 0.2) -> float:
-    return footprint(h, vfov_deg, aspect)[1] * (1 - overlap)
+def lane_spacing(h: float, vfov_deg: float = 34.0, aspect: float = 4 / 3, overlap: float = 0.2,
+                 min_overlap_m: float = 0.0) -> float:
+    """Cross width less the overlap: a fraction of the width, and at least min_overlap_m (the largest clue, so one
+    of two neighbouring lanes sees it uncut), but never more than three quarters of the width."""
+    cross = footprint(h, vfov_deg, aspect)[1]
+    return cross - max(overlap * cross, min(min_overlap_m, 0.75 * cross))
+
+
+def frame_spacing(h: float, vfov_deg: float = 34.0, frac: float = 0.49, clue_m: float = 0.0) -> float:
+    """Along-track distance between sweep frames: a fraction of the frame's along-track ground length (0.49 gives
+    the 12 m that was fixed for 40 m, so every spot is seen about twice), and short enough that a clue clue_m long
+    fits whole in one frame. A fixed 12 m left gaps below 40 m: at 21.8 m the frame is 13.3 m long and frames
+    landed 13.0 m (median) to 14.6 m (p90) apart, coverage 0.928 (runs/s4-e2e-2/s5)."""
+    along = footprint(h, vfov_deg)[0]
+    return min(frac * along, max(along - clue_m, along / 4))
+
+
+def _ends(s: dict, p) -> tuple[tuple, tuple]:
+    """A sector's (entry, exit) when flown from the end nearer p (the mission's rule, SearchMission._begin_sector)."""
+    a, b = (s["x0"], s["y"]), (s["x1"], s["y"])
+    return (b, a) if math.dist(p, b) < math.dist(p, a) else (a, b)
+
+
+def route_m(order: list[dict], start) -> tuple[float, tuple]:
+    """Ground distance of flying these sectors in order from start, each from its nearer end; and where it ends."""
+    p, total = (float(start[0]), float(start[1])), 0.0
+    for s in order:
+        a, b = _ends(s, p)
+        total += math.dist(p, a) + math.dist(a, b)
+        p = b
+    return total, p
+
+
+def nearest_first(secs: list[dict], start) -> list[int]:
+    """Indices into secs in greedy nearest-entry order from start (ties keep the given order). After a trail plan
+    the sectors left behind were flown in their stale lane order: on the six tuning flights with plans, replaying the
+    plans with this order instead shortens the path by 1-21% and never lengthens it (DECISIONS 14:55)."""
+    left, out, p = list(range(len(secs))), [], (float(start[0]), float(start[1]))
+    while left:
+        i = min(left, key=lambda j: math.dist(p, _ends(secs[j], p)[0]))
+        p = _ends(secs[i], p)[1]
+        left.remove(i); out.append(i)
+    return out
 
 
 def sweep_height(clue_sizes_m: list[float], ref_size: float = 0.55, ref_height: float = 40.0,
