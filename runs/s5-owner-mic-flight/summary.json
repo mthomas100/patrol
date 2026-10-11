@@ -1,0 +1,94 @@
+{
+ "llm_calls": 2,
+ "llm_by_role": {
+  "note": 1,
+  "trail": 1
+ },
+ "clef_qwen_idle": {
+  "n": 22,
+  "ok": 22,
+  "median_ms": 303,
+  "p90_ms": 339
+ },
+ "clef_qwen_active": {
+  "n": 0,
+  "ok": 0,
+  "median_ms": null,
+  "p90_ms": null
+ },
+ "sectors": 28,
+ "sectors_done": 3,
+ "plans": [
+  {
+   "first": [
+    "A2",
+    "B2",
+    "C2",
+    "D2",
+    "E2",
+    "F2"
+   ],
+   "reason": "Prioritize trail segments north of the last find, following the hikers' likely forward trajectory along the path.",
+   "raw_ok": true,
+   "wall_s": 2.7,
+   "held_wait_s": 0.0
+  }
+ ],
+ "state": "DONE",
+ "return_reason": "operator: return home",
+ "sim_s": 122.7,
+ "wall_s": 61.4,
+ "flight_s": 122.2,
+ "battery_used_pct": 10.2,
+ "sweep_h": 36.36363636363636,
+ "lanes": 7,
+ "coverage": 0.1486,
+ "area_m2_covered": 3804,
+ "frames": 14,
+ "candidates": 42,
+ "clef_sweep": {
+  "n": 21,
+  "ok": 21,
+  "median_ms": 303,
+  "p90_ms": 339
+ },
+ "clef_confirm": {
+  "n": 1,
+  "ok": 1,
+  "median_ms": 1300,
+  "p90_ms": 1300
+ },
+ "fallback": 0,
+ "investigations": 1,
+ "dismissed": 0,
+ "mean_investigate_s": 8.8,
+ "mean_decision_h": 20.0,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "gray_dog",
+   "family": "gray dog",
+   "g": [
+    -66.45,
+    -62.98
+   ],
+   "conf": 0.726,
+   "h": 20.0,
+   "photo": "media/photos/S1_20m.jpg",
+   "sweep_crop": "media/crops/f0002_c1.jpg",
+   "sweep_h": 36.4,
+   "spot": "S1",
+   "t": 37.33,
+   "seen": 1,
+   "by": "Clef",
+   "note": {
+    "alert": "Drone spotted a gray dog 66 meters west and 63 meters south of the search center.",
+    "check": "Ground team should proceed to the coordinates to visually confirm the animal.",
+    "agree": true,
+    "wall_s": 1.9,
+    "held_wait_s": 0.0
+   }
+  }
+ ],
+ "time_to_first_alert": 37.33
+}
