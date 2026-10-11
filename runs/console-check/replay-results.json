@@ -1,0 +1,153 @@
+{
+ "mode": "replay",
+ "url": "http://127.0.0.1:8781/",
+ "results": [
+  {
+   "name": "replay produced an alert within 60 s",
+   "ok": true,
+   "detail": {
+    "after_s": "22.6"
+   }
+  },
+  {
+   "name": "alert banner shown on the camera at the alert",
+   "ok": true,
+   "detail": "ALERT A1: blue backpack found"
+  },
+  {
+   "name": "replay reached the summary",
+   "ok": true
+  },
+  {
+   "name": "track and footprints received",
+   "ok": true,
+   "detail": {
+    "state": "DONE",
+    "path": 618,
+    "frames": 97,
+    "alerts": 1,
+    "spots": 1,
+    "nClef": 90,
+    "nFb": 0,
+    "clues": 1,
+    "lanes": 7,
+    "hasChase": false,
+    "cov": 1,
+    "mode": "replay",
+    "t": 354.12
+   }
+  },
+  {
+   "name": "clue chips rendered",
+   "ok": true
+  },
+  {
+   "name": "alert card rendered per alert",
+   "ok": true
+  },
+  {
+   "name": "alert card images loaded",
+   "ok": true
+  },
+  {
+   "name": "camera image loaded",
+   "ok": true
+  },
+  {
+   "name": "chase panel hidden when no chase frames",
+   "ok": true
+  },
+  {
+   "name": "REPLAY label, no Start button",
+   "ok": true,
+   "detail": "REPLAY  ×20"
+  },
+  {
+   "name": "log has entries",
+   "ok": true
+  },
+  {
+   "name": "state badge shows DONE",
+   "ok": true
+  },
+  {
+   "name": "SUMMARY entry in the log",
+   "ok": true
+  },
+  {
+   "name": "map canvas has content",
+   "ok": true,
+   "detail": {
+    "lit_pixels": 173028
+   }
+  },
+  {
+   "name": "planted items off by default",
+   "ok": true
+  },
+  {
+   "name": "planted items loaded on toggle",
+   "ok": true,
+   "detail": {
+    "items": 2
+   }
+  },
+  {
+   "name": "lightbox opens on card click",
+   "ok": true
+  },
+  {
+   "name": "lightbox closes on Esc",
+   "ok": true
+  },
+  {
+   "name": "no page overflow at 1280x800",
+   "ok": true,
+   "detail": {
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 800,
+    "ch": 800
+   }
+  },
+  {
+   "name": "reload replays the history to the same state",
+   "ok": true,
+   "detail": {
+    "alerts": 1,
+    "spots": 1,
+    "state": "DONE",
+    "catchup": false
+   }
+  },
+  {
+   "name": "Play again enabled once the replay has finished",
+   "ok": true
+  },
+  {
+   "name": "Play again resets the page",
+   "ok": true
+  },
+  {
+   "name": "second replay reaches the alert again, live (banner shows)",
+   "ok": true
+  },
+  {
+   "name": "no external requests (Wi-Fi off safe)",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no failed requests",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no JS errors in the console",
+   "ok": true,
+   "detail": []
+  }
+ ],
+ "errors": [],
+ "failedReqs": []
+}

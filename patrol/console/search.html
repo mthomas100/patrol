@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patrol: search</title>
+<style>
+/* Operator console for the search mission. Self-contained on purpose: no CDN, no web fonts, no libraries, so it
+   runs with the Wi-Fi off. Sizes are in rem and the root font size follows the window, so the page scales from
+   a 1280x800 laptop to a 1920x1080 projector. */
+:root{
+  --bg:#070b10; --panel:#0e141c; --panel2:#0a0f15; --line:#1c2733; --line2:#2b3a4b;
+  --text:#e9eff6; --dim:#93a3b5; --dim2:#5f6f82;
+  --clef:#33e6a0; --fb:#ff9f1a; --amber:#ffb62e; --grey:#8f9dae; --red:#ff4d5e; --blue:#4da3ff; --cyan:#2ad4e8; --violet:#b58bff;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:clamp(10px,min(.94vw,1.67vh),26px)}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+#app{display:grid;grid-template-rows:auto auto minmax(0,1fr);height:100vh;gap:.5rem;padding:.5rem}
+
+/* ---------------------------------------------------------------- header */
+header{display:flex;align-items:center;flex-wrap:wrap;row-gap:.3rem;column-gap:1rem;background:var(--panel);
+  border:1px solid var(--line);border-radius:.5rem;padding:.42rem .9rem;min-width:0;position:relative}
+.title{font-size:1.65rem;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+.title span{color:var(--dim);font-weight:600}
+.badge{min-width:8.4rem;text-align:center;padding:.3rem .8rem;border-radius:.35rem;font-weight:800;letter-spacing:.1em;
+  font-size:1.3rem;background:#2a3542;transition:background .2s}
+.stat{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+.stat b{font-size:1.65rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat>span{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-top:.12rem;white-space:nowrap}
+.stat.cov{min-width:7.6rem}.stat.bat{min-width:5.4rem}
+.meter{height:.34rem;background:#18222d;border-radius:.2rem;overflow:hidden;margin-top:.25rem;width:100%}
+.meter i{display:block;height:100%;width:0;background:var(--blue);transition:width .25s,background .25s}
+.stat.src{min-width:11rem}
+.srcrow{display:flex;gap:.8rem;font-weight:800;font-size:1.15rem;white-space:nowrap}
+.srcrow .c{color:var(--clef)}.srcrow .f{color:var(--fb)}.srcrow .q{color:var(--violet)}
+.srcrow b{font-size:1.15rem;font-weight:800}
+.srcbar{display:flex;height:.34rem;border-radius:.2rem;overflow:hidden;background:#18222d;margin-top:.28rem}
+.srcbar i{display:block;height:100%;transition:width .25s}
+.stat.alerts b{color:var(--dim)}
+.stat.alerts.has b{color:var(--red)}
+.spacer{flex:1 1 0}
+.btn{background:#182230;border:1px solid #2b3a4d;border-radius:.4rem;padding:.42rem .85rem;cursor:pointer;font-weight:700;
+  font-size:1rem;white-space:nowrap;user-select:none;-webkit-user-select:none}
+.btn:hover:not(:disabled){background:#213046;border-color:#3d5470}
+.btn:disabled{opacity:.38;cursor:default}
+.btn.go{background:#0f4a34;border-color:#1f9c6e;color:#c4f8e1}
+.btn.go:hover:not(:disabled){background:#146446}
+.btn.warn{background:#3a2a0c;border-color:#a8741b;color:#ffe2a8}
+#ctl{display:flex;gap:.55rem;align-items:center}
+#toast{position:fixed;right:.8rem;bottom:.8rem;z-index:20;font-size:.95rem;color:var(--cyan);background:rgba(8,14,22,.94);border:1px solid #1e4a55;
+  border-radius:.35rem;padding:.3rem .7rem;max-width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toast:empty{display:none}
+.replaytag{background:#2a1f4a;border:1px solid #7a5fd0;color:#e2d8ff;padding:.4rem .95rem;border-radius:.4rem;font-weight:800;
+  letter-spacing:.12em;font-size:1.05rem;white-space:nowrap}
+.conn{font-size:.72rem;padding:.15rem .55rem;border-radius:1rem;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.conn.live{width:.7rem;height:.7rem;padding:0;background:#33e6a0;border-color:#1c7a57;font-size:0;color:transparent;align-self:flex-start;margin-top:.1rem}
+.conn.bad{color:#ff9f9f;border-color:#8a2a35}
+
+/* ---------------------------------------------------------------- clue chips */
+#chips{display:flex;gap:.5rem;min-width:0;align-items:stretch}
+.chiplab,.chipwait{display:flex;align-items:center;color:var(--dim);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:0 .3rem;white-space:nowrap}
+.chip{flex:1 1 0;min-width:0;background:var(--panel);border:1px solid var(--line);border-left:.38rem solid var(--blue);
+  border-radius:.45rem;padding:.3rem .75rem;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:.8rem;align-items:baseline}
+.chip .fam{font-weight:800;font-size:1.35rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .size{color:var(--dim);font-size:.9rem}
+.chip .words{grid-column:1/-1;font-size:.8rem;color:var(--dim);line-height:1.22;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+
+/* ---------------------------------------------------------------- layout */
+main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1.2fr);gap:.5rem;min-height:0}
+.col{display:flex;flex-direction:column;gap:.5rem;min-height:0;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:.5rem;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.panel>h2{margin:0;padding:.34rem .75rem;font-size:.74rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.8rem;flex:0 0 auto;white-space:nowrap}
+.panel>h2 .r{margin-left:auto;display:flex;gap:.8rem;align-items:center;letter-spacing:0;text-transform:none;font-weight:500;font-size:.88rem;
+  min-width:0;overflow:hidden}
+#camPanel{flex:1.28 1 0}#tracePanel{flex:1 1 0}
+#mapPanel{flex:1.3 1 0}#chasePanel{flex:.95 1 0}#logPanel{flex:.85 1 0}
+#colB.withchase #mapPanel{flex:1.75 1 0}#colB.withchase #chasePanel{flex:.85 1 0}#colB.withchase #logPanel{flex:.75 1 0}
+
+/* ---------------------------------------------------------------- camera */
+.cam{position:relative;flex:1;min-height:0;background:#000;overflow:hidden}
+.cam img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.cam canvas{position:absolute;pointer-events:none}
+.cam img:not([src]),#chaseBox img:not([src]){visibility:hidden}
+.tag:empty{display:none}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim2);font-size:1.1rem;text-align:center;padding:1rem}
+#hud{position:absolute;left:.6rem;top:.6rem;right:.6rem;display:flex;gap:.5rem;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.tag{background:rgba(6,10,15,.84);border:1px solid #33465a;border-radius:.3rem;padding:.2rem .65rem;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.vb{border-radius:.3rem;padding:.2rem .7rem;font-weight:800;font-size:1.15rem;letter-spacing:.08em;color:#fff;background:#3a4756}
+#caption{position:absolute;left:.6rem;right:.6rem;bottom:.6rem;background:rgba(6,10,15,.84);border-radius:.3rem;padding:.32rem .7rem;
+  font-size:1rem;line-height:1.3}
+#banner{position:absolute;left:0;right:0;top:3rem;text-align:center;pointer-events:none}
+#banner span{display:inline-block;background:rgba(200,24,46,.94);color:#fff;font-weight:800;font-size:1.9rem;letter-spacing:.04em;
+  padding:.35rem 1.6rem;border-radius:.4rem;box-shadow:0 0 0 .25rem rgba(255,77,94,.3);animation:bannerpulse 1s ease-in-out infinite}
+@keyframes bannerpulse{50%{box-shadow:0 0 0 .6rem rgba(255,77,94,.08)}}
+
+/* ---------------------------------------------------------------- decision trace */
+#trBody{display:grid;grid-template-columns:9.2rem minmax(0,1fr);gap:.85rem;padding:.55rem .85rem;flex:1;min-height:0;overflow:hidden}
+.trthumb{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.trthumb .imgbox{background:#000;border:2px solid var(--line2);border-radius:.35rem;overflow:hidden;aspect-ratio:1/1;position:relative}
+.trthumb.photo .imgbox{aspect-ratio:4/3}
+.trthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.trres{font-weight:800;font-size:1.02rem;letter-spacing:.06em;text-align:center;border-radius:.3rem;padding:.2rem .3rem;background:#2a3542;color:#fff}
+.trcap{font-size:.74rem;color:var(--dim);line-height:1.25}
+.trbars{display:flex;flex-direction:column;gap:.3rem;min-width:0;min-height:0;overflow:hidden}
+.grp{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:.15rem 0 0}
+.bar{display:grid;grid-template-columns:8.6rem minmax(0,1fr) 3.2rem;gap:.5rem;align-items:center;font-size:1.02rem;line-height:1.1}
+.bar .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#b9c6d4}
+.bar .trk{position:relative;height:1.08rem;background:#17202b;border-radius:.25rem;overflow:hidden}
+.bar .trk i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c,#4da3ff);border-radius:.25rem}
+.bar .trk b.mk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:rgba(255,255,255,.8)}
+.bar .pct{text-align:right;font-variant-numeric:tabular-nums}
+.bar.chosen .lab{color:#fff;font-weight:800}
+.bar.chosen .lab::before{content:"\25B6\00a0";font-size:.6rem;color:var(--c,#fff)}
+.bar.pass .pct{color:var(--amber);font-weight:800}
+.nofb{color:var(--fb);font-size:.98rem;line-height:1.35}
+.rule{font-size:.74rem;color:var(--dim2);line-height:1.3;margin-top:auto}
+#tracePanel.l1 #strip{display:none}
+#tracePanel.l2 .rule{display:none}
+#tracePanel.l3 .bar{font-size:.9rem}#tracePanel.l3 .trbars{gap:.15rem}#tracePanel.l3 .trcap{display:none}
+#strip{display:flex;gap:.4rem;padding:.4rem .85rem .5rem;border-top:1px solid var(--line);overflow:hidden;flex:0 0 auto}
+.tile{position:relative;width:3.5rem;height:3.5rem;flex:0 0 auto;border:2px solid #3a4756;border-radius:.3rem;overflow:hidden;background:#000}
+.tile.inv{border-color:var(--amber)}.tile.fb{border-color:var(--fb);border-style:dashed}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile span{position:absolute;right:0;bottom:0;background:rgba(0,0,0,.82);font-size:.7rem;padding:0 .22rem;font-weight:700}
+.striplab{align-self:center;color:var(--dim2);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);margin-right:.1rem}
+
+/* ---------------------------------------------------------------- map and chase */
+#mapwrap{flex:1;min-height:0;position:relative;background:#080c11}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tog{display:flex;align-items:center;gap:.35rem;cursor:pointer;color:var(--text);font-size:.85rem;user-select:none;-webkit-user-select:none}
+.tog input{accent-color:#4da3ff;width:1rem;height:1rem;margin:0}
+.legendrow{display:flex;gap:.9rem;padding:.25rem .75rem;border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap}
+.lg{display:inline-flex;align-items:center;gap:.3rem;color:var(--dim);font-size:.8rem;white-space:nowrap}
+.lg i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%}
+.lg i.sq{border-radius:.12rem}
+#chaseBox{position:relative;flex:1;min-height:0;background:#000}
+#chaseBox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+
+/* ---------------------------------------------------------------- log */
+#log{flex:1;overflow-y:auto;min-height:0;font-size:.95rem}
+.ev{display:grid;grid-template-columns:2.8rem 6.1rem minmax(0,1fr);gap:.4rem;padding:.24rem .65rem;border-bottom:1px solid #131c26;line-height:1.3}
+.ev .tt{color:var(--dim2);font-variant-numeric:tabular-nums;font-size:.8rem;padding-top:.1rem}
+.ev .tg{font-weight:800;font-size:.72rem;letter-spacing:.08em;padding-top:.17rem}
+.ev .tx{word-break:break-word}
+.ev .tx em{font-style:normal;color:var(--dim);font-size:.9em}
+.ev.dim{opacity:.6}
+.ev.big .tx{font-weight:700}
+.ev.fresh{animation:flash 1.4s}
+@keyframes flash{from{background:#22344a}to{background:transparent}}
+
+/* ---------------------------------------------------------------- alerts */
+#alertList{flex:1;overflow-y:auto;min-height:0;padding:.55rem;display:flex;flex-direction:column;gap:.65rem}
+.none{color:var(--dim2);margin:auto;text-align:center;font-size:1.1rem;line-height:1.5;padding:1rem}
+.none b{color:var(--dim)}
+.acard{flex:0 0 auto;background:var(--panel2);border:2px solid #6a2230;border-radius:.55rem;padding:.55rem;display:flex;flex-direction:column;gap:.5rem;cursor:zoom-in}
+.acard.new{animation:cardpulse 1.1s ease-in-out 8}
+@keyframes cardpulse{50%{border-color:var(--red);box-shadow:0 0 0 .3rem rgba(255,77,94,.25)}}
+.ahead{display:flex;align-items:baseline;gap:.75rem}
+.aid{background:var(--red);color:#fff;font-weight:800;letter-spacing:.08em;font-size:1rem;padding:.12rem .6rem;border-radius:.25rem}
+.afam{font-size:1.75rem;font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atime{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums;font-size:1rem;white-space:nowrap}
+.aimgs{display:grid;grid-template-columns:minmax(0,.42fr) minmax(0,.58fr);gap:.5rem}
+.aimgs figure{margin:0;position:relative;background:#000;border-radius:.4rem;overflow:hidden;border:1px solid var(--line2)}
+.aimgs figure.close{aspect-ratio:4/3}
+.aimgs img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.aimgs figcaption{position:absolute;left:0;right:0;bottom:0;padding:.7rem .55rem .25rem;font-size:.95rem;font-weight:800;
+  background:linear-gradient(transparent,rgba(0,0,0,.88));color:#fff}
+.afacts{display:grid;grid-template-columns:repeat(3,auto);gap:.15rem 1.2rem;justify-content:start;font-size:1rem}
+.afacts span{color:var(--dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;display:block}
+.afacts b{font-size:1.2rem;font-variant-numeric:tabular-nums}
+.asteps{font-size:.85rem;color:var(--dim);line-height:1.35}
+.anote{font-size:.9rem;color:#d6e6f6;border-left:3px solid var(--violet);padding-left:.6rem;line-height:1.35}
+.anote b{color:var(--violet);letter-spacing:.06em;font-size:.78rem}
+.anote .chk{color:var(--dim)}
+.aby{font-size:.78rem;font-weight:800;letter-spacing:.05em;color:#e6dcff;background:#3b2a66;border:1px solid #7a5fd0;border-radius:.25rem;padding:.08rem .45rem;white-space:nowrap}
+
+/* ---------------------------------------------------------------- lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(3,6,10,.95);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1.2rem;padding:2rem;cursor:zoom-out}
+#lightbox .lbt{font-size:2.1rem;font-weight:800}
+#lightbox .lbt em{font-style:normal;color:var(--red)}
+#lightbox .lbs{font-size:1.2rem;color:var(--dim)}
+#lightbox .lbi{display:flex;gap:2.2rem;align-items:flex-end;justify-content:center;width:100%}
+#lightbox figure{margin:0;text-align:center;font-size:1.3rem;font-weight:700}
+#lightbox img{display:block;background:#000;border:2px solid var(--line2);border-radius:.4rem;margin-bottom:.5rem;object-fit:contain}
+#lightbox .lbc img{width:min(30vw,58vh);aspect-ratio:1/1}
+#lightbox .lbp img{width:min(46vw,77vh);aspect-ratio:4/3}
+#lightbox .lbh{color:var(--dim2);font-size:.9rem}
+
+@media (max-height:860px){#strip{display:none}}
+@media (max-width:1500px){
+  header{column-gap:.8rem}
+  .stat.src{min-width:10rem}
+  .badge{min-width:7.5rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">Patrol<span>: search</span></div>
+    <div id="stateBadge" class="badge">READY</div>
+    <div class="stat cov"><b id="vCov">0%</b><span id="lCov">area searched</span><div class="meter"><i id="mCov"></i></div></div>
+    <div class="stat bat"><b id="vBatt">--</b><span>battery</span><div class="meter"><i id="mBatt"></i></div></div>
+    <div class="stat"><b id="vClock" class="mono">0:00</b><span>sim clock</span></div>
+    <div class="stat src">
+      <div class="srcrow"><span class="c">CLEF <b id="nClef">0</b></span><span class="f">FALLBACK <b id="nFb">0</b></span><span class="q" id="spThink" hidden title="notes, trail plans and second opinions from the slow thinker">QWEN38 <b id="nThink">0</b></span></div>
+      <div class="srcbar"><i id="sbClef" style="background:var(--clef);width:0"></i><i id="sbFb" style="background:var(--fb);width:0"></i></div>
+      <span id="lSrc">decision source</span>
+    </div>
+    <div class="stat alerts" id="stAlerts"><b id="vAlerts">0</b><span>alerts</span></div>
+    <div class="spacer"></div>
+    <div id="toast"></div>
+    <div id="ctl" hidden>
+      <button class="btn go" id="bStart">Start</button>
+      <button class="btn" id="bLast" disabled>Go to last alert</button>
+      <button class="btn warn" id="bHome" disabled>Return home</button>
+    </div>
+    <div id="replayTag" class="replaytag" hidden>REPLAY</div>
+    <button class="btn" id="bReplay" hidden disabled title="Play the recorded run again from the start">Play again</button>
+    <div id="conn" class="conn">connecting</div>
+  </header>
+
+  <section id="chips"></section>
+
+  <main>
+    <div class="col">
+      <section class="panel" id="camPanel">
+        <h2><span id="camTitle">Onboard camera</span><span class="r" id="camMeta"></span></h2>
+        <div class="cam" id="cam">
+          <img id="camImg" alt="">
+          <canvas id="boxes"></canvas>
+          <div class="empty" id="camEmpty">Waiting for the first sweep frame.</div>
+          <div id="hud"><span class="tag" id="camTag"></span><span id="camVerdict"></span></div>
+          <div id="banner"></div>
+          <div id="caption" hidden></div>
+        </div>
+      </section>
+      <section class="panel" id="tracePanel">
+        <h2>Decision trace<span class="r" id="trMeta"></span></h2>
+        <div id="trBody"><div class="none" style="grid-column:1/-1">No decision yet. Clef judges one crop at a time once the sweep starts.</div></div>
+        <div id="strip"></div>
+      </section>
+    </div>
+
+    <div class="col" id="colB">
+      <section class="panel" id="mapPanel">
+        <h2>Map
+          <span class="r">
+            <label class="tog" title="Ground truth from scene.json. Off by default: the drone never sees it."><input type="checkbox" id="togTruth">show planted items</label>
+          </span>
+        </h2>
+        <div class="legendrow">
+          <span class="lg"><i class="sq" style="background:rgba(77,163,255,.55)"></i>searched</span>
+          <span class="lg"><i style="background:var(--amber)"></i>open</span>
+          <span class="lg"><i style="background:var(--grey)"></i>dismissed</span>
+          <span class="lg"><i style="background:var(--red)"></i>alert</span>
+          <span class="lg" id="lgFeat" hidden><i class="sq" style="background:#e2c696;height:.2rem;width:.9rem"></i>trail <i class="sq" style="background:#60aaeb;height:.2rem;width:.9rem;margin-left:.4rem"></i>stream <i style="background:none;border:2px solid var(--violet);margin-left:.4rem;border-radius:.12rem;transform:rotate(45deg);width:.55rem;height:.55rem"></i>LKP</span>
+        </div>
+        <div id="mapwrap"><canvas id="map"></canvas></div>
+      </section>
+      <section class="panel" id="chasePanel" hidden>
+        <h2>Chase view<span class="r">third person</span></h2>
+        <div id="chaseBox"><img id="chaseImg" alt=""></div>
+      </section>
+      <section class="panel" id="logPanel">
+        <h2>Log</h2>
+        <div id="log"></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="panel" id="alertPanel" style="flex:1 1 0">
+        <h2>Alerts<span class="r" id="alertMeta">click a card to enlarge</span></h2>
+        <div id="alertList"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="lightbox" hidden></div>
+
+<script>
+'use strict';
+/* ====================================================================== helpers */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isNum = v => typeof v === 'number' && isFinite(v);
+const num = (v, d = 1) => isNum(v) ? v.toFixed(d) : '--';
+const pc = v => { if (!isNum(v)) return '--'; if (v >= 0.1) return Math.round(v * 100) + '%'; if (v >= 0.01) return (v * 100).toFixed(1) + '%'; return v > 0 ? '<1%' : '0%'; };
+const runUrl = p => p ? '/run/' + String(p).replace(/^\/+/, '') : null;
+const mmss = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = Math.floor(t - m * 60); return m + ':' + String(s).padStart(2, '0'); };
+const xyTxt = g => Array.isArray(g) && g.length > 1 ? '(' + num(g[0], 1) + ', ' + num(g[1], 1) + ')' : '--';
+const setText = (el, v) => { v = String(v); if (el.textContent !== v) el.textContent = v; };
+const setHtml = (el, v) => { if (el.__h !== v) { el.__h = v; el.innerHTML = v; } };
+
+const COL = {amber:'#ffb62e', grey:'#8f9dae', red:'#ff4d5e', blue:'#4da3ff', cyan:'#2ad4e8', green:'#33e6a0', orange:'#ff9f1a', violet:'#b58bff', dim:'#5f6f82'};
+const CLUE_COL = ['#4da3ff', '#ff8a4d', '#b58bff', '#33e6a0', '#f2d15b'];
+const STATE_COL = {TAKEOFF:'#5f7288', SWEEP:'#2f7fe0', INVESTIGATE:'#d99a14', CONFIRM:'#e8691f', RESUME:'#17aabd', RETURN:'#8f5fe6', DONE:'#1fae74'};
+const TRACK_COL = {TAKEOFF:'#7d97b5', SWEEP:'#8fc4ff', INVESTIGATE:'#ffb62e', CONFIRM:'#ffb62e', RESUME:'#2ad4e8', RETURN:'#b58bff', DONE:'#33e6a0'};
+const VERDICT = {confirm:{txt:'CONFIRM', col:'#d8283c'}, dismiss:{txt:'DISMISS', col:'#5a6878'}, closer:{txt:'CLOSER', col:'#c98a0c'},
+                 unresolved:{txt:'UNRESOLVED', col:'#d9731a'}, uncertain:{txt:'UNCERTAIN', col:'#b8650f'}, duplicate:{txt:'DUPLICATE', col:'#5a6878'}};
+const AUTOZOOM = Math.max(0, parseFloat(new URLSearchParams(location.search).get('autozoom')) || 0);   // ?autozoom=6
+const OP_LABEL = {go_back_to_last_alert:'Go to last alert', return_home:'Return home'};
+
+/* ====================================================================== state */
+let S = freshState(), dirty = true, API = {};
+function freshState(){
+  return {
+    mode: null, run: null, speed: null, catchup: false,      // true only while the server replays the history on connect
+    spec: null, clues: [], cluesVer: 0, config: null, lanes: [], sectors: [], home: null, sweepH: null,
+    curSector: null, doneSectors: new Set(), plan: null, final: {}, nThink: 0,
+    state: null, stateReason: '', battery: null, coverage: 0, lane: 0, t: 0,
+    path: [], pos: null, heading: Math.PI / 2,
+    footprints: [], lastFoot: null,
+    frame: null,                       // latest sweep frame event
+    chaseUrl: null, hasChase: false,
+    spots: new Map(), curSpot: null,   // investigated spots by id: {id, g, status: open|dismissed|confirmed, alert}
+    zoom: null,                        // latest close-up: {id, h, photo, verdict, clue, noul}
+    steps: {},                         // spot id -> its confirm events
+    trace: null, traceNext: null, strip: [], stripVer: 0,
+    alerts: [], notes: {}, summary: null,
+    nClef: 0, nFb: 0, ms: [], medMs: null,
+    camHoldUntil: 0, traceHoldUntil: 0, flashUntil: 0, flashId: null,
+    truth: null, truthLoading: false,
+    bounds: {x0:-100, x1:100, y0:-100, y1:100}, boundsKey: '',
+    error: null, speech: null, speechUntil: 0,
+  };
+}
+const wake = ms => setTimeout(() => { dirty = true; }, ms + 30);
+
+function familyOf(name){ const c = S.clues.find(c => c.name === name); return c ? c.family : String(name == null ? '' : name).replace(/_/g, ' '); }
+function humanize(text){ let t = String(text == null ? '' : text); for (const c of S.clues) t = t.split(c.name).join(c.family); return t; }
+
+/* ====================================================================== log */
+function logEv(t, tag, color, html, cls){
+  const d = document.createElement('div');
+  d.className = 'ev' + (S.catchup ? '' : ' fresh') + (cls ? ' ' + cls : '');
+  d.innerHTML = '<div class="tt mono">' + esc(mmss(t)) + '</div><div class="tg" style="color:' + color + '">' + esc(tag) + '</div><div class="tx">' + html + '</div>';
+  const log = $('log');
+  log.insertBefore(d, log.firstChild);
+  while (log.children.length > 400) log.removeChild(log.lastChild);
+}
+
+/* ====================================================================== event ingest */
+function ingest(ev){
+  if (!ev || typeof ev !== 'object') return;
+  switch (ev.type){
+    case 'reset': resetAll(); return;
+    case 'caught_up': S.catchup = false; clearTimeout(cuTimer); break;
+    case 'ready': case 'start': onSetup(ev); break;
+    case 'tick': onTick(ev); break;
+    case 'frame': onFrame(ev); break;
+    case 'state': onState(ev); break;
+    case 'investigate': onInvestigate(ev); break;
+    case 'confirm': onConfirm(ev); break;
+    case 'dismiss': onDismiss(ev); break;
+    case 'alert': onAlert(ev); break;
+    case 'operator': onOperator(ev); break;
+    case 'plan': onPlan(ev); break;
+    case 'second_opinion': onSecond(ev); break;
+    case 'summary': onSummary(ev); break;
+    case 'note': onNote(ev); break;
+    case 'clues': case 'clue_options': onClues(ev); break;
+    case 'speech': onSpeech(ev); break;
+    case 'error': S.error = ev.message || 'error'; logEv(ev.t || S.t, 'ERROR', COL.red, esc(ev.message || 'flight error'), 'big'); toast('flight error: ' + (ev.message || '')); break;
+    default: break;
+  }
+  dirty = true;
+}
+
+function onSetup(ev){
+  if (ev.type === 'ready'){ S.run = ev.run || S.run; S.mode = ev.replay ? 'replay' : 'live'; S.speed = ev.speed || S.speed; }
+  if (ev.spec) S.spec = ev.spec;
+  if (Array.isArray(ev.clues) && ev.clues.length){ S.clues = ev.clues; S.cluesVer++; }
+  if (ev.config) S.config = ev.config;
+  if (Array.isArray(ev.lanes)) S.lanes = ev.lanes;
+  if (Array.isArray(ev.sectors)) S.sectors = ev.sectors;
+  if (Array.isArray(ev.home)) S.home = ev.home;
+  if (isNum(ev.sweep_h)) S.sweepH = ev.sweep_h;
+  computeBounds();
+  if (ev.type === 'start'){
+    const a = S.config && S.config.area;
+    let dim = '';
+    if (a && a.length > 2){ const xs = a.map(p => p[0]), ys = a.map(p => p[1]); dim = ', area ' + num(Math.max(...xs) - Math.min(...xs), 0) + ' x ' + num(Math.max(...ys) - Math.min(...ys), 0) + ' m'; }
+    logEv(ev.t || 0, 'START', COL.green, 'mission started: ' + esc(S.lanes.length) + ' lanes at ' + esc(num(S.sweepH, 0)) + ' m' + esc(dim) +
+          (S.clues.length ? '<br><em>looking for ' + esc(S.clues.map(c => c.family).join(', ')) + '</em>' : ''));
+  }
+}
+
+function onTick(ev){
+  if (isNum(ev.t)) S.t = ev.t;
+  const tel = ev.tel;
+  if (tel && isNum(tel.x) && isNum(tel.y)){
+    const p = S.path[S.path.length - 1];
+    if (p){ const dx = tel.x - p[0], dy = tel.y - p[1]; if (Math.hypot(dx, dy) > 0.05) S.heading = Math.atan2(dy, dx); }
+    S.path.push([tel.x, tel.y, ev.state || S.state]);
+    S.pos = tel;
+  }
+  if (ev.state) S.state = ev.state;
+  if (isNum(ev.battery)) S.battery = ev.battery;
+  if (isNum(ev.coverage)) S.coverage = ev.coverage;
+  if (isNum(ev.lane)) S.lane = ev.lane;
+  if (ev.sector !== undefined && ev.sector !== S.curSector){
+    if (S.curSector) S.doneSectors.add(S.curSector);
+    S.curSector = ev.sector;
+  }
+  if (ev.chase){ S.chaseUrl = runUrl(ev.chase); S.hasChase = true; }
+}
+
+function onFrame(ev){
+  S.frame = ev;
+  if (isNum(ev.coverage)) S.coverage = ev.coverage;
+  if (Array.isArray(ev.footprint) && ev.footprint.length > 2){ S.footprints.push(ev.footprint); S.lastFoot = ev.footprint; covDirty = true; }
+  let best = null;
+  (ev.candidates || []).forEach((c, i) => {
+    if (c.status !== 'judged') return;
+    const g = c.gate || {}, fb = g.source === 'FALLBACK', inv = g.action === 'investigate';
+    if (fb) S.nFb++; else { S.nClef++; if (isNum(c.ms)) S.ms.push(c.ms); }
+    S.strip.unshift({key: ev.n + '_' + i, crop: c.crop, noul: g.noul, inv, fb});
+    const score = (inv ? 10 : 0) + (isNum(g.noul) ? g.noul : 0) + (isNum(g.p_inv) ? g.p_inv * 0.01 : 0);
+    if (!best || score > best.score) best = {score, c, i};
+  });
+  if (S.strip.length > 12) S.strip.length = 12;
+  S.stripVer++;
+  if (best) setTrace({kind:'sweep', key:'sweep|' + ev.n + '|' + best.i, cand: best.c, n: ev.n}, 0);
+}
+
+function onState(ev){
+  const prev = S.state;
+  S.state = ev.state || S.state;
+  S.stateReason = humanize(ev.reason || '');
+  if (ev.state === 'SWEEP' && prev === 'SWEEP') return;        // next lane: the header shows it
+  logEv(ev.t, 'STATE', COL.grey, '<b>' + esc(ev.state) + '</b> <em>' + esc(S.stateReason) + '</em>', 'dim');
+}
+
+function onInvestigate(ev){
+  const sp = ev.spot || {};
+  if (!sp.id) return;
+  S.spots.set(sp.id, Object.assign({}, sp, {status:'open', t: ev.t}));
+  S.curSpot = sp.id;
+  logEv(ev.t, 'INVESTIGATE', COL.amber, '<b>' + esc(sp.id) + '</b> maybe ' + esc(familyOf(sp.clue)) + ' at ' + esc(xyTxt(sp.g)) +
+        ' <em>crop ' + esc(pc(sp.noul)) + ', investigate ' + esc(pc(sp.p_inv)) + ', seen from ' + esc(num(sp.sweep_h, 0)) + ' m</em>');
+}
+
+function onConfirm(ev){
+  (S.steps[ev.id] = S.steps[ev.id] || []).push(ev);
+  const ok = ev.ok !== false;
+  if (ok){ S.nClef++; if (isNum(ev.ms)) S.ms.push(ev.ms); } else S.nFb++;
+  S.zoom = {id: ev.id, h: ev.h, photo: ev.photo, verdict: ev.verdict, clue: ev.clue, noul: ev.noul, ok, slant: ev.slant_m};
+  const hold = ev.verdict === 'confirm' ? 7000 : 3500;
+  if (!S.catchup){ S.camHoldUntil = performance.now() + hold; wake(hold); }
+  setTrace({kind:'confirm', key:'confirm|' + ev.id + '|' + ev.h + '|' + S.steps[ev.id].length, ev}, hold);
+  const v = VERDICT[ev.verdict] || {txt: String(ev.verdict).toUpperCase(), col: COL.grey};
+  logEv(ev.t, 'CONFIRM', v.col === '#5a6878' ? COL.grey : (ev.verdict === 'confirm' ? COL.red : COL.amber),
+        '<b>' + esc(ev.id) + '</b> at ' + esc(num(ev.h, 0)) + ' m: <b>' + esc(v.txt.toLowerCase()) + '</b> ' +
+        (ok ? esc(familyOf(ev.clue)) + ' ' + esc(pc(ev.noul)) + ' <em>Clef chose ' + esc(ev.choice === 'other' ? 'something else' : ev.choice === 'nothing' ? 'nothing' : familyOf(ev.choice)) + ', ' + esc(Math.round(ev.ms)) + ' ms</em>'
+              : '<em style="color:' + COL.orange + '">no answer from Clef (FALLBACK), not resolved</em>'));
+}
+
+function onDismiss(ev){
+  S.final[ev.id] = {verdict: ev.verdict === 'duplicate' ? 'duplicate' : 'dismiss'};
+  if (S.zoom && S.zoom.id === ev.id){
+    if (ev.verdict === 'duplicate'){ S.zoom.verdict = 'duplicate'; S.zoom.dup = (/same as (\S+)/.exec(ev.reason || '') || [])[1] || ''; }
+    else if (S.zoom.verdict === 'uncertain') S.zoom.verdict = 'dismiss';
+  }
+  const sp = S.spots.get(ev.id);
+  if (sp){ sp.status = 'dismissed'; sp.verdict = ev.verdict; }
+  else if (Array.isArray(ev.g)) S.spots.set(ev.id, {id: ev.id, g: ev.g, status:'dismissed', verdict: ev.verdict});
+  logEv(ev.t, 'DISMISS', COL.grey, '<b>' + esc(ev.id) + '</b> ' + esc(ev.verdict || 'dismissed') + ' at ' + esc(num(ev.h, 0)) + ' m <em>' + esc(humanize(ev.reason || '')) + '</em>');
+}
+
+function onAlert(a){
+  S.alerts.push(a);
+  S.final[a.spot] = {verdict: 'confirm', by: a.by};
+  if (S.zoom && S.zoom.id === a.spot){ S.zoom.verdict = 'confirm'; S.zoom.by = a.by; }
+  const sp = S.spots.get(a.spot);
+  if (sp){ sp.status = 'confirmed'; sp.alert = a.id; }
+  else if (Array.isArray(a.g)) S.spots.set(a.spot || a.id, {id: a.spot || a.id, g: a.g, status:'confirmed', alert: a.id});
+  addAlertCard(a);
+  if (!S.catchup){
+    S.flashUntil = performance.now() + 9000; S.flashId = a.id; wake(9000);
+    S.camHoldUntil = Math.max(S.camHoldUntil, performance.now() + 7000); wake(7000);
+    if (AUTOZOOM > 0){ openLightbox(a); clearTimeout(onAlert.t); onAlert.t = setTimeout(closeLightbox, AUTOZOOM * 1000); }
+  }
+  logEv(a.t, 'ALERT', COL.red, '<b>' + esc(a.id) + ' ' + esc(a.family) + '</b> at ' + esc(xyTxt(a.g)) + ' <em>confidence ' + esc(pc(a.conf)) +
+        ', confirmed at ' + esc(num(a.h, 0)) + ' m, first seen from ' + esc(num(a.sweep_h, 0)) + ' m</em>', 'big');
+}
+
+function onOperator(ev){
+  const c = ev.command || {};
+  const name = OP_LABEL[c.name] || c.name || '?';
+  logEv(ev.t, 'OPERATOR', COL.cyan, '<b>' + esc(name) + '</b> ' + (ev.accepted === false ? '<span style="color:' + COL.orange + '">refused</span>' : '<span style="color:' + COL.clef + '">accepted</span>') +
+        (ev.reason ? ' <em>' + esc(ev.reason) + '</em>' : ''));
+}
+
+function onSummary(ev){
+  S.summary = ev;
+  const a = (ev.alerts || []).length, cs = ev.clef_sweep || {}, cc = ev.clef_confirm || {};
+  logEv(ev.t, 'SUMMARY', COL.green, 'mission complete' + (ev.return_reason ? ' (' + esc(ev.return_reason) + ')' : '') + ': searched <b>' + esc(Math.round((ev.coverage || 0) * 100)) + '%</b> (' +
+        esc(ev.area_m2_covered) + ' m&sup2;) in ' + esc(mmss(ev.sim_s)) + ', ' + esc(ev.frames) + ' frames, ' + esc(ev.investigations) + ' investigated (' + esc(ev.dismissed) +
+        ' dismissed), <b>' + esc(a) + ' alert' + (a === 1 ? '' : 's') + '</b>' +
+        '<br><em>Clef median ' + esc(cs.median_ms == null ? '--' : cs.median_ms) + ' ms per crop, ' + esc(cc.median_ms == null ? '--' : cc.median_ms) + ' ms per close-up; ' +
+        esc(ev.fallback || 0) + ' fallback answers</em>', 'big');
+}
+
+function noteHtml(n){
+  if (!n) return '';
+  if (n.error) return '<span style="color:' + COL.orange + '">radio note: qwen38 gave no answer (' + esc(n.error) + ')</span>';
+  const txt = n.alert || n.text || '';
+  return '<b>RADIO NOTE</b> &middot; qwen38<br>' + esc(txt) + (n.check ? '<br><span class="chk">Check: ' + esc(n.check) + '</span>' : '') +
+         (n.agree === false ? '<br><span style="color:' + COL.orange + '">qwen38 does not agree the close-up shows the clue</span>' : '');
+}
+function onNote(ev){
+  S.notes[ev.id] = ev;
+  if (!ev.error) S.nThink++;
+  const al = S.alerts.find(a => a.id === ev.id || a.spot === ev.id);
+  const card = al && document.querySelector('.acard[data-id="' + CSS.escape(al.id) + '"]');
+  if (card){ let n = card.querySelector('.anote'); if (!n){ n = document.createElement('div'); n.className = 'anote'; card.appendChild(n); } n.innerHTML = noteHtml(ev); }
+  logEv(ev.t, 'NOTE', COL.violet, '<b>' + esc(ev.id) + '</b> ' + (ev.error ? '<em>qwen38: ' + esc(ev.error) + '</em>' : esc(ev.alert || ev.text || '') + (ev.check ? ' <em>' + esc(ev.check) + '</em>' : '')));
+}
+function onPlan(ev){
+  if (ev.error){
+    logEv(ev.t, 'PLAN', COL.orange, 'qwen38 trail plan: no usable answer <em>' + esc(ev.error) + '</em>', 'dim');
+    return;
+  }
+  S.nThink++;
+  const ids = (ev.applied ? ev.first : ev.proposed) || [];
+  S.plan = {ids, applied: !!ev.applied};
+  logEv(ev.t, 'PLAN', COL.violet, ev.applied
+    ? '<b>sweep reordered</b>: ' + esc(ids.join(', ')) + ' first <em>' + esc(ev.reason || '') + '</em>'
+    : 'qwen38 proposes ' + esc(ids.join(', ')) + ' next, applied when this sector ends <em>' + esc(ev.reason || '') + '</em>');
+}
+function onSecond(ev){
+  if (ev.error){
+    logEv(ev.t, '2ND OPINION', COL.orange, '<b>' + esc(ev.id) + '</b> qwen38 gave no usable answer, the close call is dismissed <em>' + esc(ev.error) + '</em>');
+    return;
+  }
+  S.nThink++;
+  logEv(ev.t, '2ND OPINION', COL.violet, '<b>' + esc(ev.id) + '</b> qwen38 says <b>' + (ev.is_clue ? 'it is the ' + esc(familyOf(ev.clue)) : 'it is not') + '</b> (confidence ' + esc(pc(ev.confidence)) +
+        ') <em>' + esc(String(ev.why || '').replace(/[.\s]+$/, '')) + '; Clef alone said ' + esc(pc(ev.clef_noul)) + '</em>');
+}
+
+function onClues(ev){
+  // 'clues' (a new clue list) or 'clue_options' (qwen38 wrote clues from the family's spoken or typed description)
+  if (ev.type === 'clue_options' && ev.error){ logEv(ev.t, 'CLUES', COL.red, 'qwen38 could not write clues: ' + esc(ev.error)); return; }
+  if (Array.isArray(ev.clues) && ev.clues.length){ S.clues = ev.clues; S.cluesVer++; }
+  const from = ev.type === 'clue_options' ? 'qwen38 wrote clues from &ldquo;' + esc(ev.text || '') + '&rdquo;: ' : 'clue list updated: ';
+  logEv(ev.t, 'CLUES', COL.violet, from + esc(S.clues.map(c => c.family).join(', ')));
+}
+
+function onSpeech(ev){
+  S.speech = ev.text || ''; S.speechUntil = performance.now() + 7000; wake(7000);
+  logEv(ev.t, 'SPEECH', COL.violet, '&ldquo;' + esc(ev.text || '') + '&rdquo;');
+}
+
+/* ====================================================================== decision trace */
+function setTrace(t, holdMs){
+  const now = performance.now();
+  if (S.catchup || t.kind === 'confirm' || now >= S.traceHoldUntil){ S.trace = t; S.traceNext = null; }
+  else S.traceNext = t;                       // a verdict stays up for a few seconds before sweep answers replace it
+  if (holdMs && !S.catchup){ S.traceHoldUntil = now + holdMs; wake(holdMs); }
+}
+
+function bar(label, p, o){
+  o = o || {};
+  const w = isNum(p) ? Math.max(0, Math.min(1, p)) * 100 : 0;
+  const marks = (o.marks || []).filter(isNum).map(m => '<b class="mk" style="left:' + (m * 100) + '%"></b>').join('');
+  return '<div class="bar' + (o.chosen ? ' chosen' : '') + (o.pass ? ' pass' : '') + '" style="--c:' + (o.col || COL.blue) + '">' +
+         '<span class="lab" title="' + esc(label) + '">' + esc(label) + '</span><span class="trk"><i style="width:' + w.toFixed(1) + '%"></i>' + marks + '</span>' +
+         '<span class="pct">' + (isNum(p) ? pc(p) : '--') + '</span></div>';
+}
+const clueCol = name => CLUE_COL[Math.max(0, S.clues.findIndex(c => c.name === name)) % CLUE_COL.length];
+
+function traceHtml(t){
+  const cfg = S.config || {};
+  if (!t) return {key:'none', meta:'', body:'<div class="none" style="grid-column:1/-1">No decision yet. Clef judges one crop at a time once the sweep starts.</div>'};
+  if (t.kind === 'sweep'){
+    const c = t.cand, g = c.gate || {}, fb = g.source === 'FALLBACK', inv = g.action === 'investigate';
+    let rows = '';
+    if (fb){
+      rows = '<div class="nofb"><b>FALLBACK</b>: no answer from Clef (' + esc(g.why || 'decision link down') + ').<br>Rule used: continue along the lane. This crop is asked again if it shows up in a later frame.</div>';
+    } else {
+      rows += '<div class="grp">gate: worth a closer look?</div>';
+      rows += bar('continue', c.probs && c.probs.continue, {col: COL.grey, chosen: !inv});
+      rows += bar('investigate', c.probs && c.probs.investigate, {col: COL.amber, chosen: inv, marks: [cfg.inv_p], pass: c.probs && isNum(cfg.inv_p) && c.probs.investigate >= cfg.inv_p});
+      rows += '<div class="grp">is it one of the clues?</div>';
+      for (const cl of S.clues){
+        const p = c.nouls && c.nouls[cl.name];
+        rows += bar(cl.family, p, {col: clueCol(cl.name), chosen: g.clue === cl.name, marks: [cfg.inv_noul], pass: isNum(p) && isNum(cfg.inv_noul) && p >= cfg.inv_noul});
+      }
+      rows += '<div class="rule">White tick: investigate when a clue reaches ' + esc(pc(cfg.inv_noul)) + ' or the investigate answer reaches ' + esc(pc(cfg.inv_p)) + '.</div>';
+    }
+    const res = fb ? {t:'FALLBACK: CONTINUE', c:'#a85d0a'} : inv ? {t:'INVESTIGATE', c:'#b87d0a'} : {t:'CONTINUE', c:'#4a586a'};
+    return {key: t.key + '|' + S.cluesVer + '|' + (fb ? 'f' : ''), thumb: runUrl(c.crop), photo: false, res,
+            cap: 'What Clef saw: a ' + (c.crop ? '256 px' : '') + ' crop of the finder\u2019s box.',
+            src: fb ? 'FALLBACK' : 'CLEF', ms: fb ? null : c.ms,
+            meta: 'sweep crop, frame ' + esc(t.n) + ', ' + esc(num(S.sweepH, 0)) + ' m', body: rows};
+  }
+  const e = t.ev, fb = e.ok === false, v = VERDICT[e.verdict] || {txt: String(e.verdict).toUpperCase(), col: '#4a586a'};
+  let rows = '';
+  if (fb){
+    rows = '<div class="nofb"><b>FALLBACK</b>: no answer from Clef for this close-up.<br>The spot stays unresolved and the drone tries again, then gives up on it.</div>';
+  } else {
+    rows += '<div class="grp">Clef\u2019s choice</div>';
+    const keys = Object.keys(e.probs || {}).sort((a, b) => {
+      const rank = k => k === 'nothing' ? 2 : k === 'other' ? 1 : 0; return rank(a) - rank(b);
+    });
+    for (const k of keys){
+      const lab = k === 'other' ? 'something else' : k === 'nothing' ? 'nothing' : familyOf(k);
+      rows += bar(lab, e.probs[k], {col: S.clues.some(c => c.name === k) ? clueCol(k) : COL.grey, chosen: k === e.choice});
+    }
+    rows += '<div class="grp">is it the clue? (confirm needs ' + esc(pc(cfg.t_confirm)) + ')</div>';
+    for (const cl of S.clues){
+      const p = e.nouls && e.nouls[cl.name];
+      rows += bar(cl.family, p, {col: clueCol(cl.name), chosen: e.clue === cl.name, marks: [cfg.t_dismiss, cfg.t_confirm], pass: isNum(p) && isNum(cfg.t_confirm) && p >= cfg.t_confirm});
+    }
+    rows += '<div class="rule">White ticks: dismiss below ' + esc(pc(cfg.t_dismiss)) + ', confirm at ' + esc(pc(cfg.t_confirm)) + ' or more, in between go lower.</div>';
+  }
+  const fin = S.final[e.id], fv = fin && fin.verdict !== e.verdict && VERDICT[fin.verdict];
+  return {key: t.key + '|' + S.cluesVer + '|' + (fin ? fin.verdict : ''), thumb: runUrl(e.photo), photo: true,
+          res: fv ? {t: v.txt + ' \u2192 ' + fv.txt, c: fv.col} : {t: v.txt, c: v.col},
+          cap: 'What Clef saw: the zoom photo at ' + num(e.h, 0) + ' m.', src: fb ? 'FALLBACK' : 'CLEF', ms: fb ? null : e.ms,
+          meta: 'confirm ' + esc(e.id) + ' at ' + esc(num(e.h, 0)) + ' m', body: rows};
+}
+
+function fitTrace(){
+  const panel = $('tracePanel'), body = $('trBody');
+  const over = () => [...body.children].some(el => el.scrollHeight > el.clientHeight + 1) || body.scrollHeight > body.clientHeight + 1;
+  panel.classList.remove('l1', 'l2', 'l3');
+  for (const c of ['l1', 'l2', 'l3']){
+    if (!over()) break;
+    panel.classList.add(c);
+  }
+}
+let traceKey = null;
+function renderTrace(now){
+  if (S.traceNext && now >= S.traceHoldUntil){ S.trace = S.traceNext; S.traceNext = null; }
+  const h = traceHtml(S.trace);
+  if (h.key !== traceKey){
+    traceKey = h.key;
+    if (!S.trace){ $('trBody').innerHTML = h.body; setHtml($('trMeta'), ''); }
+    else {
+      $('trBody').innerHTML =
+        '<div class="trthumb' + (h.photo ? ' photo' : '') + '"><div class="imgbox"><img alt="" src="' + esc(h.thumb || '') + '" onerror="this.style.display=\'none\'"></div>' +
+        '<div class="trres" style="background:' + h.res.c + '">' + esc(h.res.t) + '</div><div class="trcap">' + esc(h.cap) + '</div></div>' +
+        '<div class="trbars">' + h.body + '</div>';
+      const srcCol = h.src === 'CLEF' ? COL.green : COL.orange;
+      setHtml($('trMeta'), '<span style="color:' + srcCol + ';font-weight:800;letter-spacing:.06em">' + h.src + '</span>' +
+              (isNum(h.ms) ? '<span class="mono">' + Math.round(h.ms) + ' ms</span>' : '') + '<span>' + h.meta + '</span>');
+    }
+    fitTrace();
+  }
+  renderStrip();
+}
+const tileEls = new Map();
+let stripShown = -1;
+function renderStrip(){
+  if (stripShown === S.stripVer) return;
+  stripShown = S.stripVer;
+  const box = $('strip');
+  if (!S.strip.length){ box.innerHTML = ''; tileEls.clear(); return; }
+  if (!box.querySelector('.striplab')){ box.innerHTML = '<span class="striplab">last crops</span>'; tileEls.clear(); }
+  const keep = new Set();
+  S.strip.forEach(it => {
+    keep.add(it.key);
+    if (!tileEls.has(it.key)){
+      const d = document.createElement('div');
+      d.className = 'tile' + (it.fb ? ' fb' : it.inv ? ' inv' : '');
+      d.innerHTML = '<img alt="" src="' + esc(runUrl(it.crop) || '') + '" onerror="this.style.display=\'none\'"><span>' + (it.fb ? 'n/a' : pc(it.noul)) + '</span>';
+      tileEls.set(it.key, d);
+    }
+  });
+  for (const [k, el] of tileEls) if (!keep.has(k)){ el.remove(); tileEls.delete(k); }
+  let ref = box.querySelector('.striplab').nextSibling;
+  S.strip.forEach(it => {                       // newest first, right after the label
+    const el = tileEls.get(it.key);
+    if (el !== ref) box.insertBefore(el, ref); else ref = ref.nextSibling;
+  });
+}
+
+/* ====================================================================== camera */
+const cam = {cur: null, want: null, busy: false};
+function camView(now){
+  const spot = S.spots.get(S.curSpot);
+  const inInv = S.state === 'INVESTIGATE' || S.state === 'CONFIRM';
+  const z = S.zoom;
+  const cfg = S.config || {};
+  if (z && (now < S.camHoldUntil || (inInv && z.id === S.curSpot))){
+    const v = VERDICT[z.verdict] || {txt: String(z.verdict).toUpperCase(), col: '#4a586a'};
+    const fam = familyOf(z.clue);
+    let cap;
+    if (!z.ok) cap = 'No answer from Clef (FALLBACK): this close-up is unresolved.';
+    else if (z.verdict === 'confirm') cap = fam + ' ' + pc(z.noul) + ' at ' + num(z.h, 0) + ' m: confirmed' + (z.by && z.by !== 'Clef' ? ' by ' + z.by : ' (needs ' + pc(cfg.t_confirm) + ')') + '.';
+    else if (z.verdict === 'closer') cap = fam + ' ' + pc(z.noul) + ': not sure yet, going lower for a closer look.';
+    else if (z.verdict === 'uncertain') cap = fam + ' ' + pc(z.noul) + ' at the lowest step: a close call, no alert without a second opinion.';
+    else if (z.verdict === 'dismiss') cap = 'Not a clue: best match ' + fam + ' ' + pc(z.noul) + '. Dismissed, back to the sweep.';
+    else if (z.verdict === 'duplicate') cap = fam + ' ' + pc(z.noul) + ' at ' + num(z.h, 0) + ' m: confirmed again, the same find as ' + (z.dup || 'an earlier alert') + '. No new alert.';
+    else cap = 'No clear answer yet: trying again.';
+    return {kind:'zoom', url: runUrl(z.photo), W: 512, H: 384, cands: [], title: 'Zoom camera', meta: z.id + ' at ' + num(z.h, 0) + ' m' + (isNum(z.slant) ? ', ' + num(z.slant, 0) + ' m slant' : ''),
+            tag: 'ZOOM, ' + num(z.h, 0) + ' m  \u00b7  ' + z.id, verdict: !z.ok ? {txt: 'NO ANSWER', col: '#d9731a'} : z.verdict === 'duplicate' ? {txt: 'SAME AS ' + (z.dup || 'EARLIER'), col: '#2f7f5f'} : v, caption: cap,
+            sig: ['zoom', z.photo, z.verdict, z.ok, z.by, cap].join('|')};
+  }
+  const f = S.frame;
+  if (!f || !f.frame) return null;
+  const flying = (S.state === 'INVESTIGATE' || S.state === 'CONFIRM') && spot;
+  const target = flying && spot.frame === f.frame ? spot : null;
+  let cap = S.stateReason || (S.state ? S.state.toLowerCase() : '');
+  if (flying && !target) cap = S.stateReason;
+  const nJ = (f.candidates || []).filter(c => c.status === 'judged').length;
+  return {kind:'sweep', url: runUrl(f.frame), W: f.W || 1280, H: f.H || 960, cands: f.candidates || [], target,
+          title: 'Onboard camera', meta: (S.curSector ? placeTxt() : 'lane ' + (isNum(f.lane) ? f.lane + 1 : '--') + (S.lanes.length ? '/' + S.lanes.length : '')) + '  \u00b7  frame ' + f.n + '  \u00b7  ' + nJ + ' judged',
+          tag: 'SWEEP FRAME  \u00b7  ' + num(S.sweepH, 0) + ' m', verdict: null, caption: cap,
+          sig: ['sweep', f.frame, f.n, target && target.id, cap, S.curSector, S.doneSectors.size].join('|')};
+}
+
+function applyHud(v){
+  setText($('camTitle'), v.title); setText($('camMeta'), v.meta); setText($('camTag'), v.tag);
+  setHtml($('camVerdict'), v.verdict ? '<span class="vb" style="background:' + v.verdict.col + '">' + esc(v.verdict.txt) + '</span>' : '');
+  const c = $('caption'); c.hidden = !v.caption; setText(c, v.caption || '');
+}
+
+function renderCamera(now){
+  const v = camView(now);
+  if (!v){
+    if (cam.cur){ cam.cur = cam.want = null; $('camImg').removeAttribute('src'); $('camEmpty').style.display = ''; drawBoxes(); }
+    const ready = S.state && S.state !== 'TAKEOFF';
+    setText($('camEmpty'), S.state === 'TAKEOFF' ? 'Taking off. The first sweep frame comes at the first lane.' : S.mode === 'live' && !S.state ? 'On the ground. Press Start to launch the drone.' : 'Waiting for the first sweep frame.');
+    if (!ready) { setText($('camTag'), ''); setText($('camMeta'), ''); $('caption').hidden = true; setHtml($('camVerdict'), ''); }
+    return;
+  }
+  if (cam.want && cam.want.sig === v.sig) return;
+  cam.want = v; pumpCam();
+}
+function swapImg(id, im){ const old = $(id); im.id = id; im.alt = ''; old.replaceWith(im); }
+function pumpCam(){
+  const v = cam.want;
+  if (!v || cam.busy) return;
+  if (cam.cur && cam.cur.url === v.url){ cam.cur = v; applyHud(v); drawBoxes(); return; }
+  cam.busy = true;
+  const im = new Image();
+  const done = ok => {
+    cam.busy = false;
+    if (ok){ swapImg('camImg', im); cam.cur = v; $('camEmpty').style.display = 'none'; applyHud(v); drawBoxes(); }
+    if (cam.want && cam.want !== v) pumpCam();
+  };
+  im.onload = () => done(true); im.onerror = () => done(false);
+  im.src = v.url;
+}
+
+function imgRect(){
+  const box = $('cam').getBoundingClientRect(), im = $('camImg');
+  const nw = im.naturalWidth || (cam.cur && cam.cur.W) || 4, nh = im.naturalHeight || (cam.cur && cam.cur.H) || 3;
+  const sc = Math.min(box.width / nw, box.height / nh);
+  const w = nw * sc, h = nh * sc;
+  return {x: (box.width - w) / 2, y: (box.height - h) / 2, w, h};
+}
+
+function drawBoxes(){
+  const cv = $('boxes'), dpr = window.devicePixelRatio || 1, v = cam.cur;
+  const r = imgRect();
+  cv.style.left = r.x + 'px'; cv.style.top = r.y + 'px'; cv.style.width = r.w + 'px'; cv.style.height = r.h + 'px';
+  const cw = Math.max(1, Math.round(r.w * dpr)), ch = Math.max(1, Math.round(r.h * dpr));
+  if (cv.width !== cw || cv.height !== ch){ cv.width = cw; cv.height = ch; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.w, r.h);
+  if (!v || v.kind !== 'sweep') return;
+  const sx = r.w / v.W, sy = r.h / v.H, rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const fs = Math.max(11, rem * 0.88);
+  ctx.font = '800 ' + fs + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif'; ctx.textBaseline = 'middle';
+  const order = (v.cands || []).slice().sort((a, b) => (a.status === 'judged' ? 1 : 0) - (b.status === 'judged' ? 1 : 0));
+  const placed = [];
+  const free = (x, y, w, h) => !placed.some(q => x < q.x + q.w && x + w > q.x && y < q.y + q.h && y + h > q.y);
+  for (const c of order){
+    if (!Array.isArray(c.box)) continue;
+    const pad = 5;
+    const x = c.box[0] * sx - pad, y = c.box[1] * sy - pad, w = (c.box[2] - c.box[0]) * sx + 2 * pad, h = (c.box[3] - c.box[1]) * sy + 2 * pad;
+    const g = c.gate || {};
+    let col, lw, dash = [], label, glow = false;
+    if (c.status === 'judged'){
+      if (g.source === 'FALLBACK'){ col = COL.orange; lw = 2.5; label = 'no answer'; }
+      else if (g.action === 'investigate'){ col = COL.amber; lw = 3.5; glow = true; label = familyOf(g.clue) + ' ' + pc(g.noul); }
+      else { col = '#b4c0cd'; lw = 2.25; label = pc(g.noul); }
+    } else { col = 'rgba(176,190,204,.85)'; lw = 1.75; dash = [5, 4]; label = c.status === 'seen' ? 'seen' : 'off-ground'; }
+    const isTarget = v.target && Array.isArray(v.target.box) && v.target.box.join() === c.box.join();
+    if (isTarget) label = v.target.id + '  ' + label;
+    ctx.setLineDash(dash);
+    ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineWidth = lw + 3; ctx.strokeRect(x, y, w, h);          // dark halo: boxes sit on white snow
+    if (glow){ ctx.shadowColor = col; ctx.shadowBlur = 10; }
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.strokeRect(x, y, w, h);
+    ctx.shadowBlur = 0; ctx.setLineDash([]);
+    const tw = ctx.measureText(label).width, th = fs + 6;
+    const lx = Math.min(Math.max(2, x), r.w - tw - 12);
+    let ly = y - th - 3;
+    if (ly < 2 || !free(lx, ly, tw + 10, th)) ly = y + h + 3;
+    if (!free(lx, ly, tw + 10, th)){
+      if (c.status !== 'judged') continue;                       // a dim "seen" tag is not worth a collision
+      ly = Math.max(2, y - th - 3);
+    }
+    placed.push({x: lx, y: ly, w: tw + 10, h: th});
+    ctx.fillStyle = 'rgba(6,10,15,.9)'; ctx.fillRect(lx, ly, tw + 10, th);
+    ctx.fillStyle = c.status === 'judged' ? (g.source === 'FALLBACK' ? COL.orange : g.action === 'investigate' ? COL.amber : '#dbe4ee') : '#9fb0c2';
+    ctx.fillText(label, lx + 5, ly + th / 2 + 1);
+  }
+}
+
+/* ====================================================================== alerts */
+function stepsText(a){
+  const st = S.steps[a.spot] || [];
+  if (!st.length) return '';
+  return 'Spot ' + esc(a.spot) + ': ' + st.map(s => esc(num(s.h, 0)) + ' m ' + esc((s.verdict || '').toLowerCase()) + ' (' + esc(familyOf(s.clue)) + ' ' + esc(pc(s.noul)) + ')').join(' &rarr; ');
+}
+function addAlertCard(a){
+  const list = $('alertList');
+  const none = list.querySelector('.none'); if (none) none.remove();
+  const d = document.createElement('article');
+  d.className = 'acard' + (S.catchup ? '' : ' new'); d.dataset.id = a.id;
+  d.innerHTML =
+    '<div class="ahead"><span class="aid">ALERT ' + esc(a.id) + '</span><span class="afam">' + esc(a.family) + '</span>' +
+    (a.by && a.by !== 'Clef' ? '<span class="aby">' + esc(a.by) + '</span>' : '') + '<span class="atime mono">t ' + esc(mmss(a.t)) + '</span></div>' +
+    '<div class="aimgs">' +
+      '<figure class="crop"><img alt="" src="' + esc(runUrl(a.sweep_crop) || '') + '"><figcaption>from ' + esc(num(a.sweep_h, 0)) + ' m<br><small>what the sweep saw</small></figcaption></figure>' +
+      '<figure class="close"><img alt="" src="' + esc(runUrl(a.photo) || '') + '"><figcaption>confirmed at ' + esc(num(a.h, 0)) + ' m<br><small>close-up photo</small></figcaption></figure>' +
+    '</div>' +
+    '<div class="afacts"><div><span>looking for</span><b>' + esc(a.family) + '</b></div><div><span>position, m</span><b>' + esc(xyTxt(a.g)) + '</b></div>' +
+    '<div><span>confidence</span><b>' + esc(pc(a.conf)) + '</b></div></div>' +
+    '<div class="asteps">' + stepsText(a) + '</div>' +
+    (S.notes[a.id] ? '<div class="anote">' + noteHtml(S.notes[a.id]) + '</div>' : '');
+  list.insertBefore(d, list.firstChild);
+  if (!S.catchup) list.scrollTop = 0;
+}
+function openLightbox(a){
+  if (!a) return;
+  const lb = $('lightbox');
+  lb.innerHTML = '<div class="lbt"><em>ALERT ' + esc(a.id) + '</em> &middot; ' + esc(a.family) + '</div>' +
+    '<div class="lbs">at ' + esc(xyTxt(a.g)) + ' m &middot; confidence ' + esc(pc(a.conf)) + ' &middot; found at t ' + esc(mmss(a.t)) + '</div>' +
+    '<div class="lbi"><figure class="lbc"><img alt="" src="' + esc(runUrl(a.sweep_crop) || '') + '">from ' + esc(num(a.sweep_h, 0)) + ' m (what the sweep saw)</figure>' +
+    '<figure class="lbp"><img alt="" src="' + esc(runUrl(a.photo) || '') + '">confirmed at ' + esc(num(a.h, 0)) + ' m</figure></div>' +
+    '<div class="lbh">click or press Esc to close</div>';
+  lb.hidden = false;
+}
+const closeLightbox = () => { $('lightbox').hidden = true; };
+$('lightbox').addEventListener('click', closeLightbox);
+$('alertList').addEventListener('click', e => { const c = e.target.closest('.acard'); if (c) openLightbox(S.alerts.find(a => a.id === c.dataset.id)); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+  else if ((e.key === 'a' || e.key === 'A') && !e.metaKey && !e.ctrlKey && S.alerts.length) openLightbox(S.alerts[S.alerts.length - 1]);
+  else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey){
+    try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (_) {}
+  }
+});
+
+function placeholderAlerts(){
+  const list = $('alertList');
+  if (list.children.length) return;
+  list.innerHTML = '<div class="none">No alerts yet.<br>The drone is looking for <b>' + esc(S.clues.map(c => c.family).join(', ') || 'the clues') + '</b>.<br>' +
+                   'A find shows here as the sweep crop beside the confirming close-up.</div>';
+}
+
+/* ====================================================================== map */
+let covDirty = true, cov = {cv: null, key: ''};
+const K = 3;            // coverage layer resolution, pixels per metre
+function computeBounds(){
+  const a = S.config && S.config.area;
+  let x0 = -100, x1 = 100, y0 = -100, y1 = 100;
+  if (a && a.length){
+    const xs = a.map(p => p[0]), ys = a.map(p => p[1]);
+    x0 = Math.min(...xs) - 18; x1 = Math.max(...xs) + 18; y0 = Math.min(...ys) - 18; y1 = Math.max(...ys) + 18;
+  }
+  if (S.home){ x0 = Math.min(x0, S.home[0] - 8); x1 = Math.max(x1, S.home[0] + 8); y0 = Math.min(y0, S.home[1] - 8); y1 = Math.max(y1, S.home[1] + 8); }
+  S.bounds = {x0, x1, y0, y1};
+  $('lgFeat').hidden = !(S.spec && S.spec.map);
+  const key = [x0, x1, y0, y1].join();
+  if (key !== S.boundsKey){ S.boundsKey = key; covDirty = true; }
+}
+function rebuildCoverage(){
+  const b = S.bounds, w = Math.max(1, Math.round((b.x1 - b.x0) * K)), h = Math.max(1, Math.round((b.y1 - b.y0) * K));
+  if (!cov.cv) cov.cv = document.createElement('canvas');
+  cov.cv.width = w; cov.cv.height = h;
+  const c = cov.cv.getContext('2d');
+  c.clearRect(0, 0, w, h); c.fillStyle = '#4da3ff';
+  for (const poly of S.footprints){
+    c.beginPath();
+    poly.forEach((p, i) => { const X = (p[0] - b.x0) * K, Y = (b.y1 - p[1]) * K; if (i) c.lineTo(X, Y); else c.moveTo(X, Y); });
+    c.closePath(); c.fill();
+  }
+  covDirty = false;
+}
+const mapCv = $('map');
+function drawMap(now){
+  const w = mapCv.clientWidth, h = mapCv.clientHeight;
+  if (!w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (mapCv.width !== Math.round(w * dpr) || mapCv.height !== Math.round(h * dpr)){ mapCv.width = Math.round(w * dpr); mapCv.height = Math.round(h * dpr); }
+  if (covDirty) rebuildCoverage();
+  const ctx = mapCv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  const b = S.bounds, pad = 10;
+  const s = Math.min((w - 2 * pad) / (b.x1 - b.x0), (h - 2 * pad) / (b.y1 - b.y0));
+  const left = (w - s * (b.x1 - b.x0)) / 2, top = (h - s * (b.y1 - b.y0)) / 2;
+  const X = x => left + (x - b.x0) * s, Y = y => top + (b.y1 - y) * s;
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const fs = Math.max(10, rem * 0.78);
+  ctx.font = '700 ' + fs + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif'; ctx.textBaseline = 'middle';
+
+  // grid, every 20 m
+  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let gx = Math.ceil(b.x0 / 20) * 20; gx <= b.x1; gx += 20){ ctx.moveTo(X(gx), Y(b.y0)); ctx.lineTo(X(gx), Y(b.y1)); }
+  for (let gy = Math.ceil(b.y0 / 20) * 20; gy <= b.y1; gy += 20){ ctx.moveTo(X(b.x0), Y(gy)); ctx.lineTo(X(b.x1), Y(gy)); }
+  ctx.stroke();
+
+  // the team's map: trail, stream and the last known point (public knowledge, qwen38 reads it too)
+  const feat = S.spec && S.spec.map;
+  if (feat){
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    for (const [pts, col, lw] of [[feat.stream, 'rgba(96,170,235,.8)', 3.2], [feat.trail, 'rgba(226,198,150,.85)', 2.6]]){
+      if (!Array.isArray(pts) || pts.length < 2) continue;
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath();
+      pts.forEach((q, i) => { if (i) ctx.lineTo(X(q[0]), Y(q[1])); else ctx.moveTo(X(q[0]), Y(q[1])); });
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  }
+
+  // searched ground (union of the frame footprints), then the area outline on top
+  if (cov.cv){ ctx.globalAlpha = 0.24; ctx.drawImage(cov.cv, X(b.x0), Y(b.y1), (b.x1 - b.x0) * s, (b.y1 - b.y0) * s); ctx.globalAlpha = 1; }
+  const area = S.config && S.config.area;
+  if (area && area.length > 2){
+    ctx.beginPath(); area.forEach((p, i) => { if (i) ctx.lineTo(X(p[0]), Y(p[1])); else ctx.moveTo(X(p[0]), Y(p[1])); }); ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,.025)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(220,232,245,.55)'; ctx.lineWidth = 1.6; ctx.stroke();
+  }
+
+  // sectors: faint cells with their ids; the sector being flown is outlined, the thinker's planned order is filled in
+  if (S.sectors.length){
+    const byId = {};
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(170,195,225,.16)';
+    for (const sc of S.sectors){
+      byId[sc.id] = sc;
+      const xa = X(Math.min(sc.x0, sc.x1)), xb = X(Math.max(sc.x0, sc.x1)), ya = Y(sc.y + (sc.h || 0) / 2), yb = Y(sc.y - (sc.h || 0) / 2);
+      ctx.strokeRect(xa, ya, xb - xa, yb - ya);
+      if (xb - xa > fs * 3.4){ ctx.fillStyle = 'rgba(190,208,230,.42)'; ctx.fillText(sc.id, xa + 4, ya + fs * .75); }
+    }
+    if (S.plan && S.plan.ids){
+      S.plan.ids.forEach((id, k) => {
+        const sc = byId[id];
+        if (!sc || S.doneSectors.has(id) || id === S.curSector) return;
+        const xa = X(Math.min(sc.x0, sc.x1)), xb = X(Math.max(sc.x0, sc.x1)), ya = Y(sc.y + (sc.h || 0) / 2), yb = Y(sc.y - (sc.h || 0) / 2);
+        ctx.fillStyle = S.plan.applied ? 'rgba(255,182,46,.26)' : 'rgba(255,182,46,.12)'; ctx.fillRect(xa, ya, xb - xa, yb - ya);
+        ctx.setLineDash(S.plan.applied ? [] : [5, 4]); ctx.strokeStyle = 'rgba(255,182,46,.85)'; ctx.lineWidth = 1.6; ctx.strokeRect(xa + 1, ya + 1, xb - xa - 2, yb - ya - 2); ctx.setLineDash([]);
+        ctx.fillStyle = COL.amber; ctx.textAlign = 'center'; ctx.font = '800 ' + fs * 1.5 + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(String(k + 1), (xa + xb) / 2, (ya + yb) / 2 + 1); ctx.textAlign = 'start';
+        ctx.font = '700 ' + fs + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif';
+      });
+    }
+    const cs = byId[S.curSector];
+    if (cs && S.state !== 'DONE'){
+      const xa = X(Math.min(cs.x0, cs.x1)), xb = X(Math.max(cs.x0, cs.x1)), ya = Y(cs.y + (cs.h || 0) / 2), yb = Y(cs.y - (cs.h || 0) / 2);
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2; ctx.strokeRect(xa + 1, ya + 1, xb - xa - 2, yb - ya - 2);
+    }
+  }
+
+  // planned lanes, thin and dashed; the lane being flown is brighter
+  ctx.lineWidth = 1;
+  S.lanes.forEach((ln, i) => {
+    const cur = i === S.lane && S.state === 'SWEEP';
+    ctx.setLineDash([4, 5]); ctx.strokeStyle = cur ? 'rgba(255,255,255,.7)' : 'rgba(180,200,225,.32)';
+    ctx.beginPath(); ctx.moveTo(X(ln.x0), Y(ln.y)); ctx.lineTo(X(ln.x1), Y(ln.y)); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // last photo footprint
+  if (S.lastFoot){
+    ctx.beginPath(); S.lastFoot.forEach((p, i) => { if (i) ctx.lineTo(X(p[0]), Y(p[1])); else ctx.moveTo(X(p[0]), Y(p[1])); }); ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.2; ctx.stroke();
+  }
+
+  // the track, coloured by state, one stroke per run of the same state
+  const P = S.path;
+  if (P.length > 1){
+    ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+    let i = 1;
+    while (i < P.length){
+      const st = P[i][2];
+      ctx.strokeStyle = TRACK_COL[st] || '#4da3ff'; ctx.beginPath(); ctx.moveTo(X(P[i - 1][0]), Y(P[i - 1][1]));
+      while (i < P.length && P[i][2] === st){ ctx.lineTo(X(P[i][0]), Y(P[i][1])); i++; }
+      ctx.stroke();
+    }
+  }
+
+  // home
+  if (S.home){
+    const hx = X(S.home[0]), hy = Y(S.home[1]), r = Math.max(8, rem * .62);
+    ctx.fillStyle = '#0d2a33'; ctx.strokeStyle = COL.cyan; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.rect(hx - r, hy - r, 2 * r, 2 * r); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COL.cyan; ctx.textAlign = 'center'; ctx.fillText('H', hx, hy + 1); ctx.textAlign = 'start';
+  }
+
+  // last known point (the trailhead)
+  if (feat && Array.isArray(feat.lkp)){
+    const lx = X(feat.lkp[0]), ly = Y(feat.lkp[1]), r = Math.max(6, rem * .45);
+    ctx.fillStyle = '#2a1f4a'; ctx.strokeStyle = COL.violet; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(lx, ly - r); ctx.lineTo(lx + r, ly); ctx.lineTo(lx, ly + r); ctx.lineTo(lx - r, ly); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const t = 'LKP', tw = ctx.measureText(t).width;
+    ctx.fillStyle = 'rgba(6,10,15,.85)'; ctx.fillRect(lx + r + 3, ly - fs / 2 - 1, tw + 6, fs + 2);
+    ctx.fillStyle = '#d3bcff'; ctx.fillText(t, lx + r + 6, ly + 1);
+  }
+
+  // investigated spots: amber while open, grey when dismissed, red with its alert id when confirmed
+  const pulse = now < S.flashUntil ? 0.5 + 0.5 * Math.sin(now / 160) : 0;
+  // confirmed spots last, so a revisit that was dismissed as a duplicate never hides its alert
+  const spots = [...S.spots.values()].sort((a, b) => (a.status === 'confirmed') - (b.status === 'confirmed'));
+  for (const sp of spots){
+    if (!Array.isArray(sp.g)) continue;
+    const px = X(sp.g[0]), py = Y(sp.g[1]);
+    const conf = sp.status === 'confirmed', open = sp.status === 'open';
+    const col = conf ? COL.red : open ? COL.amber : COL.grey, r = conf ? Math.max(8, rem * .6) : Math.max(5, rem * .38);
+    if (conf && pulse && sp.alert === S.flashId){ ctx.strokeStyle = 'rgba(255,77,94,' + (0.9 - 0.6 * pulse) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px, py, r + 6 + 14 * pulse, 0, 7); ctx.stroke(); }
+    ctx.fillStyle = col; ctx.strokeStyle = conf ? '#fff' : 'rgba(0,0,0,.65)'; ctx.lineWidth = conf ? 2 : 1.5;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); ctx.stroke();
+    const lab = conf ? sp.alert : sp.id;
+    if (conf || open || sp.verdict !== 'duplicate'){
+      ctx.fillStyle = conf ? '#fff' : open ? COL.amber : 'rgba(190,200,212,.8)';
+      ctx.font = (conf ? '800 ' : '700 ') + (conf ? fs * 1.15 : fs * .92) + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif';
+      const tx = px + r + 4;
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(6,10,15,.9)'; ctx.strokeText(lab, tx, py); ctx.fillText(lab, tx, py);
+    }
+  }
+  ctx.font = '700 ' + fs + 'px -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif';
+
+  // planted items: ground truth, only when asked for
+  if ($('togTruth').checked && S.truth){
+    for (const it of S.truth){
+      const px = X(it.x), py = Y(it.y), clue = it.role === 'clue', r = 7;
+      ctx.lineWidth = 2.5; ctx.strokeStyle = clue ? '#33e6a0' : '#b58bff';
+      ctx.beginPath();
+      if (clue){ ctx.moveTo(px, py - r); ctx.lineTo(px + r, py); ctx.lineTo(px, py + r); ctx.lineTo(px - r, py); ctx.closePath(); }
+      else { ctx.moveTo(px - r, py - r); ctx.lineTo(px + r, py + r); ctx.moveTo(px + r, py - r); ctx.lineTo(px - r, py + r); }
+      ctx.stroke();
+      const t = String(it.name || '').replace(/_/g, ' ') + (clue ? ' (clue)' : ' (decoy)');
+      const tw = ctx.measureText(t).width;
+      const tx = Math.max(4, Math.min(px - tw / 2, w - tw - 8)), ty = py + r + fs * .9 + 3;
+      ctx.fillStyle = 'rgba(6,10,15,.85)'; ctx.fillRect(tx - 3, ty - fs / 2 - 2, tw + 6, fs + 4);
+      ctx.fillStyle = clue ? '#7ff0c4' : '#d3bcff'; ctx.fillText(t, tx, ty);
+    }
+  }
+
+  // the drone: a wedge pointing the way it is flying
+  if (S.pos){
+    const px = X(S.pos.x), py = Y(S.pos.y), a = -S.heading, r = Math.max(9, rem * .7);
+    const col = STATE_COL[S.state] || '#4da3ff';
+    ctx.save(); ctx.translate(px, py); ctx.rotate(a);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = col; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(-r * .75, r * .7); ctx.lineTo(-r * .35, 0); ctx.lineTo(-r * .75, -r * .7); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.globalAlpha = .55; ctx.beginPath(); ctx.arc(px, py, r + 5, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  // scale bar, 20 m
+  const sb = 20 * s, bx = 12, by = h - 14;
+  ctx.strokeStyle = 'rgba(220,232,245,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + sb, by); ctx.moveTo(bx, by - 4); ctx.lineTo(bx, by + 4); ctx.moveTo(bx + sb, by - 4); ctx.lineTo(bx + sb, by + 4); ctx.stroke();
+  ctx.fillStyle = 'rgba(220,232,245,.85)'; ctx.fillText('20 m', bx + sb + 6, by);
+}
+
+/* ====================================================================== chase view */
+let chaseShown = null, chaseBusy = false;
+function renderChase(){
+  $('chasePanel').hidden = !S.hasChase;
+  $('colB').classList.toggle('withchase', !!S.hasChase);
+  if (!S.chaseUrl || S.chaseUrl === chaseShown || chaseBusy) return;
+  chaseBusy = true;
+  const url = S.chaseUrl, im = new Image();
+  im.onload = () => { chaseBusy = false; swapImg('chaseImg', im); chaseShown = url; dirty = true; };
+  im.onerror = () => { chaseBusy = false; };
+  im.src = url;
+}
+
+/* ====================================================================== header and controls */
+let medFor = -1;
+function placeTxt(){
+  if (S.sectors.length && S.curSector) return 'sector ' + S.curSector + ' (' + S.doneSectors.size + '/' + S.sectors.length + ' done)';
+  if (S.lanes.length) return 'lane ' + Math.min(S.lane + 1, S.lanes.length) + '/' + S.lanes.length;
+  return '';
+}
+function renderHeader(now){
+  const st = S.state || (S.mode === 'replay' ? 'REPLAY' : 'READY');
+  const b = $('stateBadge'); setText(b, st); b.style.background = STATE_COL[S.state] || '#2a3542';
+  setText($('vCov'), Math.round((S.coverage || 0) * 100) + '%');
+  $('mCov').style.width = Math.min(100, (S.coverage || 0) * 100) + '%';
+  setText($('lCov'), 'area searched');
+  const bt = S.battery;
+  setText($('vBatt'), isNum(bt) ? Math.round(bt) + '%' : '--');
+  const mb = $('mBatt'); mb.style.width = (isNum(bt) ? Math.max(0, Math.min(100, bt)) : 0) + '%';
+  mb.style.background = !isNum(bt) ? COL.blue : bt < 15 ? COL.red : bt < 30 ? COL.amber : COL.green;
+  setText($('vClock'), mmss(S.t));
+  setText($('nClef'), S.nClef); setText($('nFb'), S.nFb);
+  $('spThink').hidden = S.nThink === 0; setText($('nThink'), S.nThink);
+  const tot = S.nClef + S.nFb;
+  $('sbClef').style.width = (tot ? 100 * S.nClef / tot : 0) + '%'; $('sbFb').style.width = (tot ? 100 * S.nFb / tot : 0) + '%';
+  if (medFor !== S.ms.length){
+    medFor = S.ms.length;
+    if (S.ms.length){ const a = S.ms.slice().sort((x, y) => x - y); S.medMs = a[Math.floor((a.length - 1) / 2)]; } else S.medMs = null;
+  }
+  setText($('lSrc'), 'decision source' + (isNum(S.medMs) ? '  \u00b7  Clef median ' + Math.round(S.medMs) + ' ms' : ''));
+  setText($('vAlerts'), S.alerts.length);
+  $('stAlerts').classList.toggle('has', S.alerts.length > 0);
+  setText($('alertMeta'), S.alerts.length ? 'click a card to enlarge, key A: latest' : 'click a card to enlarge');
+}
+
+function renderControls(){
+  const replay = !!API.replay || S.mode === 'replay';
+  $('replayTag').hidden = !replay;
+  $('bReplay').hidden = !replay;
+  if (replay){
+    setText($('replayTag'), 'REPLAY' + (isNum(API.speed || S.speed) ? '  \u00d7' + (API.speed || S.speed) : ''));
+    $('bReplay').disabled = !!API.running || API.kind !== 'search';
+  }
+  $('ctl').hidden = replay || API.replay === undefined && S.mode !== 'live';
+  if (replay) return;
+  const running = !!API.running, st = S.state;
+  const bs = $('bStart');
+  bs.disabled = running; setText(bs, running ? 'Flying' : (S.summary || st === 'DONE') ? 'Fly again' : 'Start');
+  $('bLast').disabled = !(running && S.alerts.length && (st === 'SWEEP' || st === 'RESUME'));
+  $('bHome').disabled = !(running && st && st !== 'RETURN' && st !== 'DONE');
+}
+
+function renderBanner(now){
+  const on = now < S.flashUntil && S.flashId;
+  const a = on && S.alerts.find(x => x.id === S.flashId);
+  setHtml($('banner'), a ? '<span>ALERT ' + esc(a.id) + ': ' + esc(a.family) + ' found</span>' : '');
+  if (S.speech && now < S.speechUntil && !on){ const c = $('caption'); c.hidden = false; setText(c, '\u201c' + S.speech + '\u201d'); }
+}
+
+/* ====================================================================== render loop */
+function render(now){
+  renderHeader(now); renderControls();
+  if (S.cluesVer !== chipsShown) renderChips();
+  placeholderAlerts();
+  renderCamera(now); renderTrace(now); renderChase(); renderBanner(now);
+  if ($('togTruth').checked && !S.truth && !S.truthLoading) loadTruth();
+  drawMap(now);
+}
+let chipsShown = -1;
+function renderChips(){
+  chipsShown = S.cluesVer;
+  const box = $('chips');
+  if (!S.clues.length){ box.innerHTML = '<div class="chipwait">looking for: waiting for the clue list</div>'; return; }
+  box.innerHTML = '<div class="chiplab">looking<br>for</div>' + S.clues.map((c, i) =>
+    '<div class="chip" style="border-left-color:' + CLUE_COL[i % CLUE_COL.length] + '" title="' + esc(c.words) + '"><span class="fam">' + esc(c.family) + '</span><span class="size mono">~' + esc(c.size_m) + ' m</span>' +
+    '<span class="words">' + esc(c.words) + '</span></div>').join('');
+}
+(function loop(){
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  if (!dirty && now >= S.flashUntil) return;
+  dirty = false;
+  try { render(now); } catch (e){ console.error('render failed', e); }
+})();
+
+async function loadTruth(){
+  S.truthLoading = true;
+  try { const r = await fetch('/run/scene.json', {cache:'no-store'}); const j = await r.json(); S.truth = Array.isArray(j.items) ? j.items : []; }
+  catch (e){ S.truth = []; }
+  S.truthLoading = false; dirty = true;
+}
+$('togTruth').addEventListener('change', () => { dirty = true; });
+new ResizeObserver(() => { dirty = true; }).observe($('mapwrap'));
+new ResizeObserver(() => { requestAnimationFrame(fitTrace); }).observe($('tracePanel'));
+new ResizeObserver(() => { dirty = true; if (cam.cur) drawBoxes(); }).observe($('cam'));
+window.addEventListener('resize', () => { dirty = true; });
+
+/* ====================================================================== reset */
+let cuTimer = null;
+function resetAll(){
+  S = freshState();
+  $('log').innerHTML = ''; $('alertList').innerHTML = '';
+  cam.cur = cam.want = null; $('camImg').removeAttribute('src'); $('camEmpty').style.display = '';
+  chaseShown = null; $('chaseImg').removeAttribute('src'); $('strip').innerHTML = ''; tileEls.clear(); stripShown = -1;
+  traceKey = null; $('trBody').__h = null; chipsShown = -1; medFor = -1;
+  covDirty = true; dirty = true;
+  const c = $('boxes').getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, $('boxes').width, $('boxes').height);
+}
+
+/* ====================================================================== server: state, controls, event stream */
+function toast(msg){ setText($('toast'), msg || ''); clearTimeout(toast.t); if (msg) toast.t = setTimeout(() => setText($('toast'), ''), 4500); }
+async function post(path, body){
+  try {
+    const r = await fetch(path, {method:'POST', headers: body ? {'Content-Type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined});
+    let j = null; try { j = await r.json(); } catch (e){}
+    return {ok: r.ok, status: r.status, json: j};
+  } catch (e){ return {ok:false, status:0, json:{error:String(e)}}; }
+}
+async function pollState(){
+  try { const r = await fetch('/api/state', {cache:'no-store'}); API = await r.json(); } catch (e){ return; }
+  dirty = true;
+}
+$('bStart').addEventListener('click', async () => {
+  $('bStart').disabled = true;
+  const r = await post('/api/start');
+  toast(r.ok && r.json && r.json.ok ? 'launching' : 'start refused: ' + ((r.json && (r.json.error || r.json.reason)) || (r.ok ? 'already flying' : r.status)));
+  await pollState();
+});
+async function command(name){
+  const r = await post('/api/command', {name});
+  toast(r.ok && r.json && r.json.ok ? (OP_LABEL[name] || name) + ' sent' : (OP_LABEL[name] || name) + ' failed: ' + ((r.json && r.json.error) || r.status));
+}
+$('bReplay').addEventListener('click', async () => {
+  $('bReplay').disabled = true;
+  const r = await post('/api/start');
+  toast(r.ok && r.json && r.json.ok ? 'replaying from the start' : 'replay is still running');
+  await pollState();
+});
+$('bLast').addEventListener('click', () => command('go_back_to_last_alert'));
+$('bHome').addEventListener('click', () => command('return_home'));
+
+let es = null;
+function setConn(ok){ const c = $('conn'); c.textContent = ok ? 'connected' : 'reconnecting'; c.title = ok ? 'event stream connected' : 'event stream lost, reconnecting'; c.className = 'conn ' + (ok ? 'live' : 'bad'); }
+function connect(){
+  if (es){ try { es.close(); } catch (e){} }
+  es = new EventSource('/events');
+  es.onopen = () => {
+    // the server replays the whole history on every connect, so rebuild from scratch; "caught_up" ends the replay
+    resetAll(); S.catchup = true; setConn(true); pollState();
+    clearTimeout(cuTimer); cuTimer = setTimeout(() => { S.catchup = false; dirty = true; }, 5000);
+  };
+  es.onmessage = m => {
+    let ev; try { ev = JSON.parse(m.data); } catch (e){ return; }
+    try { ingest(ev); } catch (e){ console.error('ingest failed', ev && ev.type, e); }
+  };
+  es.onerror = () => setConn(false);
+}
+
+// keep the screen awake while the console is open (a dimming laptop on stage would hide the demo)
+let wakeLock = null;
+async function keepAwake(){
+  try { if (navigator.wakeLock && document.visibilityState === 'visible') wakeLock = await navigator.wakeLock.request('screen'); } catch (e){}
+}
+document.addEventListener('visibilitychange', keepAwake);
+keepAwake();
+
+resetAll();
+S.catchup = false;
+connect();
+setInterval(pollState, 2000);
+pollState();
+window.__patrol = {get S(){ return S; }, get cam(){ return cam; }, ingest};
+</script>
+</body>
+</html>

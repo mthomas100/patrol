@@ -1,0 +1,102 @@
+{
+ "mode": "livefake",
+ "url": "http://127.0.0.1:8782/",
+ "results": [
+  {
+   "name": "live flight produced an alert",
+   "ok": true,
+   "detail": {
+    "t": 47.31,
+    "state": "RESUME",
+    "spots": 1,
+    "nClef": 11,
+    "nFb": 0
+   }
+  },
+  {
+   "name": "alert banner shown live",
+   "ok": true
+  },
+  {
+   "name": "late-joining page catches up to the live state",
+   "ok": true,
+   "detail": {
+    "late": {
+     "alerts": 1,
+     "catchup": false,
+     "path": 110,
+     "spots": 1
+    },
+    "main": {
+     "alerts": 1,
+     "spots": 1
+    },
+    "errs2": []
+   }
+  },
+  {
+   "name": "Go to last alert enabled while sweeping with an alert",
+   "ok": true,
+   "detail": "SWEEP"
+  },
+  {
+   "name": "Go to last alert sent the drone back to investigate",
+   "ok": true,
+   "detail": "INVESTIGATE"
+  },
+  {
+   "name": "flight finished with a summary",
+   "ok": true,
+   "detail": {
+    "state": "DONE",
+    "t": 144.96
+   }
+  },
+  {
+   "name": "answers came from Clef (stand-in), none from FALLBACK",
+   "ok": true,
+   "detail": {
+    "nClef": 35,
+    "nFb": 0,
+    "alerts": 1,
+    "spots": 2,
+    "steps": 2,
+    "hasChase": true,
+    "cov": 1
+   }
+  },
+  {
+   "name": "alert cards match alerts",
+   "ok": true
+  },
+  {
+   "name": "operator entries in the log",
+   "ok": true
+  },
+  {
+   "name": "chase panel visible",
+   "ok": true
+  },
+  {
+   "name": "alert card images loaded",
+   "ok": true
+  },
+  {
+   "name": "no external requests (Wi-Fi off safe)",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no failed requests",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "name": "no JS errors in the console",
+   "ok": true,
+   "detail": []
+  }
+ ],
+ "errors": [],
+ "failedReqs": []
+}

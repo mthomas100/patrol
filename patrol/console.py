@@ -3,8 +3,15 @@ the map, photos, notes, voice) with operator buttons and push-to-talk. The missi
 server-sent events; the page's commands come back as POSTs. Stdlib only.
 
 usage: bin/patrol console [--port 8770] [--replay RUN_DIR [--speed 3]] [fly options: --scene m2 --seed 1 --escalate]
+       bin/patrol console --search [search options: --terrain snow --items a,b --clues a --half 80 --clef-url ...]
 Live mode prepares a mission and waits for "start" (button or spoken). Replay mode streams a recorded mission.jsonl
 (the demo's fallback when the models are unavailable, and the page's development fixture).
+
+Two kinds of mission, two pages. The corridor mission (power lines) uses console/index.html and stays the default.
+The search mission (patrol/search.py) uses console/search.html: `--search` flies one live (the options are search.py's,
+the page's Start button begins the flight, `--pace` defaults to 3 sim seconds per wall second, the chase camera is
+always on), and a replayed run is recognised as a search run from the `spec.kind` of its first `start` event.
+The page is also reachable at /search.html whatever the kind.
 """
 from __future__ import annotations
 
@@ -23,6 +30,26 @@ from . import mission as M
 
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = Path(__file__).parent / "console"
+
+
+def sniff_kind(run_dir: Path) -> str:
+    """'search' for a recorded search run (first `start` event: spec.kind == "search"), else 'corridor'."""
+    try:
+        with open(run_dir / "mission.jsonl") as f:
+            for i, line in enumerate(f):
+                if i >= 20:
+                    break
+                ev = json.loads(line) if line.strip() else {}
+                if ev.get("type") == "start":
+                    return "search" if (ev.get("spec") or {}).get("kind") == "search" else "corridor"
+    except (OSError, ValueError):
+        pass
+    try:                                    # no start event on the first lines: the scene file says what it is
+        if json.loads((run_dir / "scene.json").read_text()).get("kind") == "search":
+            return "search"
+    except (OSError, ValueError):
+        pass
+    return "corridor"
 
 
 class Hub:
@@ -68,14 +95,42 @@ class Console:
         self.running = False
         self.worker = self.speaker = None
         self.voice_n = 0
+        self.jsonl = None
+        self.speed = None
+        self.kind = "search" if getattr(a, "search", False) else "corridor"     # which page and which mission
         if a.replay:
             self.run_dir = Path(a.replay).resolve()
+            self.kind = sniff_kind(self.run_dir)
         else:
             self.prepare()
 
     # ------------------------------------------------------------ live missions
+    def prepare_search(self):
+        """A fresh search mission on the ground (SearchMission, chase camera on), waiting for start."""
+        from dataclasses import asdict
+
+        from . import search
+        a = self.a
+        # --out names the first mission's directory; a second flight from the same console gets a fresh one
+        out = Path(a.out) if a.out and self.mission is None else \
+            ROOT / "runs" / (time.strftime("%Y%m%d-%H%M%S") + "-console-search")
+        out.mkdir(parents=True, exist_ok=True)
+        if self.jsonl:
+            self.jsonl.close()
+        self.jsonl = M.JsonlSink(out / "mission.jsonl")
+        a.chase = True                                  # the page's chase panel needs the camera rendered every tick
+        self.mission = m = search.make_mission(a, out, sinks=[self.hub, self.jsonl])
+        self.run_dir = out
+        self.hub.reset()
+        # what the page needs before takeoff (the start event repeats it once the flight begins)
+        self.hub({"type": "ready", "kind": "search", "run": out.name, "seed": a.seed, "voice": False, "spec": m.spec,
+                  "clues": m.clues, "config": asdict(m.cfg), "sweep_h": m.sweep_h, "lanes": m.lanes,
+                  "sectors": getattr(m, "sectors", []), "home": list(m.cfg.home)})
+
     def prepare(self):
         """A fresh mission on the ground, waiting for start."""
+        if self.kind == "search":
+            return self.prepare_search()
         a = self.a
         out = ROOT / "runs" / (time.strftime("%Y%m%d-%H%M%S") + "-console")
         out.mkdir(parents=True, exist_ok=True)
@@ -103,13 +158,37 @@ class Console:
 
     def start(self) -> bool:
         with self.lock:
-            if self.running or self.a.replay:
+            if self.a.replay:                   # a search replay can be played again once it has finished
+                if self.kind != "search" or self.running:
+                    return False
+                self.running = True
+                threading.Thread(target=self.replay, args=(self.speed or self.a.speed,), daemon=True).start()
+                return True
+            if self.running:
                 return False
             if self.mission is None or self.mission.ticks:
                 self.prepare()
             self.running = True
-        threading.Thread(target=self._fly, daemon=True).start()
+        threading.Thread(target=self._fly_search if self.kind == "search" else self._fly, daemon=True).start()
         return True
+
+    def _fly_search(self):
+        m = self.mission
+        try:
+            s = m.run(self.a.max_ticks, pace=self.a.pace)
+            self.jsonl.close()
+            try:                                # scoring reads the planted items: after the flight, never on the page
+                from . import search
+                (m.out / "score.json").write_text(json.dumps(search.score(m.out), indent=1))
+            except Exception as e:              # a scoring problem must not hide a finished flight
+                print(f"score failed: {type(e).__name__}: {e}", flush=True)
+            print(f"flight done: {s['state']} coverage {s['coverage']:.0%}, {s['frames']} frames, "
+                  f"{len(s['alerts'])} alerts, {s['fallback']} fallback answers; run {m.out}", flush=True)
+        except Exception as e:                  # tell the page, so the operator sees why the drone stopped
+            self.hub({"type": "error", "t": round(m.sim.t, 2), "message": f"{type(e).__name__}: {e}"})
+            print(f"flight failed: {type(e).__name__}: {e}", flush=True)
+        finally:
+            self.running = False
 
     def _fly(self):
         m = self.mission
@@ -151,21 +230,33 @@ class Console:
 
     # ------------------------------------------------------------ replay
     def replay(self, speed: float):
-        """Stream a recorded mission.jsonl, paced by its sim clock divided by speed."""
-        evs = [json.loads(l) for l in (self.run_dir / "mission.jsonl").read_text().splitlines() if l.strip()]
-        spec = json.loads((self.run_dir / "scene.json").read_text())
-        self.hub.reset()
-        self.hub({"type": "ready", "run": self.run_dir.name, "replay": True, "speed": speed,
-                  "spec": {k: spec[k] for k in ("kind", "seed", "length", "spacing", "pylons", "trees") if k in spec}})
-        t_prev = None
-        for ev in evs:
-            t = ev.get("t")
-            if t is not None and t_prev is not None and t > t_prev:
-                time.sleep(min(2.0, (t - t_prev) / speed))
-            t_prev = t if t is not None else t_prev
-            self.hub(ev)
-        if (self.run_dir / "REPORT.md").exists():
-            self.hub({"type": "report", "path": "REPORT.md"})
+        """Stream a recorded mission.jsonl, paced by its sim clock divided by speed. For a search run `running` is
+        true while it plays, so the page can offer "play again" once it has finished."""
+        self.speed = speed
+        if self.kind == "search":
+            self.running = True
+        try:
+            evs = [json.loads(l) for l in (self.run_dir / "mission.jsonl").read_text().splitlines() if l.strip()]
+            try:
+                spec = json.loads((self.run_dir / "scene.json").read_text())
+            except (OSError, ValueError):
+                spec = {}
+            self.hub.reset()
+            self.hub({"type": "ready", "run": self.run_dir.name, "replay": True, "speed": speed,
+                      **({"kind": "search"} if self.kind == "search" else {}),
+                      "spec": {k: spec[k] for k in ("kind", "seed", "length", "spacing", "pylons", "trees") if k in spec}})
+            t_prev = None
+            for ev in evs:
+                t = ev.get("t")
+                if t is not None and t_prev is not None and t > t_prev:
+                    time.sleep(min(2.0, (t - t_prev) / speed))
+                t_prev = t if t is not None else t_prev
+                self.hub(ev)
+            if (self.run_dir / "REPORT.md").exists():
+                self.hub({"type": "report", "path": "REPORT.md"})
+        finally:
+            if self.kind == "search":
+                self.running = False
 
     def close(self):
         if self.worker:
@@ -195,14 +286,17 @@ def make_handler(con: Console):
         def do_GET(self):
             path = urlparse(self.path).path
             if path in ("/", "/index.html"):
-                return self._file(STATIC, "index.html")
+                return self._file(STATIC, "search.html" if con.kind == "search" else "index.html")
+            if path in ("/search", "/search.html"):
+                return self._file(STATIC, "search.html")
             if path.startswith("/static/"):
                 return self._file(STATIC, path[len("/static/"):])
             if path.startswith("/run/") and con.run_dir:
                 return self._file(con.run_dir, path[len("/run/"):])
             if path == "/api/state":
                 return self._json({"running": con.running, "replay": bool(con.a.replay),
-                                   "run": con.run_dir.name if con.run_dir else None, "voice": bool(con.worker)})
+                                   "run": con.run_dir.name if con.run_dir else None, "voice": bool(con.worker),
+                                   "kind": con.kind, "speed": con.speed})
             if path == "/events":
                 return self._events()
             self._send(404, b"not found", "text/plain")
@@ -215,6 +309,8 @@ def make_handler(con: Console):
             try:
                 for ev in replay:
                     self.wfile.write(f"data: {json.dumps(ev)}\n\n".encode())
+                if con.kind == "search":        # the search page tells recorded history from live events by this
+                    self.wfile.write(b'data: {"type": "caught_up"}\n\n')
                 self.wfile.flush()
                 while True:
                     try:
@@ -243,15 +339,32 @@ def make_handler(con: Console):
     return H
 
 
-def main(argv=None):
+def build_parser(search_mode: bool) -> argparse.ArgumentParser:
+    """The corridor mission's options, or with --search the search mission's (their names overlap, so not both)."""
     p = argparse.ArgumentParser(prog="patrol console")
-    M.add_args(p)
+    if search_mode:
+        from . import search
+        search.add_args(p)
+        p.set_defaults(pace=3.0)        # the live console flies at 3 sim seconds per wall second unless told otherwise
+    else:
+        M.add_args(p)
+    p.add_argument("--search", action="store_true",
+                   help="fly the search mission (patrol/search.py, with its options) and serve its page; a replayed "
+                        "run needs no flag, its kind is read from its first start event")
     p.add_argument("--port", type=int, default=8770)
     p.add_argument("--replay", help="stream a recorded run directory instead of flying")
     p.add_argument("--speed", type=float, default=3.0, help="replay speed (sim seconds per wall second)")
-    p.add_argument("--voice", action="store_true", help="push-to-talk: Parakeet + Clef routing (implied by --speak)")
+    if not search_mode:
+        p.add_argument("--voice", action="store_true",
+                       help="push-to-talk: Parakeet + Clef routing (implied by --speak)")
     p.add_argument("--autostart", action="store_true", help="start the mission as soon as the console is up")
-    a = p.parse_args(argv)
+    return p
+
+
+def main(argv=None):
+    pre = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    pre.add_argument("--search", action="store_true")
+    a = build_parser(pre.parse_known_args(argv)[0].search).parse_args(argv)
     con = Console(a)
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(con))
     srv.daemon_threads = True
