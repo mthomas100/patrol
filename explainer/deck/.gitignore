@@ -1,0 +1,6 @@
+# Only scripts, the pptx, SPEAKER_NOTES.md and the contact sheet are committed.
+preview/*.png
+build/*.png
+build/*.jpg
+build/*.txt
+build/node_modules/
