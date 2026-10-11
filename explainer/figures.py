@@ -405,6 +405,91 @@ def deploy():
     return ''.join(o)
 
 
+# --------------------------------------------------------------------------------------------- evidence charts
+DATA['s0'] = [  # runs/s0-altitude-1280/probe.jsonl via facts digest 1A and 1D: (label, backpack med, min, max, tarp med, min, max)
+    ('grass · 256 px crop from 40 m', 0.85, 0.84, 0.87, 0.28, 0.16, 0.30),
+    ('snow · 256 px crop from 40 m', 0.80, 0.73, 0.85, 0.07, 0.06, 0.09),
+    ('grass · close-up at 20 m', 0.95, 0.94, 0.96, 0.04, 0.04, 0.05),
+    ('snow · close-up at 20 m', 0.94, 0.91, 0.94, 0.03, 0.02, 0.04),
+    ('grass · close-up at 12 m', 0.95, 0.94, 0.96, 0.03, 0.03, 0.04),
+    ('snow · close-up at 12 m', 0.96, 0.96, 0.96, 0.02, 0.02, 0.03),
+]
+DATA['live_after'] = {'found': (14, 14), 'false': (0, 7), 'clef_calls': (1235, 4860)}   # runs/s6-live-vs-after
+DATA['trail'] = [('seed 5', 93.5, 109.0), ('seed 6', 91.0, 134.5)]                      # runs/s3-trail-ab-lock
+
+
+def _legend(x, y, items):
+    o, cx = [], x
+    for lab, col in items:
+        o.append(f'<circle cx="{cx + 5}" cy="{y - 4}" r="5" fill="{col}"/>')
+        o.append(_t(cx + 15, y, lab, 11, fill="var(--ink-2)"))
+        cx += 24 + len(lab) * 6.4
+    return ''.join(o)
+
+
+def s0chart():
+    rows = DATA['s0']
+    W, top, rh = 760, 46, 30
+    H = top + rh * len(rows) + 30
+    x0, x1 = 230, 740
+    X = lambda v: x0 + v * (x1 - x0)
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Clef-Flash\'s score for the blue backpack versus the blue tarp '
+         f'decoy, by view. From 40 m the crop already separates them (0.80 to 0.85 against 0.07 to 0.28); on the close-ups at 20 '
+         f'and 12 m the backpack scores 0.91 to 0.96 and the tarp 0.02 to 0.05.">']
+    o.append(_legend(x0, 18, [('blue backpack (clue)', 'var(--blaze)'), ('blue tarp (decoy)', 'var(--ink-3)')]))
+    for v in (0, 0.2, 0.5, 1.0):
+        o.append(f'<line x1="{X(v):.1f}" y1="{top - 10}" x2="{X(v):.1f}" y2="{top + rh * len(rows) - 6}" stroke="{"var(--rule)" if v in (0.2, 0.5) else "var(--grid)"}" stroke-width="1"/>')
+        o.append(_t(X(v), top + rh * len(rows) + 10, f'{v:g}', 9.5, anchor="middle", fill="var(--ink-3)", family=MONO))
+    o.append(_t(X(0.5) + 4, top - 14, 'confirm bar 0.5', 9, fill="var(--ink-3)"))
+    o.append(_t(X(0.2) - 4, top - 14, 'dismiss below 0.2', 9, anchor="end", fill="var(--ink-3)"))
+    for i, (lab, bm, bl, bh, tm, tl, th) in enumerate(rows):
+        y = top + i * rh + 8
+        o.append(_t(x0 - 12, y + 4, lab, 11.5, anchor="end", fill="var(--ink)"))
+        for m, lo, hi, col, nm in ((tm, tl, th, 'var(--ink-3)', 'tarp'), (bm, bl, bh, 'var(--blaze)', 'backpack')):
+            o.append(f'<line x1="{X(lo):.1f}" y1="{y}" x2="{X(hi):.1f}" y2="{y}" stroke="{col}" stroke-width="3" stroke-linecap="round"/>')
+            o.append(f'<circle cx="{X(m):.1f}" cy="{y}" r="5.5" fill="{col}" stroke="var(--paper-2)" stroke-width="2"><title>{escape(lab)}, {nm}: median {m:.2f} (range {lo:.2f} to {hi:.2f}, 5 views)</title></circle>')
+    o.append('</svg>')
+    return ''.join(o)
+
+
+def live_after():
+    d = DATA['live_after']
+    W, H = 520, 230
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="The same six flights scored two ways. Clues found: 14 of 16 live, '
+         f'14 of 16 after landing. False alerts: 0 live, 7 after landing. Clef-Flash calls: 1,235 live, 4,860 after landing.">']
+    o.append(_legend(10, 16, [('live, with closer looks', 'var(--clef)'), ('after landing, sweep photos only', 'var(--ink-3)')]))
+    panels = [('clues found (of 16)', d['found'], 16), ('false alerts', d['false'], 8), ('Clef-Flash calls', d['clef_calls'], 5000)]
+    for j, (lab, (a, b), mx) in enumerate(panels):
+        y = 44 + j * 62
+        o.append(_t(10, y + 10, lab, 11.5, weight=600, fill="var(--ink)"))
+        for k, (v, col) in enumerate(((a, 'var(--clef)'), (b, 'var(--ink-3)'))):
+            yy = y + 18 + k * 18
+            w = max(2, v / mx * 360)
+            o.append(f'<rect x="10" y="{yy}" width="{w:.1f}" height="13" rx="3" fill="{col}"><title>{escape(lab)}: {v:,}</title></rect>')
+            o.append(_t(10 + w + 8, yy + 11, f'{v:,}', 11, fill="var(--ink)", weight=700, family=MONO))
+    o.append('</svg>')
+    return ''.join(o)
+
+
+def trail():
+    rows = DATA['trail']
+    W, H = 520, 200
+    x0, sc = 70, 2.6
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Seconds from the first find to the second, with and without '
+         f'qwen38\'s trail plans: seed 5, 93.5 with against 109.0 without; seed 6, 91.0 with against 134.5 without.">']
+    o.append(_legend(10, 16, [('with qwen38 trail plans', 'var(--qwen)'), ('without', 'var(--ink-3)')]))
+    for j, (lab, a, b) in enumerate(rows):
+        y = 46 + j * 66
+        o.append(_t(x0 - 10, y + 22, lab, 11.5, anchor="end", weight=600, fill="var(--ink)"))
+        for k, (v, col) in enumerate(((a, 'var(--qwen)'), (b, 'var(--ink-3)'))):
+            yy = y + 6 + k * 20
+            o.append(f'<rect x="{x0}" y="{yy}" width="{v * sc:.1f}" height="14" rx="3" fill="{col}"><title>{lab}: {v} s</title></rect>')
+            o.append(_t(x0 + v * sc + 8, yy + 12, f'{v:g} s', 11, fill="var(--ink)", weight=700, family=MONO))
+    o.append(_t(x0, 186, 'seconds from the first find to the second (lockstep, grass, clues along the trail)', 10, fill="var(--ink-3)"))
+    o.append('</svg>')
+    return ''.join(o)
+
+
 FIGURES = {
     'arch': architecture,
     'alt': altitude,
@@ -412,4 +497,7 @@ FIGURES = {
     'funnel': funnel,
     'memory': memory,
     'deploy': deploy,
+    's0chart': s0chart,
+    'live_after': live_after,
+    'trail': trail,
 }
