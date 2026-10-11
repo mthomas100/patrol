@@ -26,6 +26,17 @@ from .e2e import PY, ROOT, preflight, sh
 
 MATCH_R = 5.0           # metres between an alert and the planted item for a find
 DEAD = "http://127.0.0.1:9/v1/systemone"
+PAUSE = ROOT / "logs" / "PAUSE_FLIGHTS"   # another session with priority (a priority rule) pauses the next flight
+
+
+def wait_if_paused(poll: float = 10.0) -> float:
+    """Before each flight: while logs/PAUSE_FLIGHTS exists, wait (a flight already in the air finishes first)."""
+    t0 = time.time()
+    while PAUSE.exists():
+        if time.time() - t0 < poll:
+            print(f"paused by {PAUSE}: {PAUSE.read_text().strip()[:200]}", flush=True)
+        time.sleep(poll)
+    return time.time() - t0
 SCENARIOS = {   # held out: grey_dog, green_sleeping_bag, yellow_helmet, sos_rocks; decoys built for them
     1: {"name": "item present", "terrain": "grass", "seed": 21, "items": "grey_dog,grey_boulder", "clues": "grey_dog"},
     2: {"name": "decoys", "terrain": "snow", "seed": 22, "items": "blue_tarp,red_rock,orange_leaf_pile,grey_boulder",
@@ -138,6 +149,9 @@ def main(argv=None):
     checks.append(("offline tests pass", rc == 0))
     for k in [int(x) for x in a.only.split(",") if x]:
         sc_ = SCENARIOS[k]
+        waited = wait_if_paused()
+        if waited > 1:
+            rows.append((f"paused before S{k} (logs/PAUSE_FLIGHTS)", waited, "another session had priority"))
         d = out / f"s{k}"
         seed = sc_["seed"] + a.seed_offset
         cmd = [PY, "-m", "patrol.cli", "search", "--terrain", sc_["terrain"], "--seed", str(seed),
@@ -151,6 +165,9 @@ def main(argv=None):
         checks += checks_for(k, s, sc, d)
         table.append(metrics(k, s, sc))
     if a.with_corridor:
+        waited = wait_if_paused()
+        if waited > 1:
+            rows.append(("paused before the corridor (logs/PAUSE_FLIGHTS)", waited, "another session had priority"))
         rc, dt, _ = sh([PY, "-m", "patrol.e2e", "--seed", "1", "--out", str(out / "corridor")],
                        log=out / "corridor.log", timeout=3600)
         rows.append(("corridor regression (seed 1)", dt, "patrol.e2e --seed 1"))
