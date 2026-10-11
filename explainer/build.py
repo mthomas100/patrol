@@ -53,7 +53,7 @@ def extract(run: Path) -> dict:
         events.append(out)
 
     return {
-        'run': str(run.relative_to(PROJECT)) if run.is_relative_to(PROJECT) else str(run),
+        'run': run.name,
         'seed': spec['seed'], 'terrain': spec['terrain'],
         'area': cfg['area'], 'home': start['home'], 'lkp': spec['map']['lkp'],
         'trail': [[r(x), r(y)] for x, y in spec['map']['trail']],
@@ -78,6 +78,7 @@ def main():
     if not run.is_absolute():
         run = (Path.cwd() / run).resolve()
     data = extract(run)
+    label = data.pop('run')                        # kept out of the page: it may be shared
     blob = json.dumps(data, separators=(',', ':'))
     (HERE / 'data').mkdir(exist_ok=True)
     (HERE / 'data' / 'flight.json').write_text(blob)
@@ -97,7 +98,7 @@ def main():
         else:
             print(f'note: no marker for figure {name}')
     page.write_text(html)
-    print(f"{data['run']}: {len(data['track'])} track points, {len(data['events'])} events, {len(blob) // 1024} KB")
+    print(f"{label}: {len(data['track'])} track points, {len(data['events'])} events, {len(blob) // 1024} KB")
 
 
 if __name__ == '__main__':

@@ -327,7 +327,7 @@ def funnel():
     x0, x1 = 250, 690
     import math
     X = lambda v: x0 + (math.log10(v) / math.log10(2000)) * (x1 - x0)
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="From the owner\'s flight, on a log scale: 1,234 control ticks, '
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="From one real-time flight, on a log scale: 1,234 control ticks, '
          f'125 photos, 375 odd spots, 163 crops judged by Clef-Flash, 8 closer looks, 8 close-ups judged, 3 alerts, 6 qwen38 jobs '
          f'and 3 spoken alerts.">']
     for v in (1, 10, 100, 1000):
