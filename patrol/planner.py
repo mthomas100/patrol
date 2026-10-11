@@ -113,3 +113,25 @@ class Coverage:
         code = np.where(self.inside, np.where(self.hit, ord("1"), ord("0")), ord(".")).astype(np.uint8)
         return {"x0": self.x0, "y0": self.y0, "cell": self.cell, "nx": self.nx, "ny": self.ny,
                 "rows": [r.tobytes().decode("ascii") for r in code]}
+
+
+def sectors(lanes: list[dict], length: float = 40.0) -> list[dict]:
+    """Each lane cut into equal pieces of at most `length` m, in flying order. A sector's id is its row letter (lane,
+    south first) and column number (west first) on a common grid, e.g. "C3"; h is the lane's band height. Sectors let
+    the slow thinker reorder the sweep (search along the trail first) without breaking coverage."""
+    if not lanes:
+        return []
+    xmin = min(min(ln["x0"], ln["x1"]) for ln in lanes)
+    ys = sorted(ln["y"] for ln in lanes)
+    h = ys[1] - ys[0] if len(ys) > 1 else length
+    out = []
+    for ln in lanes:
+        row = chr(ord("A") + ys.index(ln["y"]))
+        n = max(1, math.ceil(abs(ln["x1"] - ln["x0"]) / length - 1e-9))
+        step = (ln["x1"] - ln["x0"]) / n
+        for k in range(n):
+            a, b = ln["x0"] + k * step, ln["x0"] + (k + 1) * step
+            col = int(((a + b) / 2 - xmin) // length) + 1
+            out.append({"id": f"{row}{col}", "lane": ln["i"], "y": ln["y"], "x0": round(a, 2), "x1": round(b, 2),
+                        "h": round(h, 2)})
+    return out

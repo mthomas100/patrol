@@ -1,0 +1,51 @@
+{
+ "state": "DONE",
+ "return_reason": "area covered",
+ "sim_s": 398.1,
+ "wall_s": 59.5,
+ "flight_s": 397.6,
+ "battery_used_pct": 33.1,
+ "sweep_h": 40.0,
+ "lanes": 7,
+ "lanes_done": 7,
+ "coverage": 1.0,
+ "area_m2_covered": 25600,
+ "frames": 95,
+ "clef_sweep": {
+  "n": 149,
+  "ok": 149,
+  "median_ms": 335,
+  "p90_ms": 348
+ },
+ "clef_confirm": {
+  "n": 4,
+  "ok": 4,
+  "median_ms": 444,
+  "p90_ms": 453
+ },
+ "fallback": 0,
+ "investigations": 3,
+ "dismissed": 2,
+ "mean_investigate_s": 9.8,
+ "mean_decision_h": 17.3,
+ "alerts": [
+  {
+   "id": "A1",
+   "clue": "red_jacket",
+   "family": "red jacket",
+   "g": [
+    -35.44,
+    60.21
+   ],
+   "conf": 0.853,
+   "h": 12.0,
+   "photo": "media/photos/S3_12m.jpg",
+   "sweep_crop": "media/crops/f0075_c0.jpg",
+   "sweep_h": 40.0,
+   "spot": "S3",
+   "t": 287.99,
+   "seen": 1
+  }
+ ],
+ "time_to_first_alert": 287.99
+}

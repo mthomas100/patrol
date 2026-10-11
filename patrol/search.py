@@ -25,7 +25,7 @@ from pathlib import Path
 
 import numpy as np
 
-from . import anomaly, clef, clues as cluelib, geo, planner, world
+from . import anomaly, clef, clues as cluelib, geo, planner, thinker, world
 from .mission import JsonlSink
 from .sim import Sim
 
@@ -54,6 +54,7 @@ class SearchConfig:
     inv_noul: float = 0.1            # sweep gate: investigate when any clue's noul on the crop reaches this
     inv_p: float = 0.9               # ... or when p(investigate) does (background crops: noul <= 0.052, p up to 0.81)
     judged_r: float = 3.0            # a candidate this close to an already judged spot is not asked again
+    edge_px: int = 8                 # boxes this close to the frame edge wait for a neighbouring frame (overlap)
     alert_r: float = 6.0             # a find this close to an alert of the same clue updates it (one alert per item)
     h_band: tuple = (8.0, 70.0)      # SAFETY: height above ground while searching
     area_margin: float = 25.0        # SAFETY: how far outside the area the drone may stray
@@ -61,6 +62,14 @@ class SearchConfig:
     reserve: float = 10.0            # battery % kept for landing
     clef_timeout: float = 6.0
     max_confirm_tries: int = 2
+    sector_len: float = 40.0         # lanes are cut into sectors the slow thinker can reorder
+    oblique: float = 0.6             # investigate hover offset = oblique x height (about 31 degrees off vertical)
+    zoom_foot_min: float = 4.0       # zoom framing: ground height of the close-up, at least this many metres ...
+    zoom_frame: float = 3.0          # ... and this many times the suspected clue's size
+    thinker: bool = False            # qwen38 on board: notes, trail reasoning, second opinions (S3)
+    trail: bool = True               # with the thinker: reorder sectors after a find
+    second: bool = True              # with the thinker: second opinion on close calls at the lowest step
+    second_min: float = 0.6          # qwen38 confidence needed to confirm a close call
 
 
 def outside_by(area, x: float, y: float) -> float:
@@ -101,6 +110,15 @@ class SearchMission:
         self.clues = clue_list
         self.sweep_h = self.cfg.sweep_h or planner.sweep_height([c["size_m"] for c in clue_list])
         self.lanes = planner.lanes(self.cfg.area, planner.lane_spacing(self.sweep_h, overlap=self.cfg.overlap))
+        self.sectors = planner.sectors(self.lanes, self.cfg.sector_len)
+        self.queue = list(range(len(self.sectors)))     # sector indices still to sweep, in order
+        self.done_sectors: list[str] = []
+        self.cur: dict | None = None                    # the sector being swept, oriented in flying direction
+        self.on_sector = False
+        self.worker = thinker.Worker() if self.cfg.thinker else None
+        self.plan_next: dict | None = None              # a validated trail plan waiting for the sector to end
+        self.plans: list[dict] = []
+        self.calls0 = dict(thinker.CALLS)
         self.coverage = planner.Coverage(self.cfg.area)
         self.clef_url, self.fault_rate = clef_url, fault_rate
         self._ask_fn = ask or clef.ask
@@ -109,7 +127,7 @@ class SearchMission:
         self.save_frames, self.realtime, self.chase = save_frames, realtime, chase
         self.commands: deque = deque()
         self.state = "TAKEOFF"
-        self.lane_i, self.on_lane = 0, False
+        self.lane_i = 0
         self.last_frame_xy: tuple | None = None
         self.resume_xy: tuple | None = None
         self.pending: list[dict] = []
@@ -118,7 +136,7 @@ class SearchMission:
         self.investigated: list[dict] = []
         self.alerts: list[dict] = []
         self.decisions: list[dict] = []
-        self.frames = self.ticks = 0
+        self.frames = self.ticks = self.n_cands = 0
         self.flight_s = 0.0
         self.v_prev = (0.0, 0.0, 0.0)
         self.return_reason = ""
@@ -147,16 +165,19 @@ class SearchMission:
         return str(p.relative_to(self.out))
 
     def _ask(self, jpeg: bytes, state: str, questions: dict, kind: str, h: float):
+        qa = thinker.ACTIVE.is_set()
         if self.fault_rate and self.rng.random() < self.fault_rate:
             dec = clef.Decision(ok=False, error="injected fault: decision link dropped")
         else:
             dec = self._ask_fn(jpeg, state, questions, timeout=self.cfg.clef_timeout, url=self.clef_url)
+        qa = qa or thinker.ACTIVE.is_set()
         lat = dec.latency_ms / 1000.0
         if self.realtime and lat > 0:          # real-time honesty: the drone keeps flying its last command
             self._advance(self.v_prev, min(lat, 10.0))
         d = {"kind": kind, "ok": dec.ok, "action": dec.action, "probs": {k: round(v, 3) for k, v in dec.probs.items()},
              "nouls": {k: round(v, 3) for k, v in dec.nouls.items()}, "sure": round(dec.sure, 3),
-             "latency_ms": dec.latency_ms, "error": dec.error, "h": round(float(self.sim.pos[2]), 1)}
+             "latency_ms": dec.latency_ms, "error": dec.error, "h": round(float(self.sim.pos[2]), 1),
+             "qwen_active": qa}
         self.decisions.append(d)
         return dec, d
 
@@ -168,13 +189,16 @@ class SearchMission:
     def battery(self) -> float:
         return max(0.0, 100.0 * (1 - self.flight_s / self.cfg.battery_s))
 
-    def _goto(self, goal, speed: float | None = None, gain: float = 0.6):
-        """Velocity toward a point, slowing near it; True when there and nearly still."""
+    def _goto(self, goal, speed: float | None = None, gain: float = 0.6, stop: bool = True):
+        """Velocity toward a point, slowing near it; True when there and nearly still (stop=False: fly through it
+        at speed, there when within a tick's travel)."""
         p = self.sim.pos
         d = np.asarray(goal, float) - p
         dist = float(np.linalg.norm(d))
-        s = min(speed or self.cfg.speed, gain * dist)
+        s = min(speed or self.cfg.speed, gain * dist) if stop else (speed or self.cfg.speed)
         v = d / dist * s if dist > 1e-6 else np.zeros(3)
+        if not stop:
+            return tuple(float(x) for x in v), dist < s * self.cfg.dt + 0.5
         arrived = dist < 1.0 and float(np.linalg.norm(self.sim.vel)) < 0.6
         return tuple(float(x) for x in v), arrived
 
@@ -210,44 +234,41 @@ class SearchMission:
         v = (0.0, 0.0, 0.0)
         frame = None
         if self.state == "TAKEOFF":
-            lane = self.lanes[0]
             if self.sim.pos[2] < self.sweep_h - 2:
                 v = (0.0, 0.0, min(4.0, 0.8 * (self.sweep_h - float(self.sim.pos[2]))))
             else:
-                v, arrived = self._goto((lane["x0"], lane["y"], self.sweep_h))
-                if arrived:
-                    self.on_lane = True
-                    self._set("SWEEP", f"lane 1 of {len(self.lanes)} at {self.sweep_h:.0f} m")
+                self._set("SWEEP", f"sector {self.sectors[self.queue[0]]['id']} of {len(self.sectors)} at "
+                                   f"{self.sweep_h:.0f} m")
+                self._begin_sector()
         elif self.state == "SWEEP":
-            lane = self.lanes[self.lane_i]
-            if not self.on_lane:
-                v, arrived = self._goto((lane["x0"], lane["y"], self.sweep_h))
+            sec = self.cur
+            if not self.on_sector:
+                v, arrived = self._goto((sec["x0"], sec["y"], self.sweep_h))
                 if arrived:
-                    self.on_lane = True
+                    self.on_sector = True
                     self.last_frame_xy = None
             else:
-                v, arrived = self._goto((lane["x1"], lane["y"], self.sweep_h))
+                cont = self._continues()
+                v, arrived = self._goto((sec["x1"], sec["y"], self.sweep_h), stop=not cont)
                 xy = (float(self.sim.pos[0]), float(self.sim.pos[1]))
-                if self.last_frame_xy is None or math.dist(xy, self.last_frame_xy) >= cfg.frame_every_m or arrived:
-                    frame = self._sweep_frame(lane)
+                if self.last_frame_xy is None or math.dist(xy, self.last_frame_xy) >= cfg.frame_every_m or \
+                        (arrived and not cont):
+                    frame = self._sweep_frame(sec)
                 if self.state == "SWEEP" and arrived:
-                    self.lane_i += 1
-                    self.on_lane = False
-                    if self.lane_i >= len(self.lanes):
-                        self._begin_return("area covered")
-                    else:
-                        self.emit("state", state="SWEEP", reason=f"lane {self.lane_i + 1} of {len(self.lanes)}")
+                    self._end_sector()
         elif self.state == "INVESTIGATE":
             s = self.spot
-            v, arrived = self._goto((s["g"][0], s["g"][1], cfg.steps[s["step"]]))
+            h = cfg.steps[s["step"]]
+            u = s["approach"]          # hover short of the spot on the approach side: an oblique, not top-down, look
+            v, arrived = self._goto((s["g"][0] + u[0] * cfg.oblique * h, s["g"][1] + u[1] * cfg.oblique * h, h))
             if arrived:
                 self._confirm_step()
         elif self.state == "RESUME":
-            lane = self.lanes[self.lane_i]
-            v, arrived = self._goto((self.resume_xy[0], lane["y"], self.sweep_h))
+            v, arrived = self._goto((self.resume_xy[0], self.resume_xy[1], self.sweep_h))
             if arrived:
                 self.last_frame_xy = self.resume_xy
-                self._set("SWEEP", f"resumed lane {self.lane_i + 1} at x={self.resume_xy[0]:.0f}")
+                self.on_sector = True
+                self._set("SWEEP", f"resumed sector {self.cur['id']} at x={self.resume_xy[0]:.0f}")
         elif self.state == "RETURN":
             hx, hy, hz = cfg.home
             if math.hypot(self.sim.pos[0] - hx, self.sim.pos[1] - hy) > 1.5:
@@ -257,7 +278,8 @@ class SearchMission:
                 if arrived:
                     self._set("DONE", f"home ({self.return_reason})")
         rec = {"tick": self.ticks, "state": self.state, "tel": self.sim.telemetry(), "battery": round(self.battery(), 1),
-               "lane": self.lane_i, "coverage": round(self.coverage.fraction(), 4), "frame": frame}
+               "lane": self.lane_i, "sector": self.cur["id"] if self.cur else None,
+               "coverage": round(self.coverage.fraction(), 4), "frame": frame}
         if self.chase:
             rec["chase"] = self._save("chase", f"c{self.ticks:04d}.jpg", self.sim.jpeg("chase", 480, 360, quality=80),
                                       force=True)
@@ -266,8 +288,44 @@ class SearchMission:
         self.v_prev = v
         self.ticks += 1
 
+    # ------------------------------------------------------------ sectors
+    def _begin_sector(self):
+        """Take the next sector in the queue, flown from whichever end is nearer."""
+        if not self.queue:
+            self.cur = None
+            return self._begin_return("area covered")
+        sec = dict(self.sectors[self.queue[0]])
+        p = (float(self.sim.pos[0]), float(self.sim.pos[1]))
+        if math.dist(p, (sec["x1"], sec["y"])) < math.dist(p, (sec["x0"], sec["y"])):
+            sec["x0"], sec["x1"] = sec["x1"], sec["x0"]
+        self.cur, self.lane_i = sec, sec["lane"]
+        self.on_sector = math.dist(p, (sec["x0"], sec["y"])) < 3.0 and abs(float(self.sim.pos[2]) - self.sweep_h) < 2
+
+    def _continues(self) -> bool:
+        """The next sector starts where this one ends and runs on in the same direction: fly through, no stop."""
+        if len(self.queue) < 2 or self.plan_next:
+            return False
+        nxt, c = self.sectors[self.queue[1]], self.cur
+        same_way = (nxt["x1"] - nxt["x0"]) * (c["x1"] - c["x0"]) > 0
+        return abs(nxt["y"] - c["y"]) < 0.5 and abs(nxt["x0"] - c["x1"]) < 0.5 and same_way
+
+    def _end_sector(self):
+        self.done_sectors.append(self.sectors[self.queue.pop(0)]["id"])
+        if self.plan_next:
+            self._apply_plan()
+        self._begin_sector()
+
+    def _apply_plan(self):
+        p, self.plan_next = self.plan_next, None
+        ids = {self.sectors[i]["id"]: i for i in self.queue}
+        first = [ids[x] for x in p["first"] if x in ids]
+        if first:
+            self.queue = first + [i for i in self.queue if i not in first]
+        self.emit("plan", applied=True, first=[self.sectors[i]["id"] for i in first], reason=p.get("reason", ""))
+
     # ------------------------------------------------------------ sweep: finder -> Clef per new crop -> gate
     def _sweep_frame(self, lane: dict) -> str | None:
+        """One sweep photo over the current sector (`lane` is the sector dict, oriented in flying direction)."""
         cfg, sim = self.cfg, self.sim
         x, y = float(sim.pos[0]), float(sim.pos[1])
         heading = 1.0 if lane["x1"] >= lane["x0"] else -1.0
@@ -282,13 +340,16 @@ class SearchMission:
         name = self._save("frames", f"f{n:04d}.jpg", jpg)
         h = float(sim.pos[2])
         cands = []
-        for k, c in enumerate(anomaly.candidates(jpg, k=cfg.finder_k)):
+        found = anomaly.candidates(jpg, k=cfg.finder_k)
+        self.n_cands += len(found)
+        for k, c in enumerate(found):
             g = geo.pixel_to_ground(c["cx"], c["cy"], cfg.W, cfg.H, pose)
             row = {"box": [c["x0"], c["y0"], c["x1"], c["y1"]], "score": c["score"], "area": c["area"],
                    "g": [round(g[0], 2), round(g[1], 2)] if g else None}
             near = g and next((j for j in self.judged if math.dist(j["g"], g) < cfg.judged_r), None)
-            if not g or near:
-                row["status"] = "seen" if near else "off-ground"
+            edge = min(c["x0"], c["y0"], cfg.W - c["x1"], cfg.H - c["y1"]) <= cfg.edge_px
+            if not g or near or edge:     # a box cut by the frame edge is judged from a neighbouring frame instead
+                row["status"] = "seen" if near else "edge" if edge else "off-ground"
                 cands.append(row); continue
             crop = anomaly.crop(jpg, c)
             row["crop"] = self._save("crops", f"f{n:04d}_c{k}.jpg", crop, force=True)
@@ -326,7 +387,10 @@ class SearchMission:
         p = self.sim.pos
         self.pending.sort(key=lambda s: math.dist(s["g"], (p[0], p[1])))
         s = self.pending.pop(0)
-        s.update(id=f"S{len(self.investigated) + 1}", step=0, tries=0, t_start=round(self.sim.t, 2), steps=[])
+        d = np.array([p[0] - s["g"][0], p[1] - s["g"][1]])
+        n = float(np.linalg.norm(d))
+        s.update(id=f"S{len(self.investigated) + 1}", step=0, tries=0, t_start=round(self.sim.t, 2), steps=[],
+                 approach=(d / n).tolist() if n > 1e-6 else [0.0, -1.0])
         self.spot = s
         self.investigated.append(s)
         self._set("INVESTIGATE", f"{s['id']}: maybe {s['clue']} at ({s['g'][0]:.0f}, {s['g'][1]:.0f}); "
@@ -338,6 +402,11 @@ class SearchMission:
         cfg, sim, s = self.cfg, self.sim, self.spot
         h = cfg.steps[s["step"]]
         self.state = "CONFIRM"
+        size = next((c["size_m"] for c in self.clues if c["name"] == s["clue"]), 1.0)
+        foot = max(cfg.zoom_foot_min, cfg.zoom_frame * size)
+        slant = math.dist(tuple(float(v) for v in sim.pos), (s["g"][0], s["g"][1], 0.0))
+        fovy = min(24.0, max(3.0, math.degrees(2 * math.atan(foot / 2 / max(slant, 1.0)))))
+        sim.model.cam_fovy[sim.cam["zoom"]] = fovy       # a zoom lens framed to the suspected clue's size
         sim.aim("zoom", (s["g"][0], s["g"][1], 0.0))
         jpg = sim.jpeg("zoom", cfg.zoom_w, cfg.zoom_h, quality=90)
         photo = self._save("photos", f"{s['id']}_{h:.0f}m.jpg", jpg, force=True)
@@ -346,7 +415,8 @@ class SearchMission:
         s["steps"].append({"h": h, "verdict": verdict, "clue": clue, "noul": noul, "choice": dec.action,
                            "photo": photo, "ms": d["latency_ms"]})
         self.emit("confirm", id=s["id"], h=h, verdict=verdict, clue=clue, noul=noul, choice=dec.action,
-                  probs=d["probs"], nouls=d["nouls"], photo=photo, ok=dec.ok, ms=d["latency_ms"])
+                  probs=d["probs"], nouls=d["nouls"], photo=photo, ok=dec.ok, ms=d["latency_ms"],
+                  zoom_fovy=round(fovy, 1), slant_m=round(slant, 1))
         self.state = "INVESTIGATE"
         if verdict == "closer":
             s["step"] += 1
@@ -355,6 +425,8 @@ class SearchMission:
             s["tries"] += 1
             if s["tries"] < cfg.max_confirm_tries:
                 return
+        if verdict == "uncertain":
+            verdict, clue, noul = self._second_opinion(s, clue, noul, jpg)
         s.update(verdict=verdict, t_end=round(sim.t, 2), h_final=h)
         if verdict == "confirm":
             self._alert(s, clue, noul, photo)
@@ -380,9 +452,28 @@ class SearchMission:
         noul = round(dec.nouls.get(clue, 0.0), 3)
         if dec.action in names and noul >= self.cfg.t_confirm:
             return "confirm", clue, noul
-        if dec.nouls.get(best, 0.0) < self.cfg.t_dismiss or last:
+        unsure = dec.action in names or dec.nouls.get(best, 0.0) >= self.cfg.t_dismiss   # choice and nouls disagree
+        if not unsure:
             return "dismiss", clue, noul
-        return "closer", clue, noul
+        return ("uncertain" if last else "closer"), clue, noul
+
+    def _second_opinion(self, s: dict, clue: str, noul: float, jpg: bytes) -> tuple[str, str, float]:
+        """A close call at the lowest step: Clef chose a clue but its noul stayed under t_confirm (or the reverse).
+        Without the slow thinker that is a dismissal (no alert without corroboration); with it, qwen38 looks at the
+        same close-up and sweep crop while the drone hovers, and the alert says it was confirmed by both."""
+        if not (self.worker and self.cfg.second):
+            return "dismiss", clue, noul
+        c = next(c for c in self.clues if c["name"] == clue)
+        crop = (self.out / s["crop"]).read_bytes() if s.get("crop") else None
+        t0 = time.time()
+        r = thinker.second_opinion(c, s["steps"][-1]["h"], s["sweep_h"], jpg, crop)
+        if self.realtime:
+            self._advance((0.0, 0.0, 0.0), min(time.time() - t0, 30.0))     # hovering while qwen38 looks
+        ok = bool(r.get("is_clue")) and float(r.get("confidence", 0.0)) >= self.cfg.second_min
+        self.emit("second_opinion", id=s["id"], clue=clue, clef_noul=noul, verdict="confirm" if ok else "dismiss", **r)
+        if ok:
+            s["by"] = "Clef + qwen38"
+        return ("confirm" if ok else "dismiss"), clue, noul
 
     def _alert(self, s: dict, clue: str, noul: float, photo: str):
         g = s["g"]
@@ -395,11 +486,41 @@ class SearchMission:
         fam = next(c["family"] for c in self.clues if c["name"] == clue)
         a = {"id": f"A{len(self.alerts) + 1}", "clue": clue, "family": fam, "g": [round(g[0], 2), round(g[1], 2)],
              "conf": noul, "h": s["h_final"], "photo": photo, "sweep_crop": s["crop"], "sweep_h": s["sweep_h"],
-             "spot": s["id"], "t": round(self.sim.t, 2), "seen": 1}
+             "spot": s["id"], "t": round(self.sim.t, 2), "seen": 1, "by": s.get("by", "Clef")}
         self.alerts.append(a)
         self.state = "ALERT"
         self.emit("alert", **a)
         self.state = "INVESTIGATE"
+        if self.worker:
+            self._think_after(a)
+
+    def _think_after(self, a: dict):
+        """qwen38, off the control path: the radio note, then (with map features) where to search next."""
+        clue = next(c for c in self.clues if c["name"] == a["clue"])
+        closeup = (self.out / a["photo"]).read_bytes()
+        crop = (self.out / a["sweep_crop"]).read_bytes() if a.get("sweep_crop") else None
+        where = f"{a['g'][0]:.0f} m east and {a['g'][1]:.0f} m north of the search-area centre"
+        lkp = self.spec.get("map", {}).get("lkp")
+        if lkp:
+            where += f", {math.dist(a['g'], lkp):.0f} m from the trailhead"
+
+        def on_note(n):
+            a["note"] = n
+            self.emit("note", id=a["id"], **n)
+        self.worker.submit(thinker.alert_note, clue, where, a["conf"], a["h"], a["sweep_h"], closeup, crop,
+                           on_done=on_note)
+        if self.cfg.trail and self.spec.get("map", {}).get("trail") and len(self.queue) > 2:
+            rest = [self.sectors[i] for i in self.queue[1:]]
+
+            def on_plan(p):
+                self.plans.append(p)
+                if "error" in p or not p.get("first"):
+                    return self.emit("plan", applied=False, error=p.get("error", "no usable sectors"), **{
+                        k: p[k] for k in ("reason", "wall_s") if k in p})
+                self.plan_next = p
+                self.emit("plan", applied=False, proposed=p["first"], reason=p["reason"], wall_s=p["wall_s"])
+            self.worker.submit(thinker.trail_plan, self.cfg.area, self.spec["map"], list(self.alerts), rest,
+                               on_done=on_plan)
 
     # ------------------------------------------------------------ operator
     def _operator(self, cmd: dict):
@@ -410,7 +531,7 @@ class SearchMission:
         elif name == "go_back_to_last_alert" and self.alerts and self.state in ("SWEEP", "RESUME"):
             a = self.alerts[-1]
             if self.state == "SWEEP":
-                self.resume_xy = (float(self.sim.pos[0]), self.lanes[self.lane_i]["y"])
+                self.resume_xy = (float(self.sim.pos[0]), self.cur["y"])
             self.pending.insert(0, {"g": tuple(a["g"]), "clue": a["clue"], "p_inv": 1.0, "noul": a["conf"],
                                     "frame": None, "crop": a["sweep_crop"], "box": None, "sweep_h": a["sweep_h"],
                                     "t_seen": round(self.sim.t, 2), "revisit": a["id"]})
@@ -419,7 +540,8 @@ class SearchMission:
 
     def status_text(self) -> str:
         found = "; ".join(f"{a['id']} {a['family']} at ({a['g'][0]:.0f}, {a['g'][1]:.0f})" for a in self.alerts)
-        return (f"State {self.state}, lane {min(self.lane_i + 1, len(self.lanes))} of {len(self.lanes)}, area searched "
+        return (f"State {self.state}, sector {self.cur['id'] if self.cur else '-'} ({len(self.done_sectors)} of "
+                f"{len(self.sectors)} done), area searched "
                 f"{100 * self.coverage.fraction():.0f}%, battery {self.battery():.0f}%. Alerts: {found or 'none yet'}.")
 
     # ------------------------------------------------------------ run
@@ -428,7 +550,7 @@ class SearchMission:
         t0 = time.time()
         self.started = True
         self.emit("start", spec=self.spec, clues=self.clues, config=asdict(self.cfg), sweep_h=self.sweep_h,
-                  lanes=self.lanes, home=self.cfg.home)
+                  lanes=self.lanes, sectors=self.sectors, home=self.cfg.home)
         while self.state != "DONE" and self.ticks < max_ticks:
             if script and self.ticks in script:
                 self.command(script[self.ticks])
@@ -439,6 +561,9 @@ class SearchMission:
                 ahead = self.sim.t / pace - (time.time() - t0)
                 if ahead > 0:
                     time.sleep(min(ahead, 1.0))
+        if self.worker:
+            self.emit("state", state=self.state, reason="waiting for qwen38 notes")
+            self.worker.drain()
         summary = self.summary(time.time() - t0)
         self.emit("summary", **summary)
         (self.out / "summary.json").write_text(json.dumps(summary, indent=1))
@@ -455,11 +580,16 @@ class SearchMission:
         inv = [s for s in self.investigated if "verdict" in s]
         used = 100.0 - self.battery()
         area_m2 = round(self.coverage.fraction() * polygon_area(self.cfg.area))
-        return {"state": self.state, "return_reason": self.return_reason, "sim_s": round(self.sim.t, 1),
+        llm = {k: v - self.calls0.get(k, 0) for k, v in thinker.CALLS.items() if v - self.calls0.get(k, 0)}
+        return {"llm_calls": sum(llm.values()), "llm_by_role": llm,
+                "clef_qwen_idle": stats([d for d in self.decisions if not d["qwen_active"]]),
+                "clef_qwen_active": stats([d for d in self.decisions if d["qwen_active"]]),
+                "sectors": len(self.sectors), "sectors_done": len(self.done_sectors), "plans": self.plans,
+                "state": self.state, "return_reason": self.return_reason, "sim_s": round(self.sim.t, 1),
                 "wall_s": round(wall, 1), "flight_s": round(self.flight_s, 1), "battery_used_pct": round(used, 1),
-                "sweep_h": self.sweep_h, "lanes": len(self.lanes), "lanes_done": min(self.lane_i, len(self.lanes)),
+                "sweep_h": self.sweep_h, "lanes": len(self.lanes),
                 "coverage": round(self.coverage.fraction(), 4), "area_m2_covered": area_m2,
-                "frames": self.frames, "clef_sweep": stats(sweep), "clef_confirm": stats(conf),
+                "frames": self.frames, "candidates": self.n_cands, "clef_sweep": stats(sweep), "clef_confirm": stats(conf),
                 "fallback": sum(not d["ok"] for d in self.decisions),
                 "investigations": len(inv), "dismissed": sum(s["verdict"] != "confirm" for s in inv),
                 "mean_investigate_s": round(statistics.mean(s["t_end"] - s["t_start"] for s in inv), 1) if inv else None,
@@ -480,14 +610,28 @@ def item_info(name: str) -> dict:
 
 
 def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str], area=SQUARE,
-                home=(0.0, -95.0), min_sep: float = 30.0) -> dict:
-    """Place the named items at seeded positions inside the area (inset 12 m, apart, away from home)."""
+                home=(0.0, -95.0), min_sep: float = 30.0, on_trail: bool = False) -> dict:
+    """Place the named items at seeded positions inside the area (inset 12 m, apart, away from home). on_trail: the
+    clue items lie along the map's trail in the order a hiker walking from the trailhead would drop them (a path
+    seed, for the trail-reasoning test); decoys stay random."""
     rng = random.Random(seed * 977 + 13)
     xs, ys = [p[0] for p in area], [p[1] for p in area]
+    size = 2 * (max(max(map(abs, xs)), max(map(abs, ys))) + 20)
+    path = []
+    if on_trail:
+        pts = [p for p in world.map_features(seed, size)["trail"]
+               if min(xs) + 10 < p[0] < max(xs) - 10 and min(ys) + 10 < p[1] < max(ys) - 10]
+        n_clues = sum(n in clue_names for n in names)
+        path = [pts[int(len(pts) * (0.3 + 0.6 * k / max(1, n_clues - 1 or 1)))] for k in range(n_clues)] if pts else []
     placed = []
     for name in names:
         info = item_info(name)
         for _ in range(500):
+            if path and name in clue_names:
+                px, py = path.pop(0)
+                side = rng.choice((-1, 1)) * rng.uniform(2.0, 5.0)
+                x, y = px + side * rng.uniform(0.5, 1.0), py + side * rng.uniform(0.2, 0.6)
+                break
             x, y = rng.uniform(min(xs) + 12, max(xs) - 12), rng.uniform(min(ys) + 12, max(ys) - 12)
             if all(math.dist((x, y), (q["x"], q["y"])) >= min_sep for q in placed) and math.dist((x, y), home) > 30:
                 break
@@ -495,7 +639,6 @@ def build_scene(terrain: str, seed: int, names: list[str], clue_names: list[str]
                        "obj": info["obj"],
                        "texture": info["texture"], "x": round(x, 2), "y": round(y, 2),
                        "yaw": round(rng.uniform(0, 360), 1), "h": info["extent_m"][2], "size_m": info["size_m"]})
-    size = 2 * (max(max(map(abs, xs)), max(map(abs, ys))) + 20)
     return world.search_spec(seed, terrain, placed, size=size)
 
 
@@ -549,6 +692,10 @@ def add_args(ap: argparse.ArgumentParser):
     ap.add_argument("--chase", action="store_true", help="render the chase camera every tick (console, video)")
     ap.add_argument("--pace", type=float, default=0.0, help="sim seconds per wall second (0: as fast as possible)")
     ap.add_argument("--max-ticks", type=int, default=4000)
+    ap.add_argument("--think", action="store_true", help="qwen38 on board: notes, trail reasoning, second opinions")
+    ap.add_argument("--no-trail", action="store_true", help="with --think: no sector reordering after a find")
+    ap.add_argument("--no-second", action="store_true", help="with --think: no second opinion on close calls")
+    ap.add_argument("--on-trail", action="store_true", help="place the clue items along the trail (path seeds)")
 
 
 def make_mission(a, out: Path, sinks=()) -> SearchMission:
@@ -556,8 +703,9 @@ def make_mission(a, out: Path, sinks=()) -> SearchMission:
     names = [n for n in a.items.split(",") if n]
     cnames = [n for n in a.clues.split(",") if n]
     h = a.half
-    cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h)
-    spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2])
+    cfg = SearchConfig(area=[(-h, -h), (h, -h), (h, h), (-h, h)], home=(0.0, -h - 15, 2.0), sweep_h=a.sweep_h,
+                       thinker=a.think, trail=not a.no_trail, second=not a.no_second)
+    spec = build_scene(a.terrain, a.seed, names, cnames, area=cfg.area, home=cfg.home[:2], on_trail=a.on_trail)
     return SearchMission(spec, out, cluelib.clues(cnames), cfg, clef_url=a.clef_url, fault_rate=a.fault_rate,
                          seed=a.seed, sinks=sinks, realtime=not a.lockstep, chase=a.chase)
 

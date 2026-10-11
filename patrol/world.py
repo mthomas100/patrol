@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 import random
+from pathlib import Path
 
 PHASES = {"near": -4.5, "middle": 0.0, "far": 4.5}   # crossarm tip y per phase
 ARM_Z = 14.0            # crossarm height
@@ -303,8 +304,71 @@ TERRAINS = {   # ground texture colours (MuJoCo builtin checker, low contrast, r
 }
 
 
+def _curve(rng, start, heading, length, step=4.0, wiggle=0.08):
+    pts, a = [list(start)], heading
+    for _ in range(int(length / step)):
+        a += rng.uniform(-wiggle, wiggle)
+        x, y = pts[-1]
+        pts.append([round(x + step * math.cos(a), 2), round(y + step * math.sin(a), 2)])
+    return pts
+
+
+def map_features(seed: int, size: float) -> dict:
+    """What a search team's map shows: a hiking trail from the trailhead (the last known point) across the area, and
+    a stream. Public knowledge, not ground truth: the decision path and qwen38 may use it."""
+    rng = random.Random(seed * 53 + 5)
+    h = size / 2
+    head = [round(rng.uniform(-0.3, 0.3) * h, 1), -h + 2]
+    trail = _curve(rng, head, math.radians(90 + rng.uniform(-25, 25)), 1.9 * h)
+    stream = _curve(rng, [-h + 2, round(rng.uniform(-0.1, 0.5) * h, 1)], math.radians(rng.uniform(-20, 20)), 2.2 * h,
+                    wiggle=0.1)
+    return {"trail": trail, "stream": stream, "lkp": head}
+
+
+GROUND = {   # terrain base colour, two variation colours (low-frequency patches), grain amplitude
+    "snow": ((0.74, 0.76, 0.81), (0.64, 0.67, 0.75), (0.80, 0.80, 0.83), 0.025),
+    "grass": ((0.33, 0.45, 0.22), (0.45, 0.46, 0.26), (0.24, 0.37, 0.17), 0.035),
+}
+FEATURE_RGBA = {"snow": {"trail": (0.70, 0.70, 0.72, 1), "stream": (0.30, 0.40, 0.50, 1)},
+                "grass": {"trail": (0.48, 0.40, 0.29, 1), "stream": (0.22, 0.33, 0.40, 1)}}
+
+
+def ground_texture(terrain: str, seed: int, n: int = 1024) -> str:
+    """A tiling noise texture for the ground (patches plus grain), cached under assets/terrain/."""
+    import numpy as np
+    from PIL import Image
+    from scipy import ndimage
+    out = Path(__file__).resolve().parents[1] / "assets" / "terrain" / f"{terrain}_{seed}_{n}.png"
+    if out.exists():
+        return str(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed * 7 + len(terrain))
+    base, c1, c2, grain = (np.array(c) if isinstance(c, tuple) else c for c in GROUND[terrain])
+
+    def noise(sigma):
+        z = ndimage.gaussian_filter(rng.standard_normal((n, n)), sigma, mode="wrap")
+        return (z - z.mean()) / (z.std() + 1e-9)
+    lo, mid = noise(n / 10), noise(n / 40)
+    w1 = np.clip(0.5 + 0.35 * lo, 0, 1)[..., None]
+    w2 = np.clip(0.35 * mid, 0, 1)[..., None]
+    img = base * (1 - w1 * 0.6) + c1 * w1 * 0.6
+    img = img * (1 - w2) + c2 * w2
+    img += grain * rng.standard_normal((n, n, 1)) * np.array([1, 1, 1])
+    Image.fromarray((np.clip(img, 0, 1) * 255).astype("uint8")).save(out)
+    return str(out)
+
+
+def _ribbon(pts, width, rgba, z=0.012):
+    g = []
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        L = math.hypot(x1 - x0, y1 - y0)
+        g.append(_g("box", pos=((x0 + x1) / 2, (y0 + y1) / 2, z), size=(L / 2 + width * 0.3, width / 2, 0.01),
+                    rgba=rgba, euler=(0, 0, math.degrees(math.atan2(y1 - y0, x1 - x0)))))
+    return g
+
+
 def search_spec(seed: int = 0, terrain: str = "snow", items: list[dict] | None = None, size: float = 200.0,
-                n_rocks: int = 60, n_trees: int = 40) -> dict:
+                n_rocks: int = 60, n_trees: int = 40, features: bool = True) -> dict:
     """An open search area centred on the origin. items: [{"name", "obj", "texture", "x", "y", "yaw", "role"}]
     with role "clue" or "decoy"; mesh paths come from patrol.items. Rocks and trees are seeded clutter. The item
     positions are ground truth: for placement and scoring only, never for the decision path."""
@@ -317,7 +381,12 @@ def search_spec(seed: int = 0, terrain: str = "snow", items: list[dict] | None =
     for it in items or []:   # keep clutter off the items so S0 measures the item, not an occlusion
         rocks = [r for r in rocks if math.hypot(r["x"] - it["x"], r["y"] - it["y"]) > 4]
         trees = [t for t in trees if math.hypot(t["x"] - it["x"], t["y"] - it["y"]) > 8]
-    return {"kind": "search", "seed": seed, "terrain": terrain, "size": size, "length": size,
+    feats = map_features(seed, size) if features else {}
+    for f in feats.values():     # no clutter on the trail or in the stream
+        if isinstance(f, list) and f and isinstance(f[0], list):
+            rocks = [r for r in rocks if min(math.hypot(r["x"] - x, r["y"] - y) for x, y in f) > 3]
+            trees = [t for t in trees if min(math.hypot(t["x"] - x, t["y"] - y) for x, y in f) > 4]
+    return {"kind": "search", "seed": seed, "terrain": terrain, "size": size, "length": size, "map": feats,
             "items": items or [], "rocks": rocks, "trees": trees, "defects": []}
 
 
@@ -378,6 +447,11 @@ def build_search_mjcf(spec: dict) -> str:
     T = TERRAINS[spec["terrain"]]
     S = spec["size"]
     assets, world = [], []
+    fr = FEATURE_RGBA[spec["terrain"]]
+    if spec.get("map", {}).get("stream"):
+        world += _ribbon(spec["map"]["stream"], 3.0, fr["stream"])
+    if spec.get("map", {}).get("trail"):
+        world += _ribbon(spec["map"]["trail"], 1.4, fr["trail"], z=0.016)
     for r in spec["rocks"]:
         world.append(_g("ellipsoid", pos=(r["x"], r["y"], r["r"] * r["flat"] * 0.5),
                         size=(r["r"], r["r"] * 0.8, r["r"] * r["flat"]), rgba=(0.45, 0.44, 0.42, 1)))
@@ -401,19 +475,18 @@ def build_search_mjcf(spec: dict) -> str:
   <visual>
     <global offwidth="1280" offheight="960" fovy="60"/>
     <quality shadowsize="4096"/>
-    <headlight ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45" specular="0.1 0.1 0.1"/>
+    <headlight ambient="0.28 0.28 0.28" diffuse="0.2 0.2 0.2" specular="0.05 0.05 0.05"/>
     <map znear="0.001" zfar="3" haze="0.2"/>
     <rgba haze="0.8 0.85 0.9 1"/>
   </visual>
   <asset>
     <texture type="skybox" builtin="gradient" rgb1="0.55 0.7 0.9" rgb2="0.9 0.93 0.97" width="512" height="512"/>
-    <texture name="ground" type="2d" builtin="checker" rgb1="{T['rgb1']}" rgb2="{T['rgb2']}" mark="random"
-             random="0.06" markrgb="{T['mark']}" width="512" height="512"/>
-    <material name="ground" texture="ground" texrepeat="{S / 4:.0f} {S / 4:.0f}" reflectance="0"/>
+    <texture name="ground" type="2d" file="{ground_texture(spec['terrain'], spec['seed'])}"/>
+    <material name="ground" texture="ground" texrepeat="{S / 60:.2f} {S / 60:.2f}" reflectance="0"/>
     {a}
   </asset>
   <worldbody>
-    <light directional="true" pos="0 0 80" dir="-0.3 0.4 -1" diffuse="0.75 0.72 0.65" castshadow="true"/>
+    <light directional="true" pos="0 0 80" dir="-0.3 0.4 -1" diffuse="0.68 0.66 0.60" castshadow="true"/>
     <geom type="plane" size="{S:.0f} {S:.0f} 0.1" material="ground"/>
     {DRONE_XML.format(x=0, y=-S / 2, z=40)}
     <camera name="map" pos="0 0 {S * 1.2:.0f}" xyaxes="1 0 0 0 1 0" fovy="60"/>
