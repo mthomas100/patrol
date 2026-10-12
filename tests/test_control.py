@@ -171,3 +171,22 @@ def test_rangefinder_flag_leaves_clear_trees_to_the_photo():
                  "continue", "p")
     assert rangefinder_flag(photo, 1.4).action == "continue"
     assert rangefinder_flag(photo, None).action == "continue"
+
+
+def test_silence_is_never_a_command():
+    """An empty transcript (a tap on push-to-talk) must not reach the router: Clef sent "" to start_search at p 0.95."""
+    from patrol import voice
+
+    class W:
+        def __init__(self, text): self.text = text
+        def stt(self, wav): return {"ok": True, "text": self.text}
+
+    class M:
+        alerts, ticks, events = [], 0, []
+        def emit(self, kind, **kw): self.events.append((kind, kw)); return kw
+        def status_text(self): return ""
+
+    for text in ("", "  ", ".", "a"):
+        m = M(); m.events = []
+        ev = voice.handle_utterance("x.wav", W(text), m, url="http://127.0.0.1:9/v1/systemone")
+        assert ev["accepted"] is False and ev["error"] == "nothing heard"

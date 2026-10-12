@@ -251,6 +251,12 @@ def handle_utterance(wav: str | Path, worker: VoiceWorker, mission, speaker: Spe
     heard = worker.stt(wav)
     if not heard.get("ok"):
         return mission.emit("voice", text=None, error=heard.get("error"), accepted=False)
+    if sum(ch.isalnum() for ch in heard.get("text") or "") < 2:
+        # silence or a tap: Clef routed an empty transcript to start_search at p 0.95 (patrol-79, 17:36), which would
+        # nothing heard is never a command
+        if speaker:
+            speaker.say(f"voice_{mission.ticks}", "I did not hear anything.")
+        return mission.emit("voice", text=heard.get("text"), error="nothing heard", accepted=False)
     kind = "search" if hasattr(mission, "alerts") else "corridor"
     r = route(heard["text"], mission.status_text(), url, kind=kind)
     cmd = r.get("command")
