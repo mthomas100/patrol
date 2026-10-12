@@ -9,6 +9,8 @@
 
 <p align="center">🏆 <b>Winner of the Multi Model Hackathon, SF Tech Week 2026.</b></p>
 
+<p align="center">📖 <a href="https://patrol-31d53272.base44.app"><b>Read the illustrated explainer and the slides in your browser</b></a></p>
+
 > *"The camper had a blue backpack, an orange tent, and a gray dog."*
 
 An operator said that into Patrol's console during a test. Patrol turns words like these into a search. It sweeps the
@@ -99,6 +101,8 @@ Details and evidence: the reports under [`runs/`](runs/).
 
 ## The full story
 
+- **In your browser:** [the explainer and a slide viewer](https://patrol-31d53272.base44.app), nothing to download. Same content as the files below,
+  plus the animated flight replay.
 - **Explainer page:** [`explainer/index.html`](explainer/index.html) (download the `explainer/` folder and open it in a
   browser). The whole project in one page: an animated flight replay, every model, the altitude maths, the faults, and
   where it goes next.
