@@ -142,6 +142,15 @@ def probe(item: dict, use_clef: bool, crops_dir: Path | None) -> dict:
             "wall_s": round(time.perf_counter() - t0, 1)}
 
 
+NEAR_PX = 150           # 3 m at 2 cm/px: an alert this close to a person box is on that person or their shadow
+
+
+def _dist_px(g, b: dict) -> float:
+    """Distance from a native point to a box (0 inside)."""
+    dx, dy = max(b["x0"] - g[0], 0, g[0] - b["x1"]), max(b["y0"] - g[1], 0, g[1] - b["y1"])
+    return (dx * dx + dy * dy) ** 0.5
+
+
 def _pct(a, b):
     return f"{a}/{b} ({100 * a / b:.0f}%)" if b else "0/0"
 
@@ -195,10 +204,13 @@ def summarise(out: Path) -> str:
                          f"{statistics.median(nl):.3f} |")
         for view in ("native", "down"):
             fa = sum(c.get("alert", False) for c in swept if c["view"] == view and not c["person"])
+            far = sum(c.get("alert", False) and all(_dist_px(c["g"], p["box"]) > NEAR_PX for p in r["persons"])
+                      for r in recs for c in r["cands"] if c["view"] == view and not c["person"])
             found = sum(any(c.get("alert") and i in c["person"] for c in r["cands"] if c["view"] == view)
                         for r in recs for i in range(len(r["persons"])))
-            L.append(f"\n{view}: false alerts {fa} on {n_img} images ({fa / n_img:.2f} per image); persons found end to "
-                     f"end (finder top 3, sweep gate, confirm) {_pct(found, n_per)}")
+            L.append(f"\n{view}: alerts off every person box {fa} on {n_img} images ({fa / n_img:.2f} per image), of "
+                     f"which {far} more than {NEAR_PX * real.GSD_M:.0f} m from any box; persons found end to end "
+                     f"(finder top 3, sweep gate, confirm) {_pct(found, n_per)}")
         lat = [x["ms"] for c in swept for x in [c["sweep"]] + ([c["confirm"]] if "confirm" in c else []) if x["ok"]]
         bad = sum(not x["ok"] for c in swept for x in [c["sweep"]] + ([c["confirm"]] if "confirm" in c else []))
         L.append(f"\nClef latency median {statistics.median(lat):.0f} ms, p90 {np.percentile(lat, 90):.0f} ms over "
