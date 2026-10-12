@@ -238,13 +238,13 @@ main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,
       <button class="btn snd" id="bSound" title="Spoken alerts and answers. The browser blocks sound until a click, so this turns on by itself the first time you hold to talk.">Sound off</button>
     </div>
     <div id="ctl" hidden>
-      <button class="btn go" id="bStart">Start</button>
-      <button class="btn" id="bLast" disabled>Go to last alert</button>
-      <button class="btn warn" id="bHome" disabled>Return home</button>
+      <button class="btn go" id="bStart" title="Take off and search the area for what is described in the cards below (about 3 minutes). After landing it becomes Fly again: a fresh flight over the same ground.">Start</button>
+      <button class="btn" id="bLast" disabled title="Fly back to the most recent find and take another close look (the same as saying &quot;go back and look at that again&quot;).">Go to last alert</button>
+      <button class="btn warn" id="bHome" disabled title="Stop searching and fly back to the launch point; the flight ends when it lands (the same as saying &quot;return home&quot;).">Return home</button>
     </div>
     <div id="replayTag" class="replaytag" hidden>REPLAY</div>
     <button class="btn" id="bReplay" hidden disabled title="Play the recorded run again from the start">Play again</button>
-    <div id="conn" class="conn">connecting</div>
+    <div id="conn" class="conn" title="The link between this page and the drone console. It reconnects by itself; if it stays red, reload the page.">connecting</div>
   </header>
 
   <section id="chips"></section>
