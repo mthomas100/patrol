@@ -7,6 +7,8 @@
   Four AI models on one laptop · built in a day for the Multi Model Hackathon, SF Tech Week 2026
 </p>
 
+<p align="center">🏆 <b>Winner of the Multi Model Hackathon, SF Tech Week 2026.</b></p>
+
 > *"The camper had a blue backpack, an orange tent, and a gray dog."*
 
 An operator said that into Patrol's console during a test. Patrol turns words like these into a search. It sweeps the
